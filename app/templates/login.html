@@ -1,19 +1,31 @@
-<form action="{{ url_for('login') }}" method="post">
-	{% if message is defined and message %}
-		<div class="alert alert-warning">{{ message }}</div>
-	{% endif %}
-	<div class="form-group">
-		<label for="username">Username:</label>
-		<input type="username" class="form-control" id="username" name="username" placeholder="Enter username">
-	</div>
-	<div class="form-group">
-		<label for="password">Password:</label>
-		<input type="password" class="form-control" id="password" name="password" placeholder="Enter password">
-	</div>    
-	<button type="submit" class="btn btn-primary">Login</button>
-</form>
-
-<form action="{{ url_for('register') }}" method="get">
-<button class="btn btn-primary">Register</button>
-
-</form>
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Website</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <nav>
+      <div class="navbar-brand">
+        <a href="#">ŞuBilet</a>
+      </div>
+      <div class="navbar-links">
+        <!-- Navbar links go here -->
+      </div>
+    </nav>
+    <div class="login-box">
+      <h2>Login</h2>
+      <form>
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password">
+        </div>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </body>
+</html>
