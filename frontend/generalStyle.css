@@ -3,6 +3,10 @@ body{
     font-family: "Roboto";
 }
 
+select option{
+  font-family: serif;
+}
+
 .customNavbar{
     background-color: rgb(201, 31, 31);
     color: white !important;
