@@ -8,6 +8,7 @@ import MySQLdb.cursors
 
 # YARRAK YARRAK YARRAK YARRAK YARRAK YARRAK
 # ERDO ERDO ERDO ERDO ERDO ERDO
+# %50.1 %50.1 %50.1 %50.1 %50.1 %50.1
 
 app = Flask(__name__) 
 
