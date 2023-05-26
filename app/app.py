@@ -7,6 +7,7 @@ from flask_mysqldb import MySQL
 import MySQLdb.cursors
 
 # YARRAK YARRAK YARRAK YARRAK YARRAK YARRAK
+# ERDO ERDO ERDO ERDO ERDO ERDO
 
 app = Flask(__name__) 
 
