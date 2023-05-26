@@ -23,6 +23,9 @@ select option{
     align-items: center; /* Vertically center the content */
   }
 
+  .nav-item {
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+}
 .card{
     background-color: rgb(174, 174, 174);
 }

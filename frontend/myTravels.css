@@ -1,0 +1,10 @@
+.container-fluid .row{
+    display: flex;
+    align-items: center;
+}
+
+.companyTitle{
+    color: #d55454;
+    font-family: 'Raleway', sans-serif;
+    
+}
