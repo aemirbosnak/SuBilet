@@ -8,6 +8,8 @@ import MySQLdb.cursors
 
 app = Flask(__name__) 
 
+# DO NOT WANT TO SEE THIS IN MAIN
+
 app.secret_key = 'abcdefgh'
   
 app.config['MYSQL_HOST'] = 'db'
