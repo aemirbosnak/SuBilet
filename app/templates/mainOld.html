@@ -20,6 +20,30 @@
     <title>ŞuBilet</title>
   </head>
 
+  <script>
+    // Function to update the form action URL
+    function updateFormAction() {
+      // Get the selected travel type
+      var vehicleType = document.querySelector('input[name="vehicleType"]:checked').value;
+  
+      // Get the selected departure city
+      var departsFrom = document.getElementById('departs_from').value;
+  
+      // Get the selected arrival city
+      var arrivesTo = document.getElementById('arrives_to').value;
+  
+      // Build the new action URL with the selected parameters
+      var newAction = "/travel/" + vehicleType + "/from:" + departsFrom + "/to:" + arrivesTo;
+  
+      // Set the new action URL to the form
+      document.getElementById('searchForm').action = newAction;
+    }
+  
+    // Add event listener to the form submission
+    document.getElementById('searchForm').addEventListener('submit', updateFormAction);
+  </script>
+
+  
   <body>
     <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
       <div class="container d-flex justify-content-between align-items-center">
@@ -39,6 +63,7 @@
     </nav>
 
     <div class="container pt-5">
+      <form action="{{ url_for('travels') }}" method="GET">
         <div class="container d-flex justify-content-center">
           <div
             class="btn-group btn-group-lg"
@@ -48,7 +73,7 @@
             <input
               type="radio"
               class="btn-check"
-              name="vehicle_type"
+              name="vehicleType"
               id="btnradio1"
               autocomplete="off"
               value="bus"
@@ -59,7 +84,7 @@
             <input
               type="radio"
               class="btn-check"
-              name="vehicle_type"
+              name="vehicleType"
               id="btnradio2"
               autocomplete="off"
               value="plane"
@@ -69,7 +94,7 @@
             <input
               type="radio"
               class="btn-check"
-              name="vehicle_type"
+              name="vehicleType"
               id="btnradio3"
               autocomplete="off"
               value="train"
@@ -91,54 +116,36 @@
                 name="departs_from"
                 id="departs_from"
               >
-                <option value="Izmir">İzmir</option>
-                <option value="Ankara" >Ankara</option>
-                <option value="Istanbul" >İstanbul</option>
-                <option value="Mus">Muş</option>
+                <option>İzmir</option>
+                <option>Ankara</option>
+                <option>İstanbul</option>
+                <option>Muş</option>
               </select>
             </div>
 
             <div class="container pt-2">
               <label for="arrives_to" class="form-label">To:</label>
               <select class="form-select" name="arrives_to" id="arrives_to">
-                <option value="Izmir">İzmir</option>
-                <option value="Ankara" >Ankara</option>
-                <option value="Istanbul" >İstanbul</option>
-                <option value="Mus">Muş</option>
+                <option>İzmir</option>
+                <option>Ankara</option>
+                <option>İstanbul</option>
+                <option>Muş</option>
               </select>
             </div>
 
             <div class="container pt-4">
-              <label for="departure_date">Travel Date:</label>
-              <input type="date" id="departure_date" name="departure_date" />
+              <label for="travelDate">Travel Date:</label>
+              <input type="date" id="travelDate" name="travelDate" />
             </div>
 
             <div class="d-grid pt-4 justify-content-center">
-              <button type="button" onclick="updateFormAction()" class="btn btn-lg btn-danger">
+              <button type="submit" class="btn btn-lg btn-danger">
                 Find Travel
               </button>
             </div>
           </div>
         </div>
+      </form>
     </div>
-
-    <script>
-      function updateFormAction() {
-        var form = document.getElementById('searchForm');
-        // var vehicleType = form.querySelector('input[name=vehicle_type]:checked').value;
-        var vehicleType = "bus";
-        var departureCity = document.getElementById('departs_from').value;
-        var arrivalCity = document.getElementById('arrives_to').value;
-        var departure_date = document.getElementById('departure_date').value;
-        console.log("helllooo");
-        var url = "/travel/" + vehicleType + "/from:" + departureCity + "/to:" + arrivalCity + "/date:" + departure_date;
-        window.location.href = url;
-        // form.action = url;
-        // form.submit();
-        console.log("helllooo2");
-      }
-    </script>
-
-
   </body>
 </html>
