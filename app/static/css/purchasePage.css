@@ -1,0 +1,15 @@
+.couponCard{
+    background-color: rgb(80, 186, 154);
+    color: white;
+    transition: background-color 0.2s ease;
+}
+.couponCard:hover{
+    background-color:  rgb(60, 148, 122);
+    cursor: pointer;
+}
+.infoCard{
+    background-color: rgb(72, 72, 72);
+}
+.text-lightRed{
+    color: rgb(247, 121, 121);
+}
