@@ -60,6 +60,13 @@
       </nav>
     {% endif %}
 
+    {% if error_message %}
+    <!-- NEEDS BETTER STYLING -->
+    <div class="error-message">
+        <p>{{ error_message }}</p>
+    </div>
+    {% endif %}
+
     <form action="{{ url_for('findTravel') }}" method="post">
       <!-- form is needed to send info when button is clicked (for flask) -->
       <div class="container pt-5">

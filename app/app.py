@@ -105,6 +105,11 @@ def findTravel():
         arrival_city = request.form['to-location']
         departure_date = request.form['departure_date']
 
+        #perform checks
+        if not departure_city or not arrival_city or not departure_date:
+            error_message = "Please select fill in the form."
+            return render_template('main.html', cities=cities, is_logged_in=is_logged_in, error_message=error_message)
+
         #redirect to listAvailableTravelsPage.html with relevant information
         return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
         
