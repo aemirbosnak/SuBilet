@@ -59,69 +59,35 @@ def logout():
 def main():
     if 'loggedin' in session:
 
-        # # Display tasks
-        # cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        # cursor.execute('SELECT * FROM Task WHERE user_id = %s AND status = %s ORDER BY deadline ASC', (session['userid'], 'Todo'))
-        # tasks = cursor.fetchall()
-
-        # # Display completed tasks
-        # cursor.execute('SELECT * FROM Task WHERE user_id = %s AND status = %s ORDER BY done_time DESC', (session['userid'], 'Done'))
-        # completed_tasks = cursor.fetchall()
-
-        # cursor.execute('SELECT * FROM TaskType')
-        # task_types = cursor.fetchall()
-
         return render_template('main.html')
     
     else:
         return redirect(url_for('main'))
  
 
-@app.route('/travel/<vehicle_type>/from:<departure_city>/to:<arrival_city>/date:<departure_date>/', methods=['GET'])
+@app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/', methods=['GET'])
 def travels(vehicle_type, departure_city, arrival_city, departure_date):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     query = """
-    SELECT *
+    SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
     FROM Travel T
     JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
     JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
     JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+    JOIN Company C ON T.travel_company_id = C.id
     WHERE Dep.city = %s
     AND Ar.city = %s
     AND DATE(T.depart_time) = %s
     AND V.type = %s
     """
+    
+    # cursor.execute(query)
     cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
     searchedTravels = cursor.fetchall()
-    return render_template('listAvailableTravelsPage.html', travels=searchedTravels)
-    
-# @app.route('/travels', methods=['GET', 'POST'])
-# def travels():
-#     if request.method == 'GET' and 'vehicleType' in request.form and 'departs_from' in request.form and 'arrives_to' in request.form and 'travelDate' in request.form:
-#         vehicleType = request.form['vehicleType']
-#         departs_from = request.form['departs_from']
-#         arrives_to = request.form['arrives_to']
-#         travelDate = request.form['travelDate']
-#         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-#         query = """
-#         SELECT *
-#         FROM Travel T
-#         JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-#         JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-#         JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-#         WHERE Dep.city = %s
-#         AND Ar.city = %s
-#         AND DATE(T.depart_time) = %s
-#         AND V.type = %s
-#         """
-#         cursor.execute(query, (departs_from, arrives_to, travelDate, vehicleType))
-#         searchedTravels = cursor.fetchall()
-#         return render_template('travels.html', travels=searchedTravels)
-#     else:
-#         return redirect(url_for('login'))
-    
+    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date)
+     
 
 @app.route('/trav', methods=['GET', 'POST'])
 def listAvailableTravels():

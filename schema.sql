@@ -172,25 +172,27 @@ INSERT INTO Terminal (terminal_id, name, city, type, active_status) VALUES
 ( 14, 'Gazipasa Airport', 'Antalya', 'plane', 'active'),
 ( 15, 'Haydarpasa Train Station', 'Istanbul', 'train', 'active'),
 ( 16, 'Denizli Bus Terminal', 'Denizli', 'bus', 'active'),
-( 17, 'Kemer Train Station', 'Antalya', 'train', 'active');
+( 17, 'Kemer Train Station', 'Antalya', 'train', 'active'),
+( 18, 'ASTI', 'ANKARA', 'bus', 'active');
 -- INSERT INTO Terminal (terminal_id, name, city, type, active_status) VALUES
--- ( 1, 'Atatürk Airport', 'Istanbul', 'plane', 'active'),
--- ( 2, 'Sabiha Gökçen Airport', 'Istanbul', 'plane', 'active'),
--- ( 3, 'Esenboğa Airport', 'Ankara', 'plane', 'active'),
--- ( 4, 'Adana Şakirpaşa Airport', 'Adana', 'plane', 'active'),
--- ( 5, 'Harem Bus Terminal', 'istanbul', 'bus', 'active'),
+-- ( 1, 'Ataturk Airport', 'Istanbul', 'plane', 'active'),
+-- ( 2, 'Sabiha Gokcen Airport', 'Istanbul', 'plane', 'active'),
+-- ( 3, 'Esenboga Airport', 'Ankara', 'plane', 'active'),
+-- ( 4, 'Adana Sakirpasa Airport', 'Adana', 'plane', 'active'),
+-- ( 5, 'Harem Bus Terminal', 'Istanbul', 'bus', 'active'),
 -- ( 6, 'Ankara Train Station', 'Ankara', 'train', 'active'),
 -- ( 7, 'Antalya Airport', 'Antalya', 'plane', 'active'),
--- ( 8, 'Dalaman Airport', 'Muğla', 'plane', 'active'),
--- ( 9, 'Söğütlüçeşme Train Station', 'İstanbul', 'train', 'active'),
--- ( 10, 'Çanakkale Bus Terminal', 'Çanakkale', 'bus', 'active'),
+-- ( 8, 'Dalaman Airport', 'Mugla', 'plane', 'active'),
+-- ( 9, 'Sogutlucesme Train Station', 'Istanbul', 'train', 'active'),
+-- ( 10, 'Canakkale Bus Terminal', 'Canakkale', 'bus', 'active'),
 -- ( 11, 'Konya Airport', 'Konya', 'plane', 'active'),
--- ( 12, 'Alsancak Train Station', 'İzmir', 'train', 'active'),
+-- ( 12, 'Alsancak Train Station', 'Izmir', 'train', 'active'),
 -- ( 13, 'Bursa Bus Terminal', 'Bursa', 'bus', 'active'),
--- ( 14, 'Gazipaşa Airport', 'Antalya', 'plane', 'active'),
--- ( 15, 'Haydarpaşa Train Station', 'Istanbul', 'train', 'active'),
+-- ( 14, 'Gazipasa Airport', 'Antalya', 'plane', 'active'),
+-- ( 15, 'Haydarpasa Train Station', 'Istanbul', 'train', 'active'),
 -- ( 16, 'Denizli Bus Terminal', 'Denizli', 'bus', 'active'),
--- ( 17, 'Kemer Train Station', 'Antalya', 'train', 'active');
+-- ( 17, 'Kemer Train Station', 'Antalya', 'train', 'active')
+-- ( 18, 'ASTI', 'ANKARA', 'bus', 'active');
 
 
 CREATE TABLE Travel(
@@ -227,14 +229,16 @@ INSERT INTO Travel (travel_id, travel_company_id, departure_terminal_id, arrival
 (8, 5, 3, 1, '2023-06-01 13:00:00', '2023-06-01 15:00:00', 999.00, 1399.00, 3),
 (9, 5, 3, 4, '2023-08-01 19:00:00', '2023-08-01 21:00:00', 899.00, 1299.00, 4),
 (10, 5, 3, 4, '2023-04-12 19:00:00', '2023-04-12 21:00:00', 899.00, 1299.00, 3),
-(11, 5, 5, 10, '2023-06-25 09:00:00', '2023-06-25 15:00:00', 349.00, NULL, 1),
+(11, 5, 5, 18, '2023-06-06 09:00:00', '2023-06-25 15:00:00', 349.00, NULL, 2),
 (12, 5, 16, 13, '2023-06-25 09:00:00', '2023-06-25 16:00:00', 349.00, NULL, 2),
-(13, 6, 1, 3, '2023-06-01 10:00:00', '2023-06-01 12:00:00', 1199.00, 1699.00, 3),
-(14, 6, 3, 1, '2023-06-01 13:00:00', '2023-06-01 15:00:00', 899.00, 1199.00, 3),
-(15, 6, 3, 4, '2023-08-01 19:00:00', '2023-08-01 21:00:00', 799.00, 1199.00, 4),
-(16, 6, 3, 4, '2023-04-12 19:00:00', '2023-04-12 21:00:00', 799.00, 1199.00, 3),
-(17, 6, 5, 10, '2023-06-25 09:00:00', '2023-06-25 15:00:00', 249.00, NULL, 1),
-(18, 6, 16, 13, '2023-06-25 09:00:00', '2023-06-25 16:00:00', 259.00, NULL, 2);
+(13, 5, 5, 18, '2023-06-25 09:00:00', '2023-06-25 13:00:00', 189.00, NULL, 2),
+(14, 6, 1, 3, '2023-06-01 10:00:00', '2023-06-01 12:00:00', 1199.00, 1699.00, 3),
+(15, 6, 3, 1, '2023-06-01 13:00:00', '2023-06-01 15:00:00', 899.00, 1199.00, 3),
+(16, 6, 3, 4, '2023-08-01 19:00:00', '2023-08-01 21:00:00', 799.00, 1199.00, 4),
+(17, 6, 3, 4, '2023-04-12 19:00:00', '2023-04-12 21:00:00', 799.00, 1199.00, 3),
+(18, 6, 5, 10, '2023-06-25 09:00:00', '2023-06-25 15:00:00', 249.00, NULL, 1),
+(19, 6, 16, 13, '2023-06-25 09:00:00', '2023-06-25 16:00:00', 259.00, NULL, 2),
+(20, 6, 5, 18, '2023-06-06 09:00:00', '2023-06-25 13:00:00', 159.00, NULL, 2);
 
 CREATE TABLE Booking(
 	PNR VARCHAR(20),
