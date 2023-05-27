@@ -30,7 +30,7 @@
       <div class="row justify-content-center">
         <div class="col-md-6">
           <div class="login-box mt-5 rounded">
-            <form>
+            <form action="{{ url_for('login') }}" method="POST"> 
               <div class="mb-3">
                 <label for="email" class="form-label text-start">
                   <h4>Email</h4>
