@@ -16,9 +16,9 @@
     <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
           <ul class="navbar-nav">
-            <a class="navbar-brand" href="#"><strong>şu</strong>bilet.com</a>
+            <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
             <li class="nav-item">
-              <a class="nav-link" href="#">My Travels</a>
+              <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
             </li>
            <li class="nav-item">
               <a class="nav-link" href="#">Balance</a>
@@ -27,27 +27,27 @@
               <a class="nav-link" href="#">Coupons</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Log Out</a>
+              <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
             </li>
           </ul>
         </div>
     </nav>
 
     <div class="container pt-4">
-        <!--This will be handled by a loop from the database of course-->
+        {% for row in user_travels %}
         <div class="card text-white mb-4">
             <div class="card-body">
                 <div class="container-fluid">
                     <div class="row">
                         <div class="col-3">
-                            <h3 class="companyTitle">Lüks Bayburt Seyahat</h3>
+                            <h3 class="companyTitle">{{ row['company_name'] }}</h3>
                         </div>
                         <div class="col">
                             <div class="row text-secondary">
                                 PNR Number:
                             </div>
                             <div class="row">
-                                TR313131
+                                {{ row['PNR'] }}
                             </div>
                         </div>
                         <div class="col">
@@ -55,7 +55,7 @@
                                 Travel Date:
                             </div>
                             <div class="row">
-                                01/01/2023 12.00
+                                {{ row['depart_time'] }}
                             </div>
                         </div>
                         <div class="col">
@@ -63,15 +63,15 @@
                                 Departure:
                             </div>
                             <div class="row">
-                                Ankara AŞTİ
+                                {{ row['departure_terminal_name'] }}
                             </div>
                         </div>
                         <div class="col">
                             <div class="row text-secondary">
-                                Departure:
+                                Destination:
                             </div>
                             <div class="row">
-                                İzmir Otogar
+                                {{ row['arrival_terminal_name'] }}
                             </div>
                         </div>
                         <div class="col-1">
@@ -81,104 +81,7 @@
                 </div>
             </div>
         </div>
-
-        <div class="card text-white mb-4">
-            <div class="card-body">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-3">
-                            <h3 class="companyTitle">Pamukkale</h3>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                PNR Number:
-                            </div>
-                            <div class="row">
-                                TR123456
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                Travel Date:
-                            </div>
-                            <div class="row">
-                                01/01/2023 17.00
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                Departure:
-                            </div>
-                            <div class="row">
-                                Ankara Söğütözü Terminali
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                Departure:
-                            </div>
-                            <div class="row">
-                                İzmir Otogar
-                            </div>
-                        </div>
-                        <div class="col-1">
-                            <button class="btn btn-danger btn-lg">Details</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card text-white mb-4">
-            <div class="card-body">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-3">
-                            <h3 class="companyTitle">Turkish Airlines</h3>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                PNR Number:
-                            </div>
-                            <div class="row">
-                                TR11111111
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                Travel Date:
-                            </div>
-                            <div class="row">
-                                01/01/2023 20.00
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                Departure:
-                            </div>
-                            <div class="row">
-                                Ankara (ESB)
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="row text-secondary">
-                                Departure:
-                            </div>
-                            <div class="row">
-                                İstanbul (SAW)
-                            </div>
-                        </div>
-                        <div class="col-1">
-                            <button class="btn btn-danger btn-lg">Details</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-    
-    </div>
-
+        {% endfor %}
+    </div>    
     
 </body>

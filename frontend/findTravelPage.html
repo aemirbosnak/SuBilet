@@ -51,24 +51,23 @@
                 <h1>Search for a travel</h1>
             </div>
             <div class="card-body">
+
                 <div class="container pt-2">
                     <label for="from-location" class="form-label">From:</label>
                     <select class="form-select" name="from-location" id="from-location">
-                        <option>İzmir</option>
-                        <option>Ankara</option>
-                        <option>İstanbul</option>
-                        <option>Muş</option>
-                    </select> 
+                        {% for city in cities %}
+                        <option>{{ city }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-
+                
                 <div class="container pt-2">
                     <label for="to-location" class="form-label">To:</label>
                     <select class="form-select" name="to-location" id="to-location">
-                    <option>İzmir</option>
-                    <option>Ankara</option>
-                    <option>İstanbul</option>
-                    <option>Muş</option>
-                    </select> 
+                        {% for city in cities %}
+                        <option>{{ city }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 
                 <div class="container pt-4">

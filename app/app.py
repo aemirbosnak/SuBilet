@@ -19,7 +19,7 @@ mysql = MySQL(app)
 
 @app.route('/')
 def home():
-    return render_template('main.html')
+    return main()
 
 @app.route('/login', methods =['GET', 'POST'])
 def login():
@@ -53,16 +53,12 @@ def logout():
         return render_template('tasks.html')
     
     logoutMessage = 'Successfully logged out!'
-    return render_template('main.html', logoutMessage = logoutMessage)
+    return redirect(url_for('main'))
 
 @app.route('/main', methods=['GET', 'POST'])
 def main():
-    if 'loggedin' in session:
-
-        return render_template('main.html')
-    
-    else:
-        return redirect(url_for('main'))
+    #main displays findTravelPage wheter a user is logged in or not
+    return findTravel()
  
 
 @app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/', methods=['GET'])
@@ -91,8 +87,53 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
 
 @app.route('/trav', methods=['GET', 'POST'])
 def listAvailableTravels():
-    return render_template('listAvailableTravels.html')
+    return render_template('listAvailableTravelsPage.html')
+
+@app.route('/findTravel', methods=['GET', 'POST'])
+def findTravel():
+    #get cities from terminal table to show in drop down menu
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    query = "SELECT DISTINCT city FROM Terminal ORDER BY city ASC"
+    cursor.execute(query)
+
+    cities = [row['city'] for row in cursor.fetchall()]
+    is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
+
+    if request.method == 'POST': 
+        vehicle_type = request.form['vehicle_type']
+        departure_city = request.form['from-location']
+        arrival_city = request.form['to-location']
+        departure_date = request.form['departure_date']
+
+        #perform checks
+        if not departure_city or not arrival_city or not departure_date:
+            error_message = "Please select fill in the form."
+            return render_template('main.html', cities=cities, is_logged_in=is_logged_in, error_message=error_message)
+
+        #redirect to listAvailableTravelsPage.html with relevant information
+        return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
+        
+    #main.html is the current design
+    return render_template('main.html', cities=cities, is_logged_in=is_logged_in)
+
+@app.route('/myTravels', methods=['GET', 'POST'])
+def myTravels():
+    id = session.get('userid')
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
+    query = """
+    SELECT Booking.PNR, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
+    FROM Booking
+    JOIN Travel ON Booking.travel_id = Travel.travel_id
+    JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
+    JOIN Terminal AS Terminal2 ON Travel.arrival_terminal_id = Terminal2.terminal_id
+    JOIN Company ON Travel.travel_company_id = Company.id
+    WHERE Booking.traveler_id = %s;
+    """
+    cursor.execute(query, (id,))
+    user_travels = cursor.fetchall()
+
+    return render_template('myTravelsPage.html', user_travels=user_travels)
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
