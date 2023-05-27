@@ -125,17 +125,14 @@
     <script>
       function updateFormAction() {
         var form = document.getElementById('searchForm');
-        // var vehicleType = form.querySelector('input[name=vehicle_type]:checked').value;
-        var vehicleType = "bus";
+        var vehicleType = document.querySelector('input[name=vehicle_type]:checked').value;
         var departureCity = document.getElementById('departs_from').value;
         var arrivalCity = document.getElementById('arrives_to').value;
         var departure_date = document.getElementById('departure_date').value;
-        console.log("helllooo");
         var url = "/travel/" + vehicleType + "/from:" + departureCity + "/to:" + arrivalCity + "/date:" + departure_date;
         window.location.href = url;
         // form.action = url;
         // form.submit();
-        console.log("helllooo2");
       }
     </script>
 

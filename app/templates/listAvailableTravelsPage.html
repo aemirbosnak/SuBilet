@@ -16,7 +16,7 @@
     <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
           <ul class="navbar-nav">
-            <a class="navbar-brand" href="#"><strong>şu</strong>bilet.com</a>
+            <a class="navbar-brand" href="/"><strong>şu</strong>bilet.com</a>
             <li class="nav-item">
               <a class="nav-link" href="#">My Travels</a>
             </li>
@@ -37,10 +37,10 @@
         <div class="row">
             <div class="col-3">
                 <select class="form-select" name="sort-options" id="sort-options">
-                    <option>Time (earliest to latest)</option>
-                    <option>Time (latest to earliest)</option>
-                    <option>Price (low to high)</option>
-                    <option>Price (high to low)</option>
+                    <option value="earliest_to_latest">Time (earliest to latest)</option>
+                    <option value="latest_to_earliest">Time (latest to earliest)</option>
+                    <option value="low_to_high">Price (low to high)</option>
+                    <option value="high_to_low">Price (high to low)</option>
                 </select> 
             </div>
             <div class="col-2">
@@ -48,15 +48,15 @@
             </div>
             <div class="col-2">
                 <!--Replace with actual data from database-->
-                From: İzmir
+                From: {{ departureCity }}
             </div>
             <div class="col-2">
                 <!--Replace with actual data from database-->
-                To: Ankara
+                To: {{ arrivalCity }}
             </div>
             <div class="col-3">
                 <!--Replace with actual data from database-->
-                Date: 29.05.2023
+                Date: {{ departureDate }}
             </div>
         </div>
     </div>
@@ -64,89 +64,43 @@
 
     <div class="container pt-5">
         <!--This will be handled by a loop from the database of course-->
-        <div class="card bg-secondary text-white">
-            <div class="card-body">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-5">
-                            <h1 class="companyTitle">Lüks Bayburt Seyahat</h1>
-                        </div>
-                        <div class="col-5">
-                            <div class="row arrow-container">
-                                <div class="col arrow-text">
-                                    <div>Depart: 13:30</div>
-                                </div>
-                                <div class="col">                        
-                                    <span class="arrow">&rarr;</span>
-                                </div>
-                                <div class="col arrow-text">
-                                    <div>Arrive: 18:30</div>
+        <div>{{ departure_city }}</div>
+        {% if searchedTravels %}
+            {% for singleTravel in searchedTravels %}
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-5">
+                                <h1 class="companyTitle">{{ singleTravel['company_name'] }}</h1>
+                            </div>
+                            <div class="col-5">
+                                <div class="row arrow-container">
+                                    <div class="col arrow-text">
+                                        <div>Depart: {{ singleTravel['depart_time'] }}</div>
+                                    </div>
+                                    <div class="col">                        
+                                        <span class="arrow">&rarr;</span>
+                                    </div>
+                                    <div class="col arrow-text">
+                                        <div>Arrive: {{ singleTravel['arrive_time'] }}</div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-2 col-right">
-                            <button class="btn btn-danger btn-lg">450 ₺</button>
+                            <div class="col-2 col-right">
+                                <button class="btn btn-danger btn-lg">{{ singleTravel['price'] }} ₺</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+            {% endfor %}
+        {% else %}
+            <div>
+                <h3>Unfortunetelly, there is no such travel.</h3>
+            </div>
+        {% endif %}
 
-        <div class="card bg-secondary text-white">
-            <div class="card-body">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-5">
-                            <h1 class="companyTitle">Pamukkale Seyahat</h1>
-                        </div>
-                        <div class="col-5">
-                            <div class="row arrow-container">
-                                <div class="col arrow-text">
-                                    <div>Depart: 14:30</div>
-                                </div>
-                                <div class="col">                        
-                                    <span class="arrow">&rarr;</span>
-                                </div>
-                                <div class="col arrow-text">
-                                    <div>Arrive: 19:30</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-2 col-right">
-                            <button class="btn btn-danger btn-lg">400 ₺</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card bg-secondary text-white">
-            <div class="card-body">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-5">
-                            <h1 class="companyTitle">Varan</h1>
-                        </div>
-                        <div class="col-5">
-                            <div class="row arrow-container">
-                                <div class="col arrow-text">
-                                    <div>Depart: 12:30</div>
-                                </div>
-                                <div class="col">                        
-                                    <span class="arrow">&rarr;</span>
-                                </div>
-                                <div class="col arrow-text">
-                                    <div>Arrive: 20:00</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-2 col-right">
-                            <button class="btn btn-danger btn-lg">500 ₺</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </div>
 
