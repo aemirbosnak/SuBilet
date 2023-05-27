@@ -116,6 +116,25 @@ def findTravel():
     #main.html is the current design
     return render_template('main.html', cities=cities, is_logged_in=is_logged_in)
 
+@app.route('/myTravels', methods=['GET', 'POST'])
+def myTravels():
+    id = session.get('userid')
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    query = """
+    SELECT Booking.PNR, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
+    FROM Booking
+    JOIN Travel ON Booking.travel_id = Travel.travel_id
+    JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
+    JOIN Terminal AS Terminal2 ON Travel.arrival_terminal_id = Terminal2.terminal_id
+    JOIN Company ON Travel.travel_company_id = Company.id
+    WHERE Booking.traveler_id = %s;
+    """
+    cursor.execute(query, (id,))
+    user_travels = cursor.fetchall()
+
+    return render_template('myTravelsPage.html', user_travels=user_travels)
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=True, host='0.0.0.0', port=port)
