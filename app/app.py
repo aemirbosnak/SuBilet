@@ -58,8 +58,8 @@ def logout():
 @app.route('/main', methods=['GET', 'POST'])
 def main():
     if 'loggedin' in session:
-
-        return render_template('main.html')
+        #If logged in the main page is the find travel page
+        return findTravel()
     
     else:
         return redirect(url_for('main'))
@@ -91,8 +91,28 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
 
 @app.route('/trav', methods=['GET', 'POST'])
 def listAvailableTravels():
-    return render_template('listAvailableTravels.html')
-    
+    return render_template('listAvailableTravelsPage.html')
+
+@app.route('/findTravel', methods=['GET', 'POST'])
+def findTravel():
+    #get cities from terminal table to show in drop down menu
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    query = "SELECT DISTINCT city FROM Terminal ORDER BY city ASC"
+    cursor.execute(query)
+
+    cities = [row['city'] for row in cursor.fetchall()]
+
+    if request.method == 'POST': 
+        vehicle_type = request.form['vehicle_type']
+        departure_city = request.form['from-location']
+        arrival_city = request.form['to-location']
+        departure_date = request.form['departure_date']
+
+        #redirect to listAvailableTravelsPage.html with relevant information
+        return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
+        
+    #main.html is the current design
+    return render_template('main.html', cities=cities)
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))

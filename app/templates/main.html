@@ -38,90 +38,100 @@
       </div>
     </nav>
 
-    <div class="container pt-5">
-        <div class="container d-flex justify-content-center">
-          <div
-            class="btn-group btn-group-lg"
-            role="group"
-            aria-label="Basic radio toggle button group"
-          >
-            <input
-              type="radio"
-              class="btn-check"
-              name="vehicle_type"
-              id="btnradio1"
-              autocomplete="off"
-              value="bus"
-              checked
-            />
-            <label class="btn btn-outline-danger" for="btnradio1">Bus</label>
 
-            <input
-              type="radio"
-              class="btn-check"
-              name="vehicle_type"
-              id="btnradio2"
-              autocomplete="off"
-              value="plane"
-            />
-            <label class="btn btn-outline-danger" for="btnradio2">Plane</label>
+    <form action="{{ url_for('findTravel') }}" method="post">
+      <!-- form is needed to send info when button is clicked (for flask) -->
+      <div class="container pt-5">
+          <div class="container d-flex justify-content-center">
+            <div
+              class="btn-group btn-group-lg"
+              role="group"
+              aria-label="Basic radio toggle button group"
+            >
+              <input
+                type="radio"
+                class="btn-check"
+                name="vehicle_type"
+                id="btnradio1"
+                autocomplete="off"
+                value="bus"
+                checked
+              />
+              <label class="btn btn-outline-danger" for="btnradio1">Bus</label>
 
-            <input
-              type="radio"
-              class="btn-check"
-              name="vehicle_type"
-              id="btnradio3"
-              autocomplete="off"
-              value="train"
-            />
-            <label class="btn btn-outline-danger" for="btnradio3">Train</label>
+              <input
+                type="radio"
+                class="btn-check"
+                name="vehicle_type"
+                id="btnradio2"
+                autocomplete="off"
+                value="plane"
+              />
+              <label class="btn btn-outline-danger" for="btnradio2">Plane</label>
+
+              <input
+                type="radio"
+                class="btn-check"
+                name="vehicle_type"
+                id="btnradio3"
+                autocomplete="off"
+                value="train"
+              />
+              <label class="btn btn-outline-danger" for="btnradio3">Train</label>
+            </div>
           </div>
-        </div>
 
-        <br />
-        <div class="card text-white justify-content-center">
-          <div class="card-header text-center">
-            <h1>Search for a travel</h1>
-          </div>
-          <div class="card-body">
+          <br />
+          <div class="card text-white justify-content-center">
+            <div class="card-header text-center">
+              <h1>Search for a travel</h1>
+            </div>
+            <div class="card-body">
+
+              <div class="container pt-2">
+                <label for="from-location" class="form-label">From:</label>
+                <select class="form-select" name="from-location" id="from-location">
+                    {% for city in cities %}
+                    <option>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
             <div class="container pt-2">
-              <label for="departs_from" class="form-label">From:</label>
-              <select
-                class="form-select"
-                name="departs_from"
-                id="departs_from"
-              >
-                <option value="Izmir">İzmir</option>
-                <option value="Ankara" >Ankara</option>
-                <option value="Istanbul" >İstanbul</option>
-                <option value="Mus">Muş</option>
-              </select>
+                <label for="to-location" class="form-label">To:</label>
+                <select class="form-select" name="to-location" id="to-location">
+                    {% for city in cities %}
+                    <option>{{ city }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <div class="container pt-2">
-              <label for="arrives_to" class="form-label">To:</label>
-              <select class="form-select" name="arrives_to" id="arrives_to">
-                <option value="Izmir">İzmir</option>
-                <option value="Ankara" >Ankara</option>
-                <option value="Istanbul" >İstanbul</option>
-                <option value="Mus">Muş</option>
-              </select>
-            </div>
+              <div class="container pt-4">
+                <label for="departure_date">Travel Date:</label>
+                <input type="date" id="departure_date" name="departure_date" />
+              </div>
 
-            <div class="container pt-4">
-              <label for="departure_date">Travel Date:</label>
-              <input type="date" id="departure_date" name="departure_date" />
-            </div>
+              <div class="d-grid pt-4 justify-content-center">
+                <button type="submit" class="btn btn-lg btn-danger">
+                  Find Travel
+                </button>
+              </div>
 
-            <div class="d-grid pt-4 justify-content-center">
-              <button type="button" onclick="updateFormAction()" class="btn btn-lg btn-danger">
-                Find Travel
-              </button>
+              <!-- Look at the below comment for details regarding updateFormAction
+              <div class="d-grid pt-4 justify-content-center">
+                <button type="button" onclick="updateFormAction()" class="btn btn-lg btn-danger">
+                  Find Travel
+                </button>
+              </div>
+              -->
             </div>
           </div>
-        </div>
-    </div>
+      </div>
+    </form>
 
+    <!-- Why javascript code here? 
+        I modified the app.py file to get the necessary information using flask form request
+        not deleting it since I do not know its function but commenting it out for now
     <script>
       function updateFormAction() {
         var form = document.getElementById('searchForm');
@@ -135,6 +145,7 @@
         // form.submit();
       }
     </script>
+    -->
 
 
   </body>
