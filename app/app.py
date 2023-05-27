@@ -19,7 +19,7 @@ mysql = MySQL(app)
 
 @app.route('/')
 def home():
-    return render_template('main.html')
+    return main()
 
 @app.route('/login', methods =['GET', 'POST'])
 def login():
@@ -53,16 +53,12 @@ def logout():
         return render_template('tasks.html')
     
     logoutMessage = 'Successfully logged out!'
-    return render_template('main.html', logoutMessage = logoutMessage)
+    return redirect(url_for('main'))
 
 @app.route('/main', methods=['GET', 'POST'])
 def main():
-    if 'loggedin' in session:
-        #If logged in the main page is the find travel page
-        return findTravel()
-    
-    else:
-        return redirect(url_for('main'))
+    #main displays findTravelPage wheter a user is logged in or not
+    return findTravel()
  
 
 @app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/', methods=['GET'])
