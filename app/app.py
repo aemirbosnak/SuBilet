@@ -101,6 +101,7 @@ def findTravel():
     cursor.execute(query)
 
     cities = [row['city'] for row in cursor.fetchall()]
+    is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
 
     if request.method == 'POST': 
         vehicle_type = request.form['vehicle_type']
@@ -112,7 +113,7 @@ def findTravel():
         return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
         
     #main.html is the current design
-    return render_template('main.html', cities=cities)
+    return render_template('main.html', cities=cities, is_logged_in=is_logged_in)
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
