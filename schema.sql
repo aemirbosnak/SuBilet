@@ -38,9 +38,9 @@ CREATE TABLE Traveler (
 );
 
 INSERT INTO Traveler (id, TCK, name, surname, age, balance) VALUES
-(7, '11111111111', 'traveler1Name', 'traveler1Surname', 18, 0 ),
-(8, '11111111112', 'traveler2Name', 'traveler2Surname', 18, 0 ),
-(9, '11111111113', 'traveler3Name', 'traveler3Surname', 18, 0 );
+(7, '11111111111', 'traveler1Name', 'traveler1Surname', 18, 10000 ),
+(8, '11111111112', 'traveler2Name', 'traveler2Surname', 18,  50000),
+(9, '11111111113', 'traveler3Name', 'traveler3Surname', 18, 8000 );
 
 CREATE TABLE Administrator (
     id INT DEFAULT 0,

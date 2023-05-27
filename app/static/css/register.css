@@ -1,0 +1,35 @@
+/* generalStyle.css */
+
+body {
+  background-color: #edf2f4;
+  color: #000;
+}
+
+.customNavbar{
+  background-color: rgb(201, 31, 31);
+  color: white !important;
+}
+  
+.navbar{
+  background-color: rgb(201, 31, 31);
+  color: white !important;
+}
+  
+.login-box {
+  background-color: #8d99ae;
+  padding: 20px;
+  margin-top: 50px;
+  text-align: center;
+  border-radius: 5px;
+}
+
+
+.btn-primary {
+  background-color: rgb(252, 57, 57);
+  border-color: rgb(252, 57, 57);;
+}
+
+.signup-btn{
+  
+}
+
