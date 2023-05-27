@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS subilet;
-USE subilet;
+CREATE DATABASE IF NOT EXISTS subiletdb;
+USE subiletdb;
 
 CREATE TABLE User (
     id INT AUTO_INCREMENT,
