@@ -16,9 +16,9 @@
     <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
           <ul class="navbar-nav">
-            <a class="navbar-brand" href="/"><strong>şu</strong>bilet.com</a>
+            <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
             <li class="nav-item">
-              <a class="nav-link" href="#">My Travels</a>
+              <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
             </li>
            <li class="nav-item">
               <a class="nav-link" href="#">Balance</a>
@@ -27,7 +27,7 @@
               <a class="nav-link" href="#">Coupons</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Log Out</a>
+              <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
             </li>
           </ul>
         </div>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="generalStyle.css">
+    <link rel="stylesheet" href="couponsPage.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script> 
+    <title>ŞuBilet</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+        <div class="container-fluid">
+          <ul class="navbar-nav">
+            <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
+            </li>
+          <li class="nav-item">
+              <a class="nav-link" href="#">Balance</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('coupons', user_id=user_id) }}">Coupons</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+            </li>
+          </ul>
+        </div>
+    </nav>
+
+    <div class="container-fluid text-white">
+        <div class="row"> <!--Main row-->
+
+            <div class="col"> <!--Left column-->
+
+                <div class="row"> <!-- Left column 1st row -->
+                    <div class="card m-4 infoCard">
+                        <div class="card-header">
+                            <h5 class="card-title"> Available Coupons </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Replace with actual coupons from database -->
+                            <div class="card availableCouponCard p-2 mb-2">
+                                100 ₺ Coupon
+                            </div>
+                            <div class="card availableCouponCard p-2 mb-2">
+                                25 ₺ Coupon
+                            </div>
+                            <div class="card availableCouponCard p-2 mb-2">
+                                50 ₺ Coupon
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row"> <!-- Left column 2nd row -->
+                    <div class="card m-4 infoCard">
+                        <div class="card-header">
+                            <h5 class="card-title"> Past Coupons </h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Replace with actual coupons from database -->
+                            <div class="card unavailableCouponCard p-2 mb-2">
+                                80 ₺ Coupon
+                            </div>
+                            <div class="card unavailableCouponCard p-2 mb-2">
+                                45 ₺ Coupon
+                            </div>
+                            <div class="card unavailableCouponCard p-2 mb-2">
+                                200 ₺ Coupon
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col"> <!-- Right column -->
+                <div class="card m-4 infoCard">
+                   <div class="card-header">
+                        <h5 class="card-title"> Add New Coupon </h5>
+                   </div> 
+                   <div class="card-body">
+                        <label for="couponForm" class="form-label">Enter coupon number</label>
+                        <input class="form-control" id="couponForm" aria-describedby="couponForm">
+                        <div id="couponForm" class="form-text custom-form-text">
+                            Private coupons can only be entered by one user. Don't share your private coupons with others.
+                        </div>
+                        <br/>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-success btn-lg">Add Coupon</button>
+                        </div>
+                   </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>

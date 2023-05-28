@@ -33,7 +33,7 @@
               <a class="nav-link" href="#">Balance</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Coupons</a>
+              <a class="nav-link" href="{{ url_for('coupons', user_id=user_id) }}">Coupons</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
