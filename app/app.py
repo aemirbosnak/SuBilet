@@ -65,6 +65,21 @@ def main():
 def travels(vehicle_type, departure_city, arrival_city, departure_date):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
+    sort_type = 'T.depart_time'
+    sort_in = 'earliest_to_latest'
+
+    if request.method == 'GET' and 'sort_type' in request.args:
+        sort_in = request.args.get('sort_type')
+
+        if sort_in == 'earliest_to_latest':
+            sort_type = 'T.depart_time'
+        elif sort_in == 'latest_to_earliest':
+            sort_type = 'T.depart_time DESC'
+        elif sort_in == 'low_to_high':
+            sort_type = 'T.price'
+        elif sort_in == 'high_to_low':
+            sort_type = 'T.price DESC'
+
     query = """
     SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
     FROM Travel T
@@ -76,13 +91,14 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
     AND Ar.city = %s
     AND DATE(T.depart_time) = %s
     AND V.type = %s
-    """
+    ORDER BY {}
+    """.format(sort_type)
     
     # cursor.execute(query)
     cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
     searchedTravels = cursor.fetchall()
 
-    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date)
+    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
      
 
 @app.route('/trav', methods=['GET', 'POST'])
