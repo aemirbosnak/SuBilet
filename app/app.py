@@ -150,7 +150,30 @@ def myTravels():
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
-    return render_template('couponsPage.html', user_id=user_id)
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Retrieve available coupons for the user
+    query_available = """
+    SELECT SC.coupon_name, SC.sale_rate
+    FROM Sale_Coupon SC
+    INNER JOIN Coupon_Traveler CT ON SC.coupon_id = CT.coupon_id
+    WHERE CT.user_id = %s AND CT.used_status = FALSE
+    """
+    cursor.execute(query_available, (user_id,))
+    available_coupons = cursor.fetchall()
+
+    # Retrieve past coupons for the user
+    query_past = """
+    SELECT SC.coupon_name, SC.sale_rate
+    FROM Sale_Coupon SC
+    INNER JOIN Coupon_Traveler CT ON SC.coupon_id = CT.coupon_id
+    WHERE CT.user_id = %s AND CT.used_status = TRUE
+    """
+    cursor.execute(query_past, (user_id,))
+    past_coupons = cursor.fetchall()
+
+    return render_template('couponsPage.html', user_id=user_id, available_coupons = available_coupons, past_coupons = past_coupons)
+
 
 @app.route('/userProfile/<int:user_id>', methods=['GET', 'POST'])
 def userProfile(user_id): 

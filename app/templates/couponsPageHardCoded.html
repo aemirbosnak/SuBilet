@@ -46,11 +46,16 @@
                             <h5 class="card-title"> Available Coupons </h5>
                         </div>
                         <div class="card-body">
-                            {% for coupon in available_coupons %}
+                            <!-- Replace with actual coupons from database -->
                             <div class="card availableCouponCard p-2 mb-2">
-                                {{ coupon.coupon_name }} ({{ coupon.sale_rate * 100 }}%)
+                                100 ₺ Coupon
                             </div>
-                            {% endfor %}
+                            <div class="card availableCouponCard p-2 mb-2">
+                                25 ₺ Coupon
+                            </div>
+                            <div class="card availableCouponCard p-2 mb-2">
+                                50 ₺ Coupon
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -61,14 +66,20 @@
                             <h5 class="card-title"> Past Coupons </h5>
                         </div>
                         <div class="card-body">
-                            {% for coupon in past_coupons %}
+                            <!-- Replace with actual coupons from database -->
                             <div class="card unavailableCouponCard p-2 mb-2">
-                                {{ coupon.coupon_name }} ({{ coupon.sale_rate * 100 }}%)
+                                80 ₺ Coupon
                             </div>
-                            {% endfor %}
+                            <div class="card unavailableCouponCard p-2 mb-2">
+                                45 ₺ Coupon
+                            </div>
+                            <div class="card unavailableCouponCard p-2 mb-2">
+                                200 ₺ Coupon
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <div class="col"> <!-- Right column -->

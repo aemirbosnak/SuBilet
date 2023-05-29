@@ -129,14 +129,14 @@ CREATE TABLE Coupon_Traveler(
 );
 
 INSERT INTO Coupon_Traveler (coupon_id, user_id, used_status) VALUES
-(1, 7, FALSE),
+(1, 7, TRUE),
 (1, 8, FALSE),
-(1, 9, FALSE),
+(1, 9, TRUE),
 (3, 7, FALSE),
 (5, 8, FALSE),
-(5, 9, FALSE),
+(5, 9, TRUE),
 (6, 7, FALSE),
-(6, 8, FALSE),
+(6, 8, TRUE),
 (6, 9, FALSE);
 
 CREATE TABLE Vehicle_Type(
