@@ -40,6 +40,58 @@ def login():
             message = 'Please enter correct email / password !'
     return render_template('login.html', message = message)
 
+@app.route('/travelerRegister', methods =['GET', 'POST'])
+def travelerRegister():
+    message = ''
+    if request.method == 'POST' and 'email' in request.form and 'password' in request.form and 'passwordRepeat' in request.form and 'phone' in request.form and 'TCK' in request.form and 'name' in request.form and 'surname' in request.form and 'age' in request.form :
+        email = request.form['email']
+        password = request.form['password']
+        passwordRepeat = request.form['passwordRepeat']
+        phone = request.form['phone']
+        TCK = request.form['TCK']
+        name = request.form['name']
+        surname = request.form['surname']
+        age = request.form['age']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        cursor.execute('SELECT * FROM User WHERE email = %s ', (email, ))
+        accountExistWithSameEmail = cursor.fetchone()
+
+        cursor.execute('SELECT * FROM User WHERE phone = %s ', (phone, ))
+        accountExistWithSamePhone = cursor.fetchone()
+
+        cursor.execute('SELECT * FROM Traveler WHERE TCK = %s ', (TCK, ))
+        accountExistWithSameTCK = cursor.fetchone()
+
+        if not email or not password or not phone or not TCK or not name or not surname or not age:
+            message = 'Please fill out the form!'
+        elif accountExistWithSameEmail:
+            message = 'There is already an account with that email!'
+        elif accountExistWithSameTCK:
+            message = 'There is already an account with this TCK!'
+        elif accountExistWithSamePhone:
+            message = 'There is already an account with this phone number!'
+        elif password != passwordRepeat:
+            message = 'Password mismatch. Please enter same password!'
+        elif int(age) < 18:
+            message = 'To register, you must be bigger than 18 years old!'   
+        else:
+            cursor.execute('INSERT INTO User (id, email, password, phone, active) VALUES (NULL, % s, % s, % s, TRUE)', (email, password, phone, ))
+            mysql.connection.commit()
+            # find newly added traveler
+            cursor.execute('SELECT * FROM User WHERE email = %s ', (email, ))
+            newUser = cursor.fetchone()
+            # get the user id and insert this user into Traveler
+            newUserId = newUser['id']
+            cursor.execute('INSERT INTO Traveler (id, TCK, name, surname, age, balance) VALUES (%s, % s, % s, % s, %s, 0)', (newUserId, TCK, name, surname, age, ))
+            mysql.connection.commit()
+            message = 'User successfully created! Please log in.'
+
+    elif request.method == 'POST':
+        message = 'Please fill all the fields!'
+
+    return render_template('travelerRegister.html', message = message)
+
 @app.route('/logout', methods =['GET', 'POST'])
 def logout():
     session.pop('userid', default=None)
