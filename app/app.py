@@ -30,12 +30,10 @@ def login():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM User WHERE email = % s AND password = % s', (email, password, ))
         user = cursor.fetchone()
-        print("I am here")
         #create session
         if user:              
             session['loggedin'] = True
             session['userid'] = user['id']
-            session['email'] = user['email']
             message = 'Logged in successfully!'
             return redirect(url_for('main'))
         else:
@@ -45,12 +43,11 @@ def login():
 @app.route('/logout', methods =['GET', 'POST'])
 def logout():
     session.pop('userid', default=None)
-    session.pop('email', default=None)
     session.pop('loggedin', default=None)
 
     if 'userid' in session or 'username' in session or 'email' in session or 'loggedin' in session:
         logoutMessage = 'User cannot logged out successfully, try again'
-        return render_template('tasks.html')
+        return render_template('main.html')
     
     logoutMessage = 'Successfully logged out!'
     return redirect(url_for('main'))
@@ -93,17 +90,16 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
     AND V.type = %s
     ORDER BY {}
     """.format(sort_type)
+
+    is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
+    user_id = session.get('userid')
     
     # cursor.execute(query)
     cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
     searchedTravels = cursor.fetchall()
 
-    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
-     
+    return render_template('listAvailableTravelsPage.html', is_logged_in=is_logged_in, user_id=user_id, searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
 
-@app.route('/trav', methods=['GET', 'POST'])
-def listAvailableTravels():
-    return render_template('listAvailableTravelsPage.html')
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():
@@ -125,7 +121,7 @@ def findTravel():
         #perform checks
         if not departure_city or not arrival_city or not departure_date:
             error_message = "Please select fill in the form."
-            return render_template('main.html', cities=cities, is_logged_in=is_logged_in, error_message=error_message)
+            return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id =user_id, error_message=error_message)
 
         #redirect to listAvailableTravelsPage.html with relevant information
         return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
@@ -155,6 +151,61 @@ def myTravels():
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
     return render_template('couponsPage.html', user_id=user_id)
+
+@app.route('/userProfile/<int:user_id>', methods=['GET', 'POST'])
+def userProfile(user_id): 
+    if 'userid' in session and 'loggedin' in session:
+        #get user information
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        query = """
+        SELECT id, email, phone, TCK, name, surname, age, balance
+        FROM User U NATURAL JOIN Traveler T
+        WHERE U.id = %s AND U.active = TRUE
+        """
+        cursor.execute(query, (user_id,))
+        userInfo = cursor.fetchone()
+        return render_template('userProfile.html', user_id = user_id, userInfo = userInfo)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+
+@app.route('/updateTravelerProfile/<int:user_id>', methods=['GET', 'POST'])
+def updateTravelerProfile(user_id):
+    if 'userid' in session and 'loggedin' in session:
+        if request.method == 'POST':
+            newEmail = request.form['email']
+            newPhone = request.form['phone']
+            newName = request.form['name']
+            newSurname = request.form['surname']
+            newAge = request.form['age']
+
+            #get user information
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            query = """
+            SELECT id, email, phone, TCK, name, surname, age, balance
+            FROM User U NATURAL JOIN Traveler T
+            WHERE U.id = %s AND U.active = TRUE
+            """
+            cursor.execute(query, (user_id,))
+            userCurrentInfo = cursor.fetchone()
+
+            updateQuery = "UPDATE User SET email = %s, phone = %s WHERE id = %s "
+            cursor.execute(updateQuery, (newEmail, "888 888 88 88", user_id,))
+            
+            if(userCurrentInfo['email'] != newEmail or userCurrentInfo['phone'] != newPhone):
+                updateQuery = "UPDATE User SET email = %s, phone = %s WHERE id = %s "
+                cursor.execute(updateQuery, (newEmail, "888 888 88 88", user_id,))
+
+            if(userCurrentInfo['name'] != newName or userCurrentInfo['surname'] != newSurname or userCurrentInfo['age'] != newAge ):
+                updateQuery = "UPDATE Traveler SET name = %s, surname = %s, age = %s WHERE id = %s"
+                cursor.execute(updateQuery, (newName, newSurname, newAge, user_id,))
+            
+        return redirect(url_for('userProfile', user_id = user_id))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
