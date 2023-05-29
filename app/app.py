@@ -60,7 +60,6 @@ def main():
     #main displays findTravelPage wheter a user is logged in or not
     return findTravel()
  
-
 @app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/', methods=['GET'])
 def travels(vehicle_type, departure_city, arrival_city, departure_date):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -104,10 +103,6 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
     cursor.close()
 
     return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
-     
-    return render_template('listAvailableTravelsPage.html', is_logged_in=is_logged_in, user_id=user_id, searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
-
-
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():
