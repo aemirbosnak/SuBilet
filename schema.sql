@@ -185,25 +185,6 @@ INSERT INTO Terminal (terminal_id, name, city, type, active_status) VALUES
 ( 16, 'Denizli Bus Terminal', 'Denizli', 'bus', 'active'),
 ( 17, 'Kemer Train Station', 'Antalya', 'train', 'active'),
 ( 18, 'ASTI', 'ANKARA', 'bus', 'active');
--- INSERT INTO Terminal (terminal_id, name, city, type, active_status) VALUES
--- ( 1, 'Ataturk Airport', 'Istanbul', 'plane', 'active'),
--- ( 2, 'Sabiha Gokcen Airport', 'Istanbul', 'plane', 'active'),
--- ( 3, 'Esenboga Airport', 'Ankara', 'plane', 'active'),
--- ( 4, 'Adana Sakirpasa Airport', 'Adana', 'plane', 'active'),
--- ( 5, 'Harem Bus Terminal', 'Istanbul', 'bus', 'active'),
--- ( 6, 'Ankara Train Station', 'Ankara', 'train', 'active'),
--- ( 7, 'Antalya Airport', 'Antalya', 'plane', 'active'),
--- ( 8, 'Dalaman Airport', 'Mugla', 'plane', 'active'),
--- ( 9, 'Sogutlucesme Train Station', 'Istanbul', 'train', 'active'),
--- ( 10, 'Canakkale Bus Terminal', 'Canakkale', 'bus', 'active'),
--- ( 11, 'Konya Airport', 'Konya', 'plane', 'active'),
--- ( 12, 'Alsancak Train Station', 'Izmir', 'train', 'active'),
--- ( 13, 'Bursa Bus Terminal', 'Bursa', 'bus', 'active'),
--- ( 14, 'Gazipasa Airport', 'Antalya', 'plane', 'active'),
--- ( 15, 'Haydarpasa Train Station', 'Istanbul', 'train', 'active'),
--- ( 16, 'Denizli Bus Terminal', 'Denizli', 'bus', 'active'),
--- ( 17, 'Kemer Train Station', 'Antalya', 'train', 'active')
--- ( 18, 'ASTI', 'ANKARA', 'bus', 'active');
 
 
 CREATE TABLE Travel(
