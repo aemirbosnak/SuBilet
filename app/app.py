@@ -203,13 +203,7 @@ def userProfile(user_id):
 def updateTravelerProfile(user_id):
     if 'userid' in session and 'loggedin' in session:
         if request.method == 'POST':
-            newEmail = request.form['email']
-            newPhone = request.form['phone']
-            newName = request.form['name']
-            newSurname = request.form['surname']
-            newAge = request.form['age']
-
-            #get user information
+            # Get user information
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             query = """
             SELECT id, email, phone, TCK, name, surname, age, balance
@@ -219,21 +213,34 @@ def updateTravelerProfile(user_id):
             cursor.execute(query, (user_id,))
             userCurrentInfo = cursor.fetchone()
 
-            updateQuery = "UPDATE User SET email = %s, phone = %s WHERE id = %s "
-            cursor.execute(updateQuery, (newEmail, "888 888 88 88", user_id,))
-            
-            if(userCurrentInfo['email'] != newEmail or userCurrentInfo['phone'] != newPhone):
-                updateQuery = "UPDATE User SET email = %s, phone = %s WHERE id = %s "
-                cursor.execute(updateQuery, (newEmail, "888 888 88 88", user_id,))
+            newEmail = request.form['email'] 
+            newPhone = request.form['phone'] 
+            newName = request.form['name'] 
+            newSurname = request.form['surname']
+            newAge = request.form['age']
+            # newEmail = request.form['email'] if 'email' in request.form else userCurrentInfo['email']
+            # newPhone = request.form['phone'] if 'phone' in request.form else userCurrentInfo['phone']
+            # newName = request.form['name'] if 'name' in request.form else userCurrentInfo['name']
+            # newSurname = request.form['surname'] if 'surname' in request.form else userCurrentInfo['surname']
+            # newAge = request.form['age']
+            # newAge = int(newAge) if newAge else userCurrentInfo['age']
 
-            if(userCurrentInfo['name'] != newName or userCurrentInfo['surname'] != newSurname or userCurrentInfo['age'] != newAge ):
+            if (userCurrentInfo['email'] != newEmail or userCurrentInfo['phone'] != newPhone):
+                updateQuery = "UPDATE User SET email = %s, phone = %s WHERE id = %s"
+                cursor.execute(updateQuery, (newEmail, newPhone, user_id,))
+
+            if (userCurrentInfo['name'] != newName or userCurrentInfo['surname'] != newSurname or userCurrentInfo['age'] != newAge):
                 updateQuery = "UPDATE Traveler SET name = %s, surname = %s, age = %s WHERE id = %s"
                 cursor.execute(updateQuery, (newName, newSurname, newAge, user_id,))
-            
-        return redirect(url_for('userProfile', user_id = user_id))
+
+            # Commit the changes to the database
+            mysql.connection.commit()
+
+            return redirect(url_for('userProfile', user_id=user_id))
     else:
         message = 'Session was not valid, please log in!'
-        return render_template('login.html', message = message)
+        return render_template('login.html', message=message)
+
     
 
 if __name__ == "__main__":
