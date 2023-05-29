@@ -40,6 +40,9 @@ def login():
             return redirect(url_for('main'))
         else:
             message = 'Please enter correct email / password !'
+
+    cursor.close()    
+    
     return render_template('login.html', message = message)
 
 @app.route('/logout', methods =['GET', 'POST'])
@@ -98,6 +101,8 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
     cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
     searchedTravels = cursor.fetchall()
 
+    cursor.close()
+
     return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
      
 
@@ -130,6 +135,8 @@ def findTravel():
         #redirect to listAvailableTravelsPage.html with relevant information
         return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
         
+    cursor.close()
+
     #main.html is the current design
     return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id=user_id)
 
@@ -150,11 +157,35 @@ def myTravels():
     cursor.execute(query, (user_id,))
     user_travels = cursor.fetchall()
 
+    cursor.close()
+
     return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
-    return render_template('couponsPage.html', user_id=user_id)
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Retrieve available coupons for the user
+    query_available = """
+    SELECT SC.coupon_name, SC.sale_rate
+    FROM Sale_Coupon SC
+    INNER JOIN Coupon_Traveler CT ON SC.coupon_id = CT.coupon_id
+    WHERE CT.user_id = %s AND CT.used_status = FALSE
+    """
+    cursor.execute(query_available, (user_id,))
+    available_coupons = cursor.fetchall()
+
+    # Retrieve past coupons for the user
+    query_past = """
+    SELECT SC.coupon_name, SC.sale_rate
+    FROM Sale_Coupon SC
+    INNER JOIN Coupon_Traveler CT ON SC.coupon_id = CT.coupon_id
+    WHERE CT.user_id = %s AND CT.used_status = TRUE
+    """
+    cursor.execute(query_past, (user_id,))
+    past_coupons = cursor.fetchall()
+
+    return render_template('couponsPage.html', user_id=user_id, available_coupons=available_coupons, past_coupons=past_coupons)
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
