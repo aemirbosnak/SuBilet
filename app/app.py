@@ -281,6 +281,10 @@ def myTravels():
 
     return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id)
 
+@app.route('/travel/buy/<int:travel_id>/', methods=['GET'])
+def buy_travel(travel_id):
+    return render_template('purchasePage.html')
+
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
