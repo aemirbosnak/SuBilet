@@ -77,18 +77,32 @@
                         <h5 class="card-title"> Add New Coupon </h5>
                    </div> 
                    <div class="card-body">
-                        <label for="couponForm" class="form-label">Enter coupon number</label>
-                        <input class="form-control" id="couponForm" aria-describedby="couponForm">
-                        <div id="couponForm" class="form-text custom-form-text">
-                            Private coupons can only be entered by one user. Don't share your private coupons with others.
-                        </div>
-                        <br/>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-outline-success btn-lg">Add Coupon</button>
-                        </div>
-                   </div>
+                        <form method="POST" action="{{ url_for('coupons', user_id=user_id) }}">
+                            <label for="couponForm" class="form-label">Enter coupon number</label>
+                            <input class="form-control" name="coupon_number" id="couponForm" aria-describedby="couponForm">
+                            <div id="couponForm" class="form-text custom-form-text">
+                                Private coupons can only be entered by one user. Don't share your private coupons with others.
+                            </div>
+                            <br/>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-outline-success btn-lg">Add Coupon</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-danger">
+                        <ul>
+                            {% for message in messages %}
+                                <li>{{ message }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            {% endwith %}
 
         </div>
     </div>
