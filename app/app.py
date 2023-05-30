@@ -30,10 +30,28 @@ def login():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM User WHERE email = % s AND password = % s', (email, password, ))
         user = cursor.fetchone()
+
+        cursor.execute('SELECT * From Traveler WHERE id = %s ', (user['id'],))
+        userTraveler = cursor.fetchone()
+
+        cursor.execute('SELECT * From Company WHERE id = %s ', (user['id'],))
+        userCompany = cursor.fetchone()
+
+        cursor.execute('SELECT * From Administrator WHERE id = %s', (user['id'],))
+        userAdmin = cursor.fetchone()
+
+        if userTraveler:
+            userType = 'traveler'
+        elif userCompany:
+            userType = 'company'
+        elif userAdmin:
+            userType = 'admin'
+
         #create session
         if user:              
             session['loggedin'] = True
             session['userid'] = user['id']
+            session['userType'] = userType
             message = 'Logged in successfully!'
             return redirect(url_for('main'))
         else:
@@ -151,8 +169,9 @@ def companyRegister():
 def logout():
     session.pop('userid', default=None)
     session.pop('loggedin', default=None)
+    session.pop('userType', default=None)
 
-    if 'userid' in session or 'username' in session or 'email' in session or 'loggedin' in session:
+    if 'userid' in session or 'userType' in session or 'loggedin' in session:
         logoutMessage = 'User cannot logged out successfully, try again'
         return render_template('main.html')
     
@@ -234,7 +253,7 @@ def findTravel():
         return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
         
     #main.html is the current design
-    return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id=user_id)
+    return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id=user_id,)
 
 @app.route('/myTravels', methods=['GET', 'POST'])
 def myTravels():
@@ -341,6 +360,47 @@ def updateTravelerProfile(user_id):
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message=message)
+
+##############################
+### COMPANY RELATED ROUTES ###
+##############################
+
+@app.route('/companysAllTravels/<string:upcomingOrPast>', methods = ['GET', 'POST'])
+def companysAllTravels(upcomingOrPast):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        userid = session['userid']
+        if upcomingOrPast == 'upcoming':
+            #get upcoming travels belongs to this company and list
+            query = """
+            SELECT *
+            FROM Company C 
+            JOIN Travel T ON C.id = T.travel_company_id
+            JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+            JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+            JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+            WHERE  C.id = %s AND T.depart_time > %s
+            """
+            cursor.execute(query, (userid, datetime.now()))
+            travelDetailList = cursor.fetchall()
+        elif upcomingOrPast == 'past':
+            #get past travels belongs to the company and list
+            query = """
+            SELECT *
+            FROM Company C 
+            JOIN Travel T ON C.id = T.travel_company_id
+            JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+            JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+            JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+            WHERE  C.id = %s AND T.depart_time < %s
+            """
+            cursor.execute(query, (userid, datetime.now()))
+            travelDetailList = cursor.fetchall()
+
+        return render_template('companysAllTravels.html', travelDetailList = travelDetailList )
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
 
     
 

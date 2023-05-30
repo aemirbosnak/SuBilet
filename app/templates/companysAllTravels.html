@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet"  href="{{ url_for('static', filename='css/generalStyle.css') }}">
+    <link rel="stylesheet"  href="{{ url_for('static', filename='css/companysAllTravels.css') }}">
+    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet'>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script> 
+    <title>ŞuBilet</title>
+</head>
+<body>
+  <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+    <div class="container-fluid">
+      <ul class="navbar-nav">
+        <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Company's All Travels</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Register A Travel</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Company Profile</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+
+    <div class="container-fluid pt-4 pb-4 upperBar">
+        <div class="row">
+            <div class="col-3">
+                <form action="{{ request.path }}" method="get">
+                    <select class="form-select" name="sort_type" id="sort_type">
+                        <option value="earliest_to_latest" {% if sortType == 'earliest_to_latest' %}selected{% endif %}>Time (earliest to latest)</option>
+                        <option value="latest_to_earliest" {% if sortType == 'latest_to_earliest' %}selected{% endif %}>Time (latest to earliest)</option>
+                        <option value="low_to_high" {% if sortType == 'low_to_high' %}selected{% endif %}>Price (low to high)</option>
+                        <option value="high_to_low" {% if sortType == 'high_to_low' %}selected{% endif %}>Price (high to low)</option>
+                    </select>
+
+                   <button type="submit" id="sort-button" class="btn btn-outline-danger" style="display: none;">Sort</button>
+                </form>
+            </div>
+
+            <div class="col-2">
+                <button type="submit" class="btn btn-outline-danger"
+                onclick="document.getElementById('sort-button').click()">Sort</button>
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="container ">
+        <div class="d-flex justify-content-around mt-4 mb-3 ">
+          <div class="flex-fill justify-content-center text-center">
+            <a href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}" class="justify-content-center">
+              <button
+                type="button"
+                class="btn btn-lg w-50 {% if request.path == '/companysAllTravels/upcoming' %} btn-secondary {% else %} btn-danger {% endif %}"
+              >
+                Upcoming Travels
+              </button>
+            </a>
+          </div>
+      
+          <div class=" flex-fill justify-content-center text-center">
+            <a href="{{ url_for('companysAllTravels', upcomingOrPast = 'past') }}" class="justify-content-center">
+              <button
+                type="button"
+                class="btn btn-lg w-50 {% if request.path == '/companysAllTravels/past' %}btn-secondary {% else %} btn-danger {% endif %}"
+              >
+                Past Travels
+              </button>
+            </a>
+          </div>
+        </div>
+    </div>
+      
+    
+
+    <div class="container pt-5 ">
+        {% if travelDetailList %}
+            {% for singleTravel in travelDetailList %}
+                <div class="card bg-secondary text-white">
+                    <div class="card-body">
+                        <div class="container-fluid">
+                            <div class="row">
+                                
+                                <div class="col">
+                                    <div class="row">
+                                        <h6 class=" blockTitle">Departure Terminal</h6>
+                                        <p class="">{{ singleTravel['name'] }}</p>
+                                        <!-- <p class="">{{ singleTravel['Dep.name'] }}</p> -->
+                                        <!-- Since Terminal Dep is first terminal relation that is joined don't use Dep.name-->
+                                    </div>
+                                    <div class="row">
+                                        <h6 class="blockTitle">Departure Time</h6>
+                                        <p class="">{{ singleTravel['depart_time'] }}</p>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <h6 class="blockTitle">Arrival Terminal</h6>
+                                        <p class="">{{ singleTravel['Ar.name'] }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <h6 class="blockTitle">Arrival Time</h6>
+                                        <p class="">{{ singleTravel['arrive_time'] }}</p>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <h6 class="blockTitle">Vehicle Type</h6>
+                                        <p class="">{{ singleTravel['type'] }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <h6 class="blockTitle">Vehicle Model</h6>
+                                        <p class="">{{ singleTravel['model'] }}</p>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <h6 class="blockTitle">Price</h6>
+                                        <p class="">{{ singleTravel['price'] }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <h6 class="blockTitle">Business Price</h6>
+                                        {% if singleTravel['business_price'] %}
+                                            <p class="">{{ singleTravel['business_price'] }} ₺</p>
+                                        {% else %}
+                                            <p>-</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col d-flex flex-column justify-content-around">
+                                    <div class="row mb-2">
+                                        <button class="btn btn-danger">Delete</button>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <button class="btn btn-danger">Edit</button>
+                                    </div>
+                                    <div class="row">
+                                        <button class="btn btn-danger">Detail Purchases</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div>
+                <h3>Unfortunetelly, there is no travel.</h3>
+            </div>
+        {% endif %}
+
+
+    </div>
+
+</body>
