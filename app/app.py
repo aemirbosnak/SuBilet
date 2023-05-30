@@ -57,7 +57,7 @@ def login():
         else:
             message = 'Please enter correct email / password !'
 
-    cursor.close()    
+        cursor.close()
     
     return render_template('login.html', message = message)
 
