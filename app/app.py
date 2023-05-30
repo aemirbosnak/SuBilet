@@ -56,6 +56,9 @@ def login():
             return redirect(url_for('main'))
         else:
             message = 'Please enter correct email / password !'
+
+    cursor.close()    
+    
     return render_template('login.html', message = message)
 
 @app.route('/travelerRegister', methods =['GET', 'POST'])
@@ -183,7 +186,6 @@ def main():
     #main displays findTravelPage wheter a user is logged in or not
     return findTravel()
  
-
 @app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/', methods=['GET'])
 def travels(vehicle_type, departure_city, arrival_city, departure_date):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -224,8 +226,9 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
     cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
     searchedTravels = cursor.fetchall()
 
-    return render_template('listAvailableTravelsPage.html', is_logged_in=is_logged_in, user_id=user_id, searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
+    cursor.close()
 
+    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():
@@ -252,6 +255,8 @@ def findTravel():
         #redirect to listAvailableTravelsPage.html with relevant information
         return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
         
+    cursor.close()
+
     #main.html is the current design
     return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id=user_id,)
 
@@ -271,6 +276,8 @@ def myTravels():
     """
     cursor.execute(query, (user_id,))
     user_travels = cursor.fetchall()
+
+    cursor.close()
 
     return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id)
 
@@ -298,8 +305,7 @@ def coupons(user_id):
     cursor.execute(query_past, (user_id,))
     past_coupons = cursor.fetchall()
 
-    return render_template('couponsPage.html', user_id=user_id, available_coupons = available_coupons, past_coupons = past_coupons)
-
+    return render_template('couponsPage.html', user_id=user_id, available_coupons=available_coupons, past_coupons=past_coupons)
 
 @app.route('/userProfile/<int:user_id>', methods=['GET', 'POST'])
 def userProfile(user_id): 
