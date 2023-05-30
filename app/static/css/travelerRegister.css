@@ -26,10 +26,16 @@ body {
 
 .btn-primary {
   background-color: rgb(252, 57, 57);
-  border-color: rgb(252, 57, 57);;
+  border-color: rgb(252, 57, 57);
 }
 
 .signup-btn{
   
+}
+
+.btn-current{
+  background-color: rgb(187, 183, 183);
+  border-color: rgb(187, 183, 183);
+  color: #000;
 }
 

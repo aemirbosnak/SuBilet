@@ -14,6 +14,10 @@
     />
     <link
       rel="stylesheet"
+      href="{{ url_for('static', filename='css/generalStyle.css') }}"
+    />
+    <link
+      rel="stylesheet"
       href="{{ url_for('static', filename='css/travelerRegister.css') }}"
     />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -25,7 +29,6 @@
         <a class="navbar-brand" href="{{ url_for('main') }}"><h2>ŞuBilet.com</h2></a>
       </div>
     </nav>
-
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-md-9 p-5 rounded-4">
@@ -48,78 +51,83 @@
             </button>
           </div>
 
-          <form class="login-box mt-3 rounded" action="{{ url_for('travelerRegister') }}" method="POST">
+          <form class="login-box mt-3 rounded" action="{{ url_for('companyRegister') }}" method="POST">
               <div class="row mb-4">
                 <div class="col-md-6">
-                  <label for="name" class="form-label text-start">
-                    <h4>Name<span class="text-danger">*</span></h4>
+                  <label for="companyName" class="form-label text-start">
+                    <h4>Company Name<span class="text-danger">*</span></h4>
                   </label>
                   <input
                     type="text"
-                    id="name"
-                    name="name"
+                    id="companyName"
+                    name="companyName"
                     class="form-control"
+                    placeholder="Enter company name"
                   />
                 </div>
                 <div class="col-md-6">
-                  <label for="surname" class="form-label text-start">
-                    <h4>Surname<span class="text-danger">*</span></h4>
+                  <label for="companyEmail" class="form-label text-start">
+                    <h4>Company Official Email<span class="text-danger">*</span></h4>
                   </label>
                   <input
-                    type="text"
-                    id="surname"
-                    name="surname"
+                    type="email"
+                    id="companyEmail"
+                    name="companyEmail"
                     class="form-control"
+                    placeholder="Enter official company email"
                   />
                 </div>
               </div>
 
               <div class="row mb-4">
                 <div class="col-md-6">
-                  <label for="TCK" class="form-label text-start">
-                    <h4>TCK<span class="text-danger">*</span></h4>
+                  <label for="companyPhone" class="form-label text-start">
+                    <h4>Company Official Phone<span class="text-danger">*</span></h4>
                   </label>
                   <input
-                    type="text"
-                    id="TCK"
-                    name="TCK"
+                    type="tel"
+                    id="companyPhone"
+                    name="companyPhone"
                     class="form-control"
+                    placeholder="Enter official company phone number"
                   />
                 </div>
                 <div class="col-md-6">
-                  <label for="phone" class="form-label text-start">
-                    <h4>Phone<span class="text-danger">*</span></h4>
+                  <label for="website" class="form-label text-start">
+                    <h4>Company Official Website<span class="text-danger">*</span></h4>
                   </label>
                   <input
                     type="text"
-                    id="phone"
-                    name="phone"
+                    id="website"
+                    name="website"
                     class="form-control"
+                    placeholder="Enter official company website"
                   />
                 </div>
               </div>
 
               <div class="row mb-4">
                 <div class="col-md-6">
-                  <label for="email" class="form-label text-start">
-                    <h4>Email<span class="text-danger">*</span></h4>
+                  <label for="foundationDate" class="form-label text-start">
+                    <h4>Foundation Date</h4>
                   </label>
                   <input
-                    type="text"
-                    id="email"
-                    name="email"
+                    type="date"
+                    id="foundationDate"
+                    name="foundationDate"
                     class="form-control"
                   />
                 </div>
                 <div class="col-md-6">
-                  <label for="age" class="form-label text-start">
-                    <h4>Age<span class="text-danger">*</span></h4>
+                  <label for="aboutCompany" class="form-label text-start">
+                    <h4>About Company</h4>
                   </label>
                   <input
-                    type="number"
-                    id="age"
-                    name="age"
+                    type="text"
+                    id="aboutCompany"
+                    name="aboutCompany"
                     class="form-control"
+                    placeholder="About"
                   />
                 </div>
               </div>
@@ -134,6 +142,7 @@
                     id="password"
                     name="password"
                     class="form-control"
+                    placeholder="Enter password"
                   />
                 </div>
                 <div class="col-md-6">
@@ -145,6 +154,7 @@
                     id="passwordRepeat"
                     name="passwordRepeat"
                     class="form-control"
+                    placeholder="Repeat password"
                   />
                 </div>
               </div>

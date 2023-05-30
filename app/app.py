@@ -92,6 +92,61 @@ def travelerRegister():
 
     return render_template('travelerRegister.html', message = message)
 
+@app.route('/companyRegister', methods =['GET', 'POST'])
+def companyRegister():
+    message = ''
+    if request.method == 'POST' and 'companyName' in request.form and 'companyEmail' in request.form and 'companyPhone' in request.form and 'website' in request.form and 'password' in request.form and 'passwordRepeat' in request.form:
+        companyName = request.form['companyName']
+        companyEmail = request.form['companyEmail']
+        password = request.form['password']
+        passwordRepeat = request.form['passwordRepeat']
+        companyPhone = request.form['companyPhone']
+        website = request.form['website']
+        foundationDate = request.form['foundationDate']
+        aboutCompany = request.form['aboutCompany']
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        cursor.execute('SELECT * FROM User WHERE email = %s ', (companyEmail, ))
+        accountExistWithSameEmail = cursor.fetchone()
+
+        cursor.execute('SELECT * FROM User WHERE phone = %s ', (companyPhone, ))
+        accountExistWithSamePhone = cursor.fetchone()
+
+        cursor.execute('SELECT * FROM Company WHERE company_name = %s ', (companyName, ))
+        accountExistWithSameName = cursor.fetchone()
+
+        cursor.execute('SELECT * FROM Company WHERE website = %s ', (website, ))
+        accountExistWithSameWebsite = cursor.fetchone()
+
+        if not companyName or not companyEmail or not password or not passwordRepeat or not companyPhone or not website:
+            message = 'Please fill out the required fields!'
+        elif accountExistWithSameEmail:
+            message = 'There is already a company with that email!'
+        elif accountExistWithSameName:
+            message = 'There is already a company with this Name!'
+        elif accountExistWithSamePhone:
+            message = 'There is already a company with this phone number!'
+        elif accountExistWithSameWebsite:
+            message = 'There is already a company with this website!'
+        elif password != passwordRepeat:
+            message = 'Password mismatch. Please enter same password!'   
+        else:
+            cursor.execute('INSERT INTO User (id, email, password, phone, active) VALUES (NULL, % s, % s, % s, TRUE)', (companyEmail, password, companyPhone, ))
+            mysql.connection.commit()
+            # find newly added traveler
+            cursor.execute('SELECT * FROM User WHERE email = %s ', (companyEmail, ))
+            newUser = cursor.fetchone()
+            # get the user id and insert this user into Traveler
+            newCompanyId = newUser['id']
+            cursor.execute('INSERT INTO Company (id,  company_name, website, foundation_date, about, validator_id, validation_date) VALUES (%s, % s, % s, % s, %s, NULL, NULL)', (newCompanyId, companyName, website, foundationDate, aboutCompany, ))
+            mysql.connection.commit()
+            message = 'Comany successfully created! Please wait to be validated.'
+
+    elif request.method == 'POST':
+        message = 'Please fill all the fields!'
+
+    return render_template('companyRegister.html', message = message)
+
 @app.route('/logout', methods =['GET', 'POST'])
 def logout():
     session.pop('userid', default=None)
