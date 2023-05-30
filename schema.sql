@@ -64,7 +64,7 @@ CREATE TABLE Company (
     id INT,
     company_name VARCHAR(256),
     website VARCHAR(256),
-    foundation_date DATE,
+    foundation_date DATE DEFAULT NULL,
     about TEXT DEFAULT NULL,
     validator_id INT DEFAULT NULL,
     validation_date DATETIME DEFAULT NULL,
