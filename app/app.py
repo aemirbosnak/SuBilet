@@ -2,7 +2,7 @@
 import re  
 import os
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 
@@ -304,6 +304,37 @@ def coupons(user_id):
     """
     cursor.execute(query_past, (user_id,))
     past_coupons = cursor.fetchall()
+
+    # Insert new coupon for the user
+    if request.method == 'POST':
+        # Get the coupon number entered by the user
+        coupon_number = request.form['coupon_number']
+
+        # Check if the coupon exists in the Sale_Coupon table
+        query_check_coupon = "SELECT coupon_id FROM Sale_Coupon WHERE coupon_id = %s"
+        cursor.execute(query_check_coupon, (coupon_number,))
+        coupon = cursor.fetchone()
+
+        if coupon:
+            # Check if the coupon is already associated with the user
+            query_check_exists = "SELECT coupon_id FROM Coupon_Traveler WHERE coupon_id = %s AND user_id = %s"
+            cursor.execute(query_check_exists, (coupon_number, user_id))
+            existing_coupon = cursor.fetchone()
+
+            if existing_coupon:
+                # Display an error message if the coupon is already associated with the user
+                flash("Coupon already associated with your account.", "error")
+            else:
+                # Insert the coupon into the Coupon_Traveler table for the user
+                query_insert_coupon = "INSERT INTO Coupon_Traveler (coupon_id, user_id) VALUES (%s, %s)"
+                cursor.execute(query_insert_coupon, (coupon_number, user_id))
+                mysql.connection.commit()
+
+                # Redirect to the same page to display the updated list of available coupons
+                return redirect(url_for('coupons', user_id=user_id))
+        else:
+            # Display an error message if the coupon does not exist
+            flash("Invalid coupon number.", "error")
 
     return render_template('couponsPage.html', user_id=user_id, available_coupons=available_coupons, past_coupons=past_coupons)
 
