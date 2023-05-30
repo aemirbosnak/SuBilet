@@ -64,24 +64,24 @@
                         <div class="card m-4 infoCard">
                             <div class="card-header">
                                 <!-- Replace with actual company name from database--> 
-                                <h5 class="card-title"> Lüks Bayburt Seyahat </h5>
+                                <h5 class="card-title"> {{ travel_details['company_name'] }} </h5>
                             </div>
                             <div class="card-body">
                                 <!-- Replace with actual travel information from database -->
                                 <div class="row">
                                     <div class="col">
                                         <div class="text-lightRed">Departure:</div>
-                                        <div> Bayburt Merkez Otogar </div>        
+                                        <div> {{ travel_details['departure_terminal'] }} </div>        
                                     </div>
                                     <div class="col">
                                         <div class="text-lightRed">Arrival:</div>
-                                        <div> Ankara AŞTİ Otogar</div>        
+                                        <div> {{ travel_details['arrival_terminal'] }} </div>        
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col">
                                         <div class="text-lightRed">Departure Time:</div>
-                                        <div> 20 April 2023 13:30 </div>        
+                                        <div> {{ travel_details['depart_time'] }} </div>        
                                     </div>
                                     <div class="col">
                                         <div class="text-lightRed">Seat:</div>

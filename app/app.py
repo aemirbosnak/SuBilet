@@ -283,7 +283,21 @@ def myTravels():
 
 @app.route('/travel/buy/<int:travel_id>/', methods=['GET'])
 def buy_travel(travel_id):
-    return render_template('purchasePage.html')
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Get travel details
+    query_travel = """
+    SELECT c.company_name, dep.name AS departure_terminal, arr.name AS arrival_terminal, t.depart_time
+    FROM Travel t
+    JOIN Company c ON t.travel_company_id = c.id
+    JOIN Terminal dep ON t.departure_terminal_id = dep.terminal_id
+    JOIN Terminal arr ON t.arrival_terminal_id = arr.terminal_id
+    WHERE t.travel_id = %s;
+    """
+    cursor.execute(query_travel, (travel_id,))
+    travel_details = cursor.fetchone()
+
+    return render_template('purchasePage.html', travel_details=travel_details)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
