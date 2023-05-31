@@ -1,6 +1,7 @@
 
 import re  
 import os
+import random, string
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
@@ -16,6 +17,9 @@ app.config['MYSQL_PASSWORD'] = 'password'
 app.config['MYSQL_DB'] = 'subiletdb'
   
 mysql = MySQL(app)  
+
+#### CONSTANTS ####
+PNR_LENGTH = 8
 
 @app.route('/')
 def home():
@@ -283,6 +287,9 @@ def myTravels():
 
 @app.route('/travel/buy/<int:travel_id>/', methods=['GET'])
 def buy_travel(travel_id):
+    user_id = session.get('userid')
+    is_logged_in = session.get('loggedin', False)
+
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Get travel details
@@ -297,7 +304,37 @@ def buy_travel(travel_id):
     cursor.execute(query_travel, (travel_id,))
     travel_details = cursor.fetchone()
 
-    return render_template('purchasePage.html', travel_details=travel_details)
+    # Get balance
+    query_balance = """
+    SELECT balance
+    FROM Traveler
+    WHERE Traveler.id = %s
+    """
+    cursor.execute(query_balance, (user_id,))
+    balance = cursor.fetchone()
+
+    # Get coupons
+    query_coupons = """
+    SELECT SC.coupon_name, SC.sale_rate
+    FROM Sale_Coupon SC
+    INNER JOIN Coupon_Traveler CT ON SC.coupon_id = CT.coupon_id
+    WHERE CT.user_id = %s AND CT.used_status = FALSE
+    """
+    cursor.execute(query_coupons, (user_id,))
+    coupons = cursor.fetchall()
+
+    ## WHEN TO CREATE AND ADD PNR INTO THE DATABASE ?? ##
+    ## THIS IMPLEMENTATION CREATES A PNR EVERYTIME THE PAGE LOADS #
+    ## => CREATE WHEN THE PAGE LOADS, ADD TO THE DATABASE WHEN THE PURCHASE/RESERVATION HAPPENS
+
+    # Create random PNR number
+    length = PNR_LENGTH;
+    chars = string.ascii_uppercase + string.digits
+    pnr = ''.join(random.choice(chars) for _ in range(length))
+
+    # TODO: Add pnr to the database when reserve or purchase ticket is clicked
+
+    return render_template('purchasePage.html', travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
