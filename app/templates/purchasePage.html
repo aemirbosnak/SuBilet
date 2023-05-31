@@ -109,12 +109,12 @@
                                 <!-- Replace with actual coupons from database -->
                                 {% if is_logged_in and session['userType'] == 'traveler' %}
                                     {% for coupon in coupons %}
-                                        <div class="card availableCouponCard p-2 mb-2">
+                                        <div class="card couponCard p-2 mb-2">
                                             {{ coupon.coupon_name }} ({{ coupon.sale_rate * 100 }}%)
                                         </div>
                                     {% endfor %}
                                 {% else %}
-                                    <div class="card availableCouponCard p-2 mb-2">
+                                    <div class="card couponCard p-2 mb-2">
                                         <!-- need frontend support -->
                                         Log In to See Coupons
                                     </div>

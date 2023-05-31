@@ -376,7 +376,8 @@ def buy_travel(travel_id):
             break
 
     # TODO: Create and add a booking to the database when reserve or purchase ticket is clicked
-
+    # TODO: Add coupon functionalit
+    
     return render_template('purchasePage.html', travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
