@@ -327,10 +327,23 @@ def buy_travel(travel_id):
     ## THIS IMPLEMENTATION CREATES A PNR EVERYTIME THE PAGE LOADS #
     ## => CREATE WHEN THE PAGE LOADS, ADD TO THE DATABASE WHEN THE PURCHASE/RESERVATION HAPPENS
 
-    # Create random PNR number
-    length = PNR_LENGTH;
-    chars = string.ascii_uppercase + string.digits
-    pnr = ''.join(random.choice(chars) for _ in range(length))
+    # Create random valid PNR number
+    while(True):
+        length = PNR_LENGTH;
+        chars = string.ascii_uppercase + string.digits
+        pnr = ''.join(random.choice(chars) for _ in range(length))
+
+        # Check if pnr unique
+        query_pnr_check = """
+        SELECT COUNT(*) AS count
+        FROM Booking 
+        WHERE PNR = %s
+        """
+        cursor.execute(query_pnr_check, (pnr,))
+        result = cursor.fetchone()
+
+        if(result['count'] == 0):
+            break
 
     ## WHEN TO CHECK IF THERE ARE EMPTY SEATS FOR A TRAVEL ##
     ## SHOULD WE EVEN DIRECT TO PURCHASE_PAGE IF THERE ARE NO EMPTY SEATS ##
@@ -358,7 +371,7 @@ def buy_travel(travel_id):
     cursor.execute(query_num_bookings, (travel_id,))
     booked_seats = cursor.fetchall()[0]
 
-    # Generate a random seat number
+    # Generate random valid seat number
     while(True):
         seat_number = random.randint(1, total_seats)
 
@@ -376,8 +389,8 @@ def buy_travel(travel_id):
             break
 
     # TODO: Create and add a booking to the database when reserve or purchase ticket is clicked
-    # TODO: Add coupon functionalit
-    
+    # TODO: Add coupon functionality
+
     return render_template('purchasePage.html', travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
