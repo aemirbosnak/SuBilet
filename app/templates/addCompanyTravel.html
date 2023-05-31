@@ -21,7 +21,7 @@
               <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Company's All Travels</a>
+              <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
@@ -80,8 +80,8 @@
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <label for="dep_terminal">Departure Terminal:</label>
-                            <select class="form-select" id="dep_terminal" name="dep_terminal" > 
+                            <label for="dep_terminal_id">Departure Terminal:</label>
+                            <select class="form-select" id="dep_terminal_id" name="dep_terminal_id" > 
                                 {% if allAvailableTerminals %} 
                                     {% for singleTerminal in allAvailableTerminals %}
                                         <option value="{{ singleTerminal['terminal_id'] }}"> {{ singleTerminal['name'] }} | {{ singleTerminal['city'] }}</option>
@@ -92,8 +92,8 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label for="ar_terminal">Arrival Terminal:</label>
-                            <select class="form-select" id="ar_terminal" name="ar_terminal" >
+                            <label for="ar_terminal_id">Arrival Terminal:</label>
+                            <select class="form-select" id="ar_terminal_id" name="ar_terminal_id" >
                                 {% if allAvailableTerminals %} 
                                     {% for singleTerminal in allAvailableTerminals %}
                                         <option value="{{ singleTerminal['terminal_id'] }}"> {{ singleTerminal['name'] }} | {{ singleTerminal['city'] }}</option>
@@ -122,14 +122,14 @@
                             <input type="text" class="form-control" id="vehic_type" name="vehic_type" placeholder="{{ travelVehicleType.capitalize()  }}" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label for="vehic_model">Vehicle Model:</label>
-                            <select class="form-select" id="vehic_model" name="vehic_model" > 
+                            <label for="vehic_type_id">Vehicle Model:</label>
+                            <select class="form-select" id="vehic_type_id" name="vehic_type_id" > 
                                 {% if allAvailableVehicleTypes %} 
                                     {% for singleVehicType in allAvailableVehicleTypes %}
                                         <option value="{{ singleVehicType['id'] }}"> {{ singleVehicType['model'] }}</option>
                                     {% endfor %}
                                 {% else %}
-                                    <option value="">No available Terminal</option>
+                                    <option value="">No available Vehicle Type</option>
                                 {% endif %}
                             </select>
                         </div>
@@ -151,6 +151,12 @@
                             <button type="submit" class="btn btn-lg btn-danger">Register {{ travelVehicleType.capitalize() }} Travel</button>
                         </div>
                     </div>
+
+                    {% if message %}
+                    <div class="message mt-4">
+                        <p>{{ message }}</p>
+                    </div>
+                    {% endif %}
                 </form>
             </div>
         </div>
