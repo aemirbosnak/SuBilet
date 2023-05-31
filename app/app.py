@@ -613,7 +613,56 @@ def addCompanyTravel(travelVehicleType):
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
 
-    
+@app.route('/aTravelDetails/<int:travelId>', methods = [ 'GET', 'POST'])
+def aTravelDetails(travelId):
+        if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            companyId = session['userid']
+
+            #get travel information
+            #get upcoming travels belongs to this company and list
+            queryGetTravelInfo = """
+            SELECT *
+            FROM Travel T
+            JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+            JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+            JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+            WHERE T.travel_id = %s
+            """
+            cursor.execute(queryGetTravelInfo, (travelId, ))
+            theTravel = cursor.fetchone()
+
+            if( theTravel['travel_company_id'] != companyId ):
+                message= "This travel doesn't belongs to this company. Access Denied!"
+            else:
+                #get details of purchase, person who purchase this travel etc.
+                queryATravelPurchaseDetails= """
+                SELECT *
+                FROM Travel 
+                JOIN Booking ON Booking.travel_id = Travel.travel_id
+                JOIN Purchased ON Purchased.PNR = Booking.PNR
+                JOIN Traveler ON Traveler.id = Booking.traveler_id
+                WHERE Travel.travel_id = %s
+                """
+                cursor.execute(queryATravelPurchaseDetails, (travelId,))
+                aTravelPurchaseDetails = cursor.fetchall()
+
+                #get details of reservations, person who reserved this travel etc.
+                queryATravelReservationDetails= """
+                SELECT *
+                FROM Travel 
+                JOIN Booking ON Booking.travel_id = Travel.travel_id
+                JOIN Reserved ON Reserved.PNR = Booking.PNR
+                JOIN Traveler ON Traveler.id = Booking.traveler_id
+                WHERE Travel.travel_id = %s
+                """
+                cursor.execute(queryATravelReservationDetails, (travelId,))
+                aTravelReservationDetails = cursor.fetchall()
+
+            return render_template('aTravelDetails.html', theTravel = theTravel, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
+        else:
+            message = 'Session is not valid, please log in!'
+            return render_template('login.html', message = message)
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
