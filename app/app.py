@@ -545,8 +545,42 @@ def companysAllTravels(upcomingOrPast):
             """
             cursor.execute(query, (userid, datetime.now()))
             travelDetailList = cursor.fetchall()
-
+        
+        cursor.close()
         return render_template('companysAllTravels.html', travelDetailList = travelDetailList )
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
+
+@app.route('/addCompanyTravel/<string:travelVehicleType>', methods = ['GET', 'POST'])
+def addCompanyTravel(travelVehicleType):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        companyId = session['userid']
+
+        # get available terminals depending on the vehicle type
+        queryAllAvailableTerminals = """
+        SELECT *
+        FROM Terminal
+        WHERE active_status = 'active'AND type = %s
+        ORDER BY city, name
+        """
+        cursor.execute(queryAllAvailableTerminals, (travelVehicleType,))
+        allAvailableTerminals = cursor.fetchall()
+
+        #get all vehicle models and models depending on type
+        queryAllAvailableVehicleTypes = """
+        SELECT *
+        FROM Vehicle_Type
+        WHERE type = %s
+        ORDER BY model
+        """
+        cursor.execute(queryAllAvailableVehicleTypes, (travelVehicleType, ))
+        allAvailableVehicleTypes = cursor.fetchall()
+
+
+        cursor.close()
+        return render_template('addCompanyTravel.html', allAvailableTerminals = allAvailableTerminals, allAvailableVehicleTypes = allAvailableVehicleTypes, travelVehicleType = travelVehicleType )
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
