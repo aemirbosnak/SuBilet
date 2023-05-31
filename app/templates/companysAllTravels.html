@@ -21,7 +21,7 @@
           <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Company's All Travels</a>
+          <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
@@ -143,15 +143,15 @@
                                     </div>
                                 </div>
                                 <div class="col d-flex flex-column justify-content-around">
-                                    <div class="row mb-2">
+                                    <a class="row mb-2 text-decoration-none" href="#">
                                         <button class="btn btn-danger">Delete</button>
-                                    </div>
-                                    <div class="row mb-2">
+                                    </a>
+                                    <a class="row mb-2 text-decoration-none" href="#">
                                         <button class="btn btn-danger">Edit</button>
-                                    </div>
-                                    <div class="row">
-                                        <button class="btn btn-danger">Detail Purchases</button>
-                                    </div>
+                                    </a>
+                                    <a class="row text-decoration-none" href="{{ url_for('aTravelDetails', travelId = singleTravel['travel_id']) }}">
+                                        <button class="btn btn-danger" >Details</button>
+                                    </a>
                                 </div>
                             </div>
                         </div>
