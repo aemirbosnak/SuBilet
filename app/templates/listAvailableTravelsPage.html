@@ -163,7 +163,7 @@
                                 </div>
                             </div>
                             <div class="col-2 col-right">
-                                <button class="btn btn-danger btn-lg">{{ singleTravel['price'] }} ₺</button>
+                              <a href="{{ url_for('buy_travel', travel_id=singleTravel['travel_id']) }}" class="btn btn-danger btn-lg">{{ singleTravel['price'] }} ₺</a>
                             </div>
                         </div>
                     </div>

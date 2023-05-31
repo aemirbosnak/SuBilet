@@ -1,6 +1,7 @@
 
 import re  
 import os
+import random, string
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
@@ -16,6 +17,9 @@ app.config['MYSQL_PASSWORD'] = 'password'
 app.config['MYSQL_DB'] = 'subiletdb'
   
 mysql = MySQL(app)  
+
+#### CONSTANTS ####
+PNR_LENGTH = 8
 
 @app.route('/')
 def home():
@@ -228,7 +232,7 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
 
     cursor.close()
 
-    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in)
+    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():
@@ -280,6 +284,114 @@ def myTravels():
     cursor.close()
 
     return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id)
+
+@app.route('/travel/buy/<int:travel_id>/', methods=['GET'])
+def buy_travel(travel_id):
+    user_id = session.get('userid')
+    is_logged_in = session.get('loggedin', False)
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Get travel details
+    query_travel = """
+    SELECT c.company_name, dep.name AS departure_terminal, arr.name AS arrival_terminal, t.depart_time
+    FROM Travel t
+    JOIN Company c ON t.travel_company_id = c.id
+    JOIN Terminal dep ON t.departure_terminal_id = dep.terminal_id
+    JOIN Terminal arr ON t.arrival_terminal_id = arr.terminal_id
+    WHERE t.travel_id = %s;
+    """
+    cursor.execute(query_travel, (travel_id,))
+    travel_details = cursor.fetchone()
+
+    # Get balance
+    query_balance = """
+    SELECT balance
+    FROM Traveler
+    WHERE Traveler.id = %s
+    """
+    cursor.execute(query_balance, (user_id,))
+    balance = cursor.fetchone()
+
+    # Get coupons
+    query_coupons = """
+    SELECT SC.coupon_name, SC.sale_rate
+    FROM Sale_Coupon SC
+    INNER JOIN Coupon_Traveler CT ON SC.coupon_id = CT.coupon_id
+    WHERE CT.user_id = %s AND CT.used_status = FALSE
+    """
+    cursor.execute(query_coupons, (user_id,))
+    coupons = cursor.fetchall()
+
+    ## WHEN TO CREATE AND ADD PNR INTO THE DATABASE ?? ##
+    ## THIS IMPLEMENTATION CREATES A PNR EVERYTIME THE PAGE LOADS #
+    ## => CREATE WHEN THE PAGE LOADS, ADD TO THE DATABASE WHEN THE PURCHASE/RESERVATION HAPPENS
+
+    # Create random valid PNR number
+    while(True):
+        length = PNR_LENGTH;
+        chars = string.ascii_uppercase + string.digits
+        pnr = ''.join(random.choice(chars) for _ in range(length))
+
+        # Check if pnr unique
+        query_pnr_check = """
+        SELECT COUNT(*) AS count
+        FROM Booking 
+        WHERE PNR = %s
+        """
+        cursor.execute(query_pnr_check, (pnr,))
+        result = cursor.fetchone()
+
+        if(result['count'] == 0):
+            break
+
+    ## WHEN TO CHECK IF THERE ARE EMPTY SEATS FOR A TRAVEL ##
+    ## SHOULD WE EVEN DIRECT TO PURCHASE_PAGE IF THERE ARE NO EMPTY SEATS ##
+
+    ## Check if there are empty seats ##
+    # Get the total seats for the given travel
+    query_seats = """
+    SELECT num_of_seats, vehicle_type_id 
+    FROM Travel 
+    JOIN Vehicle_Type ON Travel.vehicle_type_id = Vehicle_Type.id 
+    WHERE travel_id = %s
+    """
+    cursor.execute(query_seats, (travel_id,))
+    result = cursor.fetchone()
+
+    total_seats = result['num_of_seats']
+    vehicle_type_id = result['vehicle_type_id']
+
+    # Count the number of bookings made for the given travel
+    query_num_bookings = """
+    SELECT COUNT(*) 
+    FROM Booking 
+    WHERE travel_id = %s
+    """
+    cursor.execute(query_num_bookings, (travel_id,))
+    booked_seats = cursor.fetchall()[0]
+
+    # Generate random valid seat number
+    while(True):
+        seat_number = random.randint(1, total_seats)
+
+        # Check if the randomly generated seat number is already booked
+        query_check_seat = """
+        SELECT COUNT(*) AS occupied
+        FROM Booking 
+        WHERE travel_id = %s AND seat_number = %s
+        """
+        cursor.execute(query_check_seat, (travel_id, seat_number))
+        result = cursor.fetchone()
+        seat = result['occupied']
+
+        if(seat == 0):
+            break
+
+    # TODO: Create and add a booking to the database when reserve or purchase ticket is clicked
+    # TODO: Add coupon functionality
+
+    return render_template('purchasePage.html', travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
