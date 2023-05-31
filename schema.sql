@@ -197,7 +197,7 @@ CREATE TABLE Travel(
 	depart_time DATETIME NOT NULL,
 	arrive_time DATETIME NOT NULL,
 	price	 DECIMAL(10,2) NOT NULL,
-	business_price DECIMAL(10,2),
+	business_price DECIMAL(10,2) DEFAULT 0,
 	vehicle_type_id INT,
 	PRIMARY KEY(travel_id),
 	FOREIGN KEY(travel_company_id) REFERENCES Company(id)

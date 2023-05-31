@@ -557,6 +557,7 @@ def addCompanyTravel(travelVehicleType):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+        message = ''
 
         # get available terminals depending on the vehicle type
         queryAllAvailableTerminals = """
@@ -578,9 +579,36 @@ def addCompanyTravel(travelVehicleType):
         cursor.execute(queryAllAvailableVehicleTypes, (travelVehicleType, ))
         allAvailableVehicleTypes = cursor.fetchall()
 
+        if request.method == 'POST':
+            # get values from the request form
+            dep_terminal_id = request.form['dep_terminal_id']
+            ar_terminal_id = request.form['ar_terminal_id']
+            dep_time = request.form['dep_time']
+            ar_time = request.form['ar_time']
+            vehic_type_id = request.form['vehic_type_id']
+            price = request.form['price']
+            business_price = request.form['business_price']
+            
+            # dep_time_converted = datetime.strptime(dep_time, '%Y-%m-%d %H:%M:%S')
+            if not dep_terminal_id or not ar_terminal_id or not dep_time or not ar_time or not vehic_type_id or not price:
+                message = 'Please fill the form!'
+            elif( dep_time < str(datetime.now()) ):
+                message = "You cannot create a travel with a date of departure in the past!"
+            elif( ar_time < dep_time ):
+                message = "You cannot create a travel whose arrival time is smaller then departure time!"
+            else:
+                queryAddTravel = """
+                INSERT INTO Travel (travel_id, travel_company_id, departure_terminal_id, arrival_terminal_id, depart_time, arrive_time, price, business_price, vehicle_type_id)
+                VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(queryAddTravel, (companyId, dep_terminal_id, ar_terminal_id, dep_time, ar_time, price, business_price, vehic_type_id))
+                # Commit the changes to the database
+                mysql.connection.commit()
+                message = 'Travel is added!'
+            
 
         cursor.close()
-        return render_template('addCompanyTravel.html', allAvailableTerminals = allAvailableTerminals, allAvailableVehicleTypes = allAvailableVehicleTypes, travelVehicleType = travelVehicleType )
+        return render_template('addCompanyTravel.html', allAvailableTerminals = allAvailableTerminals, allAvailableVehicleTypes = allAvailableVehicleTypes, travelVehicleType = travelVehicleType, message = message  )
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
