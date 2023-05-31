@@ -332,9 +332,52 @@ def buy_travel(travel_id):
     chars = string.ascii_uppercase + string.digits
     pnr = ''.join(random.choice(chars) for _ in range(length))
 
-    # TODO: Add pnr to the database when reserve or purchase ticket is clicked
+    ## WHEN TO CHECK IF THERE ARE EMPTY SEATS FOR A TRAVEL ##
+    ## SHOULD WE EVEN DIRECT TO PURCHASE_PAGE IF THERE ARE NO EMPTY SEATS ##
 
-    return render_template('purchasePage.html', travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, is_logged_in=is_logged_in, user_id=user_id)
+    ## Check if there are empty seats ##
+    # Get the total seats for the given travel
+    query_seats = """
+    SELECT num_of_seats, vehicle_type_id 
+    FROM Travel 
+    JOIN Vehicle_Type ON Travel.vehicle_type_id = Vehicle_Type.id 
+    WHERE travel_id = %s
+    """
+    cursor.execute(query_seats, (travel_id,))
+    result = cursor.fetchone()
+
+    total_seats = result['num_of_seats']
+    vehicle_type_id = result['vehicle_type_id']
+
+    # Count the number of bookings made for the given travel
+    query_num_bookings = """
+    SELECT COUNT(*) 
+    FROM Booking 
+    WHERE travel_id = %s
+    """
+    cursor.execute(query_num_bookings, (travel_id,))
+    booked_seats = cursor.fetchall()[0]
+
+    # Generate a random seat number
+    while(True):
+        seat_number = random.randint(1, total_seats)
+
+        # Check if the randomly generated seat number is already booked
+        query_check_seat = """
+        SELECT COUNT(*) AS occupied
+        FROM Booking 
+        WHERE travel_id = %s AND seat_number = %s
+        """
+        cursor.execute(query_check_seat, (travel_id, seat_number))
+        result = cursor.fetchone()
+        seat = result['occupied']
+
+        if(seat == 0):
+            break
+
+    # TODO: Create and add a booking to the database when reserve or purchase ticket is clicked
+
+    return render_template('purchasePage.html', travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):
