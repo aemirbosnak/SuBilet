@@ -103,7 +103,7 @@
         <h4> All Purchases For This Travel</h4>
         <hr>
     </div>
-    {% if aTravelPurchaseDetails %}
+    {% if aTravelPurchaseDetails%}
     <div class="container ">
         {% for singlePurchaseDetail in aTravelPurchaseDetails %}
             <div class="card card-person bg-secondary text-white">
@@ -180,7 +180,8 @@
                                     <p class="">{{ singlePurchaseDetail['payment_method'] }}</p>
                                 </div>
                             </div>
-
+                            <!-- If the travel is past travel then company cannot delete or do anything about the purchase -->
+                            {% if theTravel['depart_time'] > current_time %}
                             <div class="col align-items-center">
                                 <a class="row mb-2 text-decoration-none" href="#">
                                     <button class="btn btn-danger">Delete & Refund</button>
@@ -189,7 +190,7 @@
                                     <button class="btn btn-danger">Delete & Give Free Travel </button>
                                 </a>
                             </div>
-                            
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -202,6 +203,8 @@
     </div>
     {% endif %}
 
+    <!-- The reservations for upcoming travels will be shown -->
+    {% if theTravel['depart_time'] > current_time %}
     <div class="container pt-4 ">
         <h4> All Reservations For This Travel</h4>
         <hr>
@@ -269,5 +272,7 @@
         <h5> There is no reservation yet. </h5>
     </div>
     {% endif %}
+    {% endif %}
+
 
 </body>

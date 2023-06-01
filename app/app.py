@@ -649,6 +649,7 @@ def aTravelDetails(travelId):
         if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             companyId = session['userid']
+            aTravelReservationDetails = None   
 
             #get travel information
             queryGetTravelInfo = """
@@ -691,30 +692,33 @@ def aTravelDetails(travelId):
                 cursor.execute(queryATravelPurchaseDetails, (travelId,))
                 aTravelPurchaseDetails = cursor.fetchall()
 
-                #get details of reservations, person who reserved this travel etc.
-                queryATravelReservationDetails= """
-                SELECT
-                Booking.PNR,
-                Booking.seat_number,
-                Booking.seat_type,
-                Reserved.reserved_time,
-                Reserved.purchased_deadline,
-                Traveler.TCK,
-                Traveler.name,
-                Traveler.surname
-                FROM
-                Travel
-                JOIN Booking ON Booking.travel_id = Travel.travel_id
-                JOIN Traveler ON Traveler.id = Booking.traveler_id
-                JOIN Reserved ON Reserved.PNR = Booking.PNR
-                WHERE
-                Travel.travel_id = %s
-                """
-                cursor.execute(queryATravelReservationDetails, (travelId,))
-                aTravelReservationDetails = cursor.fetchall()
+                # Get details of reservations, person who reserved this travel etc.
+                # If a travel is past, no need to get the reservations 
+                if (theTravel['depart_time'] > datetime.now()):
+                    queryATravelReservationDetails= """
+                    SELECT
+                    Booking.PNR,
+                    Booking.seat_number,
+                    Booking.seat_type,
+                    Reserved.reserved_time,
+                    Reserved.purchased_deadline,
+                    Traveler.TCK,
+                    Traveler.name,
+                    Traveler.surname
+                    FROM
+                    Travel
+                    JOIN Booking ON Booking.travel_id = Travel.travel_id
+                    JOIN Traveler ON Traveler.id = Booking.traveler_id
+                    JOIN Reserved ON Reserved.PNR = Booking.PNR
+                    WHERE
+                    Travel.travel_id = %s
+                    """
+                    cursor.execute(queryATravelReservationDetails, (travelId,))
+                    aTravelReservationDetails = cursor.fetchall()
 
             cursor.close()
-            return render_template('aTravelDetails.html', theTravel = theTravel, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
+            current_time = datetime.now()
+            return render_template('aTravelDetails.html', theTravel = theTravel, current_time = current_time, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
         else:
             message = 'Session is not valid, please log in!'
             return render_template('login.html', message = message)
