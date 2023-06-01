@@ -147,7 +147,7 @@
                                     <a class="row mb-2 text-decoration-none" href="#">
                                       <button class="btn btn-danger">Delete</button>
                                     </a>
-                                    <a class="row mb-2 text-decoration-none" href="#">
+                                    <a class="row mb-2 text-decoration-none" href="{{ url_for('editUpcomingTravel', travelId = singleTravel['travel_id']) }}">
                                       <button class="btn btn-danger">Edit</button>
                                     </a>
                                   {% else %}

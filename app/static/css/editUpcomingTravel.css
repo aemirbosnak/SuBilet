@@ -1,0 +1,22 @@
+.card {
+    margin-bottom: 30px; /* Add spacing between cards */
+}
+
+.container-fluid .row{
+    display: flex;
+    align-items: center;
+}
+
+.blockTitle{
+    color: #fcd4d4;
+    font-weight: bold;
+    font-size: 14px;
+    font-family: 'Raleway', sans-serif;
+    text-decoration: underline;
+}
+
+.arrow-container {
+    display: flex;
+    align-items: center;
+}
+
