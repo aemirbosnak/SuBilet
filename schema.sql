@@ -24,7 +24,8 @@ INSERT INTO User (id, email, password, phone, active) VALUES
 (7, 'traveler1@example.com', '123456', '555 444 33 28', TRUE),
 (8, 'traveler2@example.com', '123456', '555 444 33 29', TRUE),
 (9, 'traveler3@example.com', '123456', '555 444 33 30', TRUE),
-(10, 'traveler4@example.com', '123456', '555 444 33 31', TRUE);
+(10, 'traveler4@example.com', '123456', '555 444 33 31', TRUE),
+(11, 'traveler5@example.com', '123456', '555 444 33 32', TRUE);
 
 CREATE TABLE Traveler (
     id INT,
@@ -44,7 +45,8 @@ INSERT INTO Traveler (id, TCK, name, surname, age, balance) VALUES
 (7, '11111111111', 'traveler1Name', 'traveler1Surname', 18, 10000 ),
 (8, '11111111112', 'traveler2Name', 'traveler2Surname', 18,  50000),
 (9, '11111111113', 'traveler3Name', 'traveler3Surname', 18, 8000 ),
-(10, '11111111114', 'traveler4Name', 'traveler4Surname', 21, 8000 );
+(10, '11111111114', 'traveler4Name', 'traveler4Surname', 21, 8000 ),
+(11, '11111111115', 'traveler5Name', 'traveler4Surname', 23, 800);
 
 CREATE TABLE Administrator (
     id INT DEFAULT 0,
