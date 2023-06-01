@@ -35,6 +35,29 @@
                 </ul>
             </div>
         </nav>
+    {% elif session['userType'] == 'company' %}
+        <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('companyProfile', companyId = session['userid']) }}">Company Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+                </li>
+                </ul>
+            </div>
+        </nav>
     {% else %}
         <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
             <div class="container-fluid">
