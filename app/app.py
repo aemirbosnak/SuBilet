@@ -780,14 +780,49 @@ def editUpcomingTravel(travelId):
                     # Get updated travel
                     cursor.execute(queryGetTravelInfo, (travelId, ))
                     theTravel = cursor.fetchone()
-            
-            
 
-           
         return render_template('editUpcomingTravel.html', message = message, isEditable = isEditable, theTravel = theTravel, allAvailableTerminals = allAvailableTerminals, allAvailableVehicleTypes = allAvailableVehicleTypes ) 
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
+    
+
+@app.route('/deleteATravel/<int:travelId>', methods = ['GET', 'POST'])
+def deleteATravel(travelId):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        companyId = session['userid']
+        message = ''
+
+        queryGetTravelInfo = """
+        SELECT *
+        FROM Travel T
+        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+        WHERE T.travel_id = %s
+        """
+        cursor.execute(queryGetTravelInfo, (travelId, ))
+        theTravel = cursor.fetchone()
+        
+        # Check if the travel is of the logged in company
+        if( theTravel['travel_company_id'] != companyId):
+            message = "This travel doesn't belong to your company. You cannot delete!"
+        else:
+            queryDeleteATravel = """
+            DELETE FROM Travel WHERE travel_id = %s
+            """
+            cursor.execute(queryDeleteATravel, (travelId,))
+            mysql.connection.commit()
+            message = "The travel is deleted successfully!"
+
+        flash(message)
+        return redirect(url_for('companysAllTravels', upcomingOrPast = 'upcoming'))
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
