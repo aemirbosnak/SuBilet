@@ -637,24 +637,48 @@ def aTravelDetails(travelId):
             else:
                 #get details of purchase, person who purchase this travel etc.
                 queryATravelPurchaseDetails= """
-                SELECT *
-                FROM Travel 
+                SELECT
+                Booking.PNR,
+                Booking.seat_number,
+                Booking.seat_type,
+                Purchased.purchased_time,
+                Purchased.payment_method,
+                Purchased.price AS amount,
+                Sale_Coupon.coupon_name,
+                Sale_Coupon.sale_rate,
+                Traveler.TCK,
+                Traveler.name,
+                Traveler.surname
+                FROM
+                Travel
                 JOIN Booking ON Booking.travel_id = Travel.travel_id
-                JOIN Purchased ON Purchased.PNR = Booking.PNR
                 JOIN Traveler ON Traveler.id = Booking.traveler_id
-                WHERE Travel.travel_id = %s
+                JOIN Purchased ON Purchased.PNR = Booking.PNR
+                LEFT JOIN Sale_Coupon ON Sale_Coupon.coupon_id = Purchased.coupon_id
+                WHERE
+                Travel.travel_id = %s
                 """
                 cursor.execute(queryATravelPurchaseDetails, (travelId,))
                 aTravelPurchaseDetails = cursor.fetchall()
 
                 #get details of reservations, person who reserved this travel etc.
                 queryATravelReservationDetails= """
-                SELECT *
-                FROM Travel 
+                SELECT
+                Booking.PNR,
+                Booking.seat_number,
+                Booking.seat_type,
+                Reserved.reserved_time,
+                Reserved.purchased_deadline,
+                Traveler.TCK,
+                Traveler.name,
+                Traveler.surname
+                FROM
+                Travel
                 JOIN Booking ON Booking.travel_id = Travel.travel_id
-                JOIN Reserved ON Reserved.PNR = Booking.PNR
                 JOIN Traveler ON Traveler.id = Booking.traveler_id
-                WHERE Travel.travel_id = %s
+                JOIN Reserved ON Reserved.PNR = Booking.PNR
+                WHERE
+                Travel.travel_id = %s
                 """
                 cursor.execute(queryATravelReservationDetails, (travelId,))
                 aTravelReservationDetails = cursor.fetchall()
