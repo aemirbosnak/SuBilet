@@ -163,7 +163,7 @@
                                       <button class="btn btn-danger">Edit</button>
                                     </a>
                                   {% else %}
-                                    <a class="row mb-2 text-decoration-none" href="#">
+                                    <a class="row mb-2 text-decoration-none" href="{{ url_for('commentsOnATravel', travelId = singleTravel['travel_id']) }}">
                                       <button class="btn btn-danger">Comments</button>
                                     </a>
                                   {% endif %}
