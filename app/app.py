@@ -620,7 +620,6 @@ def aTravelDetails(travelId):
             companyId = session['userid']
 
             #get travel information
-            #get upcoming travels belongs to this company and list
             queryGetTravelInfo = """
             SELECT *
             FROM Travel T
@@ -683,10 +682,112 @@ def aTravelDetails(travelId):
                 cursor.execute(queryATravelReservationDetails, (travelId,))
                 aTravelReservationDetails = cursor.fetchall()
 
+            cursor.close()
             return render_template('aTravelDetails.html', theTravel = theTravel, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
         else:
             message = 'Session is not valid, please log in!'
             return render_template('login.html', message = message)
+
+
+@app.route('/editUpcomingTravel/<int:travelId>', methods = [ 'GET', 'POST'])
+def editUpcomingTravel(travelId):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        companyId = session['userid']
+        isEditable = True
+        message = ''
+
+        queryGetTravelInfo = """
+        SELECT *
+        FROM Travel T
+        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+        WHERE T.travel_id = %s
+        """
+        cursor.execute(queryGetTravelInfo, (travelId, ))
+        theTravel = cursor.fetchone()
+        
+        # Check if the travel is of the logged in company
+        if( theTravel['travel_company_id'] != companyId):
+            message = "This travel doesn't belong to your company. You cannot edit!"
+            isEditable = False
+            return render_template('editUpcomingTravel.html', isEditable = isEditable, message = message, theTravel = theTravel) 
+        elif( theTravel['depart_time'] < datetime.now()): # check if the travel is past travel
+            message = "This travel has been made. You cannot edit past travels!"
+            isEditable = False
+            return render_template('editUpcomingTravel.html', isEditable = isEditable, message = message, theTravel = theTravel) 
+        else:
+            isEditable = True
+
+            travelVehicleType = theTravel['type'] # get the vehicle type such as plane, bus or train
+            # get available terminals depending on the vehicle type
+            queryAllAvailableTerminals = """
+            SELECT *
+            FROM Terminal
+            WHERE active_status = 'active'AND type = %s
+            ORDER BY city, name
+            """
+            cursor.execute(queryAllAvailableTerminals, (travelVehicleType,))
+            allAvailableTerminals = cursor.fetchall()
+
+            #get all vehicle models and models depending on type
+            queryAllAvailableVehicleTypes = """
+            SELECT *
+            FROM Vehicle_Type
+            WHERE type = %s
+            ORDER BY model
+            """
+            cursor.execute(queryAllAvailableVehicleTypes, (travelVehicleType, ))
+            allAvailableVehicleTypes = cursor.fetchall()
+        
+            # Get the information from the form 
+            # Update the travel information
+            if request.method == 'POST':
+                # get values from the request form
+                dep_terminal_id = request.form['dep_terminal_id']
+                ar_terminal_id = request.form['ar_terminal_id']
+                dep_time = request.form['dep_time']
+                ar_time = request.form['ar_time']
+                vehic_type_id = request.form['vehic_type_id']
+                price = request.form['price']
+                business_price = request.form['business_price']
+                
+                # dep_time_converted = datetime.strptime(dep_time, '%Y-%m-%d %H:%M:%S')
+                if not dep_terminal_id or not ar_terminal_id or not dep_time or not ar_time or not vehic_type_id or not price:
+                    message = 'Please fill the form!'
+                elif( dep_time < str(datetime.now()) ):
+                    message = "You cannot edit travel so that departure time is before now!"
+                elif( ar_time < dep_time ):
+                    message = "You cannot edit travel so that arrival time is before the departure time!"
+                else:
+                    queryUpdateTravel = """
+                    UPDATE Travel
+                    SET
+                    departure_terminal_id = %s,
+                    arrival_terminal_id = %s,
+                    depart_time = %s,
+                    arrive_time = %s,
+                    price = %s,
+                    business_price = %s, 
+                    vehicle_type_id = %s
+                    WHERE travel_id = %s AND travel_company_id = %s
+                    """
+                    cursor.execute(queryUpdateTravel, ( dep_terminal_id, ar_terminal_id, dep_time, ar_time, price, business_price, vehic_type_id, travelId, companyId,))
+                    # Commit the changes to the database
+                    mysql.connection.commit()
+                    message = 'Travel is successfully updated!' 
+                    # Get updated travel
+                    cursor.execute(queryGetTravelInfo, (travelId, ))
+                    theTravel = cursor.fetchone()
+            
+            
+
+           
+        return render_template('editUpcomingTravel.html', message = message, isEditable = isEditable, theTravel = theTravel, allAvailableTerminals = allAvailableTerminals, allAvailableVehicleTypes = allAvailableVehicleTypes ) 
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
