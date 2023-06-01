@@ -143,14 +143,20 @@
                                     </div>
                                 </div>
                                 <div class="col d-flex flex-column justify-content-around">
+                                  {% if upcomingOrPast == 'upcoming' %}
                                     <a class="row mb-2 text-decoration-none" href="#">
-                                        <button class="btn btn-danger">Delete</button>
+                                      <button class="btn btn-danger">Delete</button>
                                     </a>
                                     <a class="row mb-2 text-decoration-none" href="#">
-                                        <button class="btn btn-danger">Edit</button>
+                                      <button class="btn btn-danger">Edit</button>
                                     </a>
+                                  {% else %}
+                                    <a class="row mb-2 text-decoration-none" href="#">
+                                      <button class="btn btn-danger">Comments</button>
+                                    </a>
+                                  {% endif %}
                                     <a class="row text-decoration-none" href="{{ url_for('aTravelDetails', travelId = singleTravel['travel_id']) }}">
-                                        <button class="btn btn-danger" >Details</button>
+                                      <button class="btn btn-danger" >Details</button>
                                     </a>
                                 </div>
                             </div>

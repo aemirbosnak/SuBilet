@@ -547,7 +547,7 @@ def companysAllTravels(upcomingOrPast):
             travelDetailList = cursor.fetchall()
         
         cursor.close()
-        return render_template('companysAllTravels.html', travelDetailList = travelDetailList )
+        return render_template('companysAllTravels.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast )
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
