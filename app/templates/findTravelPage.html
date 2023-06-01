@@ -19,10 +19,10 @@
               <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Balance</a>
+              <a class="nav-link" href="{{ url_for('balance', user_id=user_id) }}">Balance</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Coupons</a>
+              <a class="nav-link" href="{{ url_for('coupons', user_id=user_id) }}">Coupons</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('userProfile', user_id=user_id) }}">Profile</a>
