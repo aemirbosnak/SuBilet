@@ -285,16 +285,17 @@ def myTravels():
 
     return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id)
 
-@app.route('/travel/buy/<int:travel_id>/', methods=['GET'])
+@app.route('/travel/buy/<int:travel_id>/', methods=['GET', 'POST'])
 def buy_travel(travel_id):
     user_id = session.get('userid')
     is_logged_in = session.get('loggedin', False)
+    selected_coupon_id = None
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Get travel details
     query_travel = """
-    SELECT c.company_name, dep.name AS departure_terminal, arr.name AS arrival_terminal, t.depart_time
+    SELECT c.company_name, dep.name AS departure_terminal, arr.name AS arrival_terminal, t.depart_time, t.price
     FROM Travel t
     JOIN Company c ON t.travel_company_id = c.id
     JOIN Terminal dep ON t.departure_terminal_id = dep.terminal_id
@@ -315,7 +316,7 @@ def buy_travel(travel_id):
 
     # Get coupons
     query_coupons = """
-    SELECT SC.coupon_name, SC.sale_rate
+    SELECT SC.coupon_name, SC.sale_rate, SC.coupon_id
     FROM Sale_Coupon SC
     INNER JOIN Coupon_Traveler CT ON SC.coupon_id = CT.coupon_id
     WHERE CT.user_id = %s AND CT.used_status = FALSE
@@ -390,7 +391,29 @@ def buy_travel(travel_id):
     # TODO: Create and add a booking to the database when reserve or purchase ticket is clicked
     # TODO: Add coupon functionality
 
-    return render_template('purchasePage.html', travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id)
+    if request.method == 'POST':
+        coupon_id = request.form.get('coupon_id')
+        if coupon_id:
+            selected_coupon_id = int(coupon_id)
+            # Fetch the coupon details based on the coupon ID
+            query_coupon = """
+            SELECT sale_rate
+            FROM Sale_Coupon
+            WHERE coupon_id = %s
+            """
+            cursor.execute(query_coupon, (coupon_id,))
+            coupon = cursor.fetchone()
+            sale_rate = coupon['sale_rate']
+            
+            # Calculate the discounted price
+            discounted_price = travel_details['price'] * (1 - sale_rate)
+            
+            # Update the travel_details dictionary with the discounted price
+            travel_details['discounted_price'] = discounted_price
+        else:
+            travel_details['discounted_price'] = travel_details['price']
+
+    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id)
 
 @app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
 def coupons(user_id):

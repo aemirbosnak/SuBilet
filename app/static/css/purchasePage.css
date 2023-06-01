@@ -13,3 +13,8 @@
 .text-lightRed{
     color: rgb(247, 121, 121);
 }
+
+.clickedCoupon {
+    background-color: rgb(60, 148, 122);
+    cursor: pointer;
+}

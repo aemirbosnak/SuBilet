@@ -109,11 +109,21 @@
                                 <!-- Replace with actual coupons from database -->
                                 {% if is_logged_in and session['userType'] == 'traveler' %}
                                     {% for coupon in coupons %}
-                                        <div class="card couponCard p-2 mb-2">
-                                            {{ coupon.coupon_name }} ({{ coupon.sale_rate * 100 }}%)
-                                        </div>
+                                        <form method="post" action="{{ url_for('buy_travel', travel_id=travel_id) }}" class="couponForm">
+                                            <div class="card couponCard p-2 mb-2">
+                                                <button class="btn btn-outline-success btn-lg {% if coupon.coupon_id == selected_coupon_id %}clickedCoupon{% endif %}" type="submit">
+                                                    {{ coupon.coupon_id }} ({{ coupon.sale_rate * 100 }}%)
+                                                </button>
+                                                <input type="hidden" name="coupon_id" value="{{ coupon.coupon_id }}">
+                                            </div>
+                                        </form>
                                     {% endfor %}
-                                {% else %}
+                                    {% if selected_coupon_id %}
+                                        <form method="post" action="{{ url_for('buy_travel', travel_id=travel_id) }}">
+                                            <button class="btn btn-outline-danger" type="submit">Clear Coupon</button>
+                                        </form>
+                                    {% endif %}
+                                {% else %}  
                                     <div class="card couponCard p-2 mb-2">
                                         <!-- need frontend support -->
                                         Log In to See Coupons
@@ -145,6 +155,20 @@
                                     {% else %}
                                         <!-- need frontend support (how should the page look if not logged in)-->
                                         <div style="font-size: 30px;"> Log In to Purchase </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="row">
+                            <div class="col">
+                                <h2> Ticket Price: </h2>
+                            </div>
+                            <div class="col">
+                                <div class="card bg-secondary text-white text-center">
+                                    {% if 'discounted_price' in travel_details %}
+                                        <div style="font-size: 30px;">{{ travel_details['discounted_price'] }} ₺</div>
+                                    {% else %}
+                                        <div style="font-size: 30px;">{{ travel_details['price'] }} ₺</div>
                                     {% endif %}
                                 </div>
                             </div>
