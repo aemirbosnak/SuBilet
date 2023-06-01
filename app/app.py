@@ -360,7 +360,6 @@ def buy_travel(travel_id):
     result = cursor.fetchone()
 
     total_seats = result['num_of_seats']
-    vehicle_type_id = result['vehicle_type_id']
 
     # Count the number of bookings made for the given travel
     query_num_bookings = """

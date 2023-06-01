@@ -94,13 +94,12 @@
 
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
-                    <div class="alert alert-danger">
-                        <ul>
-                            {% for message in messages %}
-                                <li>{{ message }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                    <script>
+                    var messages = {{ messages | safe }};
+                    for (var i=0; i<messages.length; i++) {
+                        alert(messages[i]);
+                    }
+                    </script>
                 {% endif %}
             {% endwith %}
 
