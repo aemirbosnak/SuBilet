@@ -722,6 +722,46 @@ def aTravelDetails(travelId):
         else:
             message = 'Session is not valid, please log in!'
             return render_template('login.html', message = message)
+        
+@app.route('/commentsOnATravel/<int:travelId>', methods = ['GET', 'POST'])
+def commentsOnATravel(travelId):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        companyId = session['userid']
+
+        #get travel information
+        queryGetTravelInfo = """
+        SELECT *
+        FROM Travel T
+        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+        WHERE T.travel_id = %s
+        """
+        cursor.execute(queryGetTravelInfo, (travelId, ))
+        theTravel = cursor.fetchone()
+
+        if( theTravel['travel_company_id'] != companyId ):
+            message= "This travel doesn't belongs to this company. Access Denied!"
+        else:
+            a = 1
+            # Get comments on the travel and information about comment writers
+            # Select statement in the query is written such that 
+            # TCK, age and balance of the travelers are not obtained for privalage
+            queryGetComment = """
+            SELECT R.travel_id, R.traveler_id, R.comment, R.rating, T.name, T.surname
+            FROM Review R
+            JOIN Traveler T ON T.id = R.traveler_id
+            WHERE R.travel_id = %s
+            """
+            cursor.execute(queryGetComment, (travelId,))
+            allComments = cursor.fetchall()
+
+        return render_template('commentsOnATravel.html', theTravel = theTravel, allComments = allComments)
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
+    
 
 
 @app.route('/editUpcomingTravel/<int:travelId>', methods = [ 'GET', 'POST'])
