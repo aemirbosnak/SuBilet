@@ -2,6 +2,10 @@
     margin-bottom: 40px; /* Add spacing between cards */
 }
 
+.card-person {
+    margin-bottom: 30px; /* Add spacing between cards */
+}
+
 .upperBar{
     background-color: rgb(75, 75, 75);
     color: white;

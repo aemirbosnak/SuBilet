@@ -89,7 +89,11 @@
     
     {% if theTravel %}
         <div class="container pt-5 ">
-            <div class="card bg-secondary text-white">
+            <h4>
+                The Travel
+            </h4>
+            <hr>
+            <div class="card bg-dark text-white">
                 <div class="card-body">
                     <div class="container-fluid">
                         <div class="row">
@@ -98,8 +102,6 @@
                                 <div class="row">
                                     <h6 class=" blockTitle">Departure Terminal</h6>
                                     <p class="">{{ theTravel['name'] }}</p>
-                                    <!-- <p class="">{{ theTravel['Dep.name'] }}</p> -->
-                                    <!-- Since Terminal Dep is first terminal relation that is joined don't use Dep.name-->
                                 </div>
                                 <div class="row">
                                     <h6 class="blockTitle">Departure Time</h6>
@@ -147,14 +149,17 @@
         </div>
     {% endif %}
 
+    <div class="container pt-4 ">
+        <h4> All Purchases For This Travel</h4>
+        <hr>
+    </div>
     {% if aTravelPurchaseDetails %}
-    <div class="container pt-5 ">
-        <div> All Purchases For This Travel</div>
+    <div class="container ">
         {% for singlePurchaseDetail in aTravelPurchaseDetails %}
-            <div class="card bg-secondary text-white">
+            <div class="card card-person bg-secondary text-white">
                 <div class="card-body">
                     <div class="container-fluid">
-                        <div class="row">
+                        <div class="row align-items-start">
                             
                             <div class="col">
                                 <div class="row">
@@ -162,50 +167,157 @@
                                     <p class="">{{ singlePurchaseDetail['PNR'] }}</p>
                                 </div>
                                 <div class="row">
-                                    <h6 class="blockTitle">Departure Time</h6>
-                                    <p class="">{{ theTravel['depart_time'] }}</p>
+                                    <h6 class="blockTitle">TCK</h6>
+                                    <p class="">{{ singlePurchaseDetail['TCK'] }}</p>
                                 </div>
                             </div>
+
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Arrival Terminal</h6>
-                                    <p class="">{{ theTravel['Ar.name'] }}</p>
+                                    <h6 class="blockTitle">Name</h6>
+                                    <p class="">{{ singlePurchaseDetail['name'] }}</p>
                                 </div>
                                 <div class="row">
-                                    <h6 class="blockTitle">Arrival Time</h6>
-                                    <p class="">{{ theTravel['arrive_time'] }}</p>
+                                    <h6 class="blockTitle">Surname</h6>
+                                    <p class="">{{ singlePurchaseDetail['surname'] }}</p>
                                 </div>
                             </div>
+
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Vehicle Type</h6>
-                                    <p class="">{{ theTravel['type'] }}</p>
+                                    <h6 class="blockTitle">Seat Number</h6>
+                                    <p class="">{{ singlePurchaseDetail['seat_number'] }}</p>
                                 </div>
                                 <div class="row">
-                                    <h6 class="blockTitle">Vehicle Model</h6>
-                                    <p class="">{{ theTravel['model'] }}</p>
+                                    <h6 class="blockTitle">Seat Type</h6>
+                                    <p class="">{{ singlePurchaseDetail['seat_type'] }}</p>
                                 </div>
                             </div>
+
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Price</h6>
-                                    <p class="">{{ theTravel['price'] }}</p>
+                                    <h6 class="blockTitle">Purchased Time</h6>
+                                    <p class="">{{ singlePurchaseDetail['purchased_time'] }}</p>
                                 </div>
                                 <div class="row">
-                                    <h6 class="blockTitle">Business Price</h6>
-                                    {% if theTravel['business_price'] %}
-                                        <p class="">{{ theTravel['business_price'] }} ₺</p>
+                                    <h6 class="blockTitle">Purchase Amount</h6>
+                                    <p class="">{{ singlePurchaseDetail['amount'] }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="row">
+                                    <h6 class="blockTitle">Coupon Name</h6>
+                                    {% if singlePurchaseDetail['coupon_name'] %}
+                                        <p class="">{{ singlePurchaseDetail['coupon_name'] }}</p>
                                     {% else %}
-                                        <p>-</p>
+                                        <p class="">-</p>
+                                    {% endif %}
+                                </div>
+                                <div class="row">
+                                    <h6 class="blockTitle">Coupon Sale Rate</h6>
+                                    {% if singlePurchaseDetail['coupon_name'] %}
+                                        <p class="">{{ singlePurchaseDetail['sale_rate'] }}</p>
+                                    {% else %}
+                                        <p class="">-</p>
                                     {% endif %}
                                 </div>
                             </div>
+
+                            <div class="col">
+                                <div class="row align-items-start">
+                                    <h6 class="blockTitle">Payment method</h6>
+                                    <p class="">{{ singlePurchaseDetail['payment_method'] }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col align-items-center">
+                                <a class="row mb-2 text-decoration-none" href="#">
+                                    <button class="btn btn-danger">Delete & Refund</button>
+                                </a>
+                                <a class="row mb-2 text-decoration-none" href="#">
+                                    <button class="btn btn-danger">Delete & Give Free Travel </button>
+                                </a>
+                            </div>
+                            
                         </div>
                     </div>
                 </div>
             </div>
         {% endfor %}
     </div>
-{% endif %}
+    {% else %}
+    <div class="container ">
+        <h5> There is no purchase yet. </h5>
+    </div>
+    {% endif %}
+
+    <div class="container pt-4 ">
+        <h4> All Reservations For This Travel</h4>
+        <hr>
+    </div>
+    {% if aTravelReservationDetails %}
+    <div class="container ">
+        {% for singleReservationDetail in aTravelReservationDetails %}
+            <div class="card card-person bg-secondary text-white">
+                <div class="card-body">
+                    <div class="container-fluid">
+                        <div class="row align-items-start">
+                            
+                            <div class="col">
+                                <div class="row">
+                                    <h6 class=" blockTitle">PNR</h6>
+                                    <p class="">{{ singleReservationDetail['PNR'] }}</p>
+                                </div>
+                                <div class="row">
+                                    <h6 class="blockTitle">TCK</h6>
+                                    <p class="">{{ singleReservationDetail['TCK'] }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="row">
+                                    <h6 class="blockTitle">Name</h6>
+                                    <p class="">{{ singleReservationDetail['name'] }}</p>
+                                </div>
+                                <div class="row">
+                                    <h6 class="blockTitle">Surname</h6>
+                                    <p class="">{{ singleReservationDetail['surname'] }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="row">
+                                    <h6 class="blockTitle">Seat Number</h6>
+                                    <p class="">{{ singleReservationDetail['seat_number'] }}</p>
+                                </div>
+                                <div class="row">
+                                    <h6 class="blockTitle">Seat Type</h6>
+                                    <p class="">{{ singleReservationDetail['seat_type'] }}</p>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="row">
+                                    <h6 class="blockTitle">Reservation Time</h6>
+                                    <p class="">{{ singleReservationDetail['reserved_time'] }}</p>
+                                </div>
+                                <div class="row">
+                                    <h6 class="blockTitle">Pruchase Deadline</h6>
+                                    <p class="">{{ singleReservationDetail['purchased_deadline'] }}</p>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="container">
+        <h5> There is no reservation yet. </h5>
+    </div>
+    {% endif %}
 
 </body>
