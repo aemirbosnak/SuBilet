@@ -324,73 +324,6 @@ def buy_travel(travel_id):
     cursor.execute(query_coupons, (user_id,))
     coupons = cursor.fetchall()
 
-    ## WHEN TO CREATE AND ADD PNR INTO THE DATABASE ?? ##
-    ## THIS IMPLEMENTATION CREATES A PNR EVERYTIME THE PAGE LOADS #
-    ## => CREATE WHEN THE PAGE LOADS, ADD TO THE DATABASE WHEN THE PURCHASE/RESERVATION HAPPENS
-
-    # Create random valid PNR number
-    while(True):
-        length = PNR_LENGTH;
-        chars = string.ascii_uppercase + string.digits
-        pnr = ''.join(random.choice(chars) for _ in range(length))
-
-        # Check if pnr unique
-        query_pnr_check = """
-        SELECT COUNT(*) AS count
-        FROM Booking 
-        WHERE PNR = %s
-        """
-        cursor.execute(query_pnr_check, (pnr,))
-        result = cursor.fetchone()
-
-        if(result['count'] == 0):
-            break
-
-    ## WHEN TO CHECK IF THERE ARE EMPTY SEATS FOR A TRAVEL ##
-    ## SHOULD WE EVEN DIRECT TO PURCHASE_PAGE IF THERE ARE NO EMPTY SEATS ##
-
-    ## Check if there are empty seats ##
-    # Get the total seats for the given travel
-    query_seats = """
-    SELECT num_of_seats, vehicle_type_id 
-    FROM Travel 
-    JOIN Vehicle_Type ON Travel.vehicle_type_id = Vehicle_Type.id 
-    WHERE travel_id = %s
-    """
-    cursor.execute(query_seats, (travel_id,))
-    result = cursor.fetchone()
-
-    total_seats = result['num_of_seats']
-
-    # Count the number of bookings made for the given travel
-    query_num_bookings = """
-    SELECT COUNT(*) 
-    FROM Booking 
-    WHERE travel_id = %s
-    """
-    cursor.execute(query_num_bookings, (travel_id,))
-    booked_seats = cursor.fetchall()[0]
-
-    # Generate random valid seat number
-    while(True):
-        seat_number = random.randint(1, total_seats)
-
-        # Check if the randomly generated seat number is already booked
-        query_check_seat = """
-        SELECT COUNT(*) AS occupied
-        FROM Booking 
-        WHERE travel_id = %s AND seat_number = %s
-        """
-        cursor.execute(query_check_seat, (travel_id, seat_number))
-        result = cursor.fetchone()
-        seat = result['occupied']
-
-        if(seat == 0):
-            break
-
-    # TODO: Create and add a booking to the database when reserve or purchase ticket is clicked
-    # TODO: Add coupon functionality
-
     if request.method == 'POST':
         coupon_id = request.form.get('coupon_id')
         if coupon_id:
@@ -489,7 +422,6 @@ def userProfile(user_id):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
     
-
 @app.route('/updateTravelerProfile/<int:user_id>', methods=['GET', 'POST'])
 def updateTravelerProfile(user_id):
     if 'userid' in session and 'loggedin' in session:
@@ -539,7 +471,6 @@ def balance(user_id):
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
-
 
 ##############################
 ### COMPANY RELATED ROUTES ###
@@ -955,6 +886,73 @@ def editCompanyProfile(companyId):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
     
+########################
+### HELPER FUNCTIONS ###
+########################
+
+def generatePNR():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    while(True):
+        length = PNR_LENGTH
+        chars = string.ascii_uppercase + string.digits
+        pnr = ''.join(random.choice(chars) for _ in range(length))
+
+        # Check if pnr unique
+        query_pnr_check = """
+        SELECT COUNT(*) AS count
+        FROM Booking 
+        WHERE PNR = %s
+        """
+        cursor.execute(query_pnr_check, (pnr,))
+        result = cursor.fetchone()
+
+        if(result['count'] == 0):
+            break
+    
+    return pnr
+
+def generateSeatNumber(travel_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    query_seats = """
+    SELECT num_of_seats, vehicle_type_id 
+    FROM Travel 
+    JOIN Vehicle_Type ON Travel.vehicle_type_id = Vehicle_Type.id 
+    WHERE travel_id = %s
+    """
+    cursor.execute(query_seats, (travel_id,))
+    result = cursor.fetchone()
+
+    total_seats = result['num_of_seats']
+
+    # Count the number of bookings made for the given travel
+    query_num_bookings = """
+    SELECT COUNT(*) 
+    FROM Booking 
+    WHERE travel_id = %s
+    """
+    cursor.execute(query_num_bookings, (travel_id,))
+    booked_seats = cursor.fetchall()[0]
+
+    # Generate random valid seat number
+    while(True):
+        seat_number = random.randint(1, total_seats)
+
+        # Check if the randomly generated seat number is already booked
+        query_check_seat = """
+        SELECT COUNT(*) AS occupied
+        FROM Booking 
+        WHERE travel_id = %s AND seat_number = %s
+        """
+        cursor.execute(query_check_seat, (travel_id, seat_number))
+        result = cursor.fetchone()
+        seat = result['occupied']
+
+        if(seat == 0):
+            break
+
+    return seat_number
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
