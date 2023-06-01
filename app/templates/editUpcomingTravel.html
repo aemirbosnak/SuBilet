@@ -106,13 +106,10 @@
     </div>
      {% endif %}
 
-    <div class="container mt-4">
-        <h4> Edit Travel</h4>
-        <hr>  
-    </div>
-
     {% if isEditable %}
     <div class="container">
+        <h4> Edit Travel</h4>
+        <hr>  
         <div class="row justify-content-center">
             <div class="col-md-12 p-2 rounded-4 profileCard ">
                 <form action="{{ url_for('editUpcomingTravel', travelId = theTravel['travel_id'] ) }}" method="POST">

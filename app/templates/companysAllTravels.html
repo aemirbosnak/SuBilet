@@ -86,7 +86,19 @@
         </div>
     </div>
       
-    
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class=flashes>
+      {% for message in messages %}
+        {% if message != 'Session was not valid, please log in!' %}
+          <div class="container mt-4">
+            <h4 class="text-danger">{{ message }}</h4>
+          </div>
+        {% endif %}
+      {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
 
     <div class="container pt-5 ">
         {% if travelDetailList %}
@@ -144,7 +156,7 @@
                                 </div>
                                 <div class="col d-flex flex-column justify-content-around">
                                   {% if upcomingOrPast == 'upcoming' %}
-                                    <a class="row mb-2 text-decoration-none" href="#">
+                                    <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteATravel', travelId = singleTravel['travel_id']) }}">
                                       <button class="btn btn-danger">Delete</button>
                                     </a>
                                     <a class="row mb-2 text-decoration-none" href="{{ url_for('editUpcomingTravel', travelId = singleTravel['travel_id']) }}">
