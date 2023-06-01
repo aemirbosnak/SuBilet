@@ -251,6 +251,18 @@ INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type) VALUES
 ('PLANE111', 1, 43, 7, 'regular'),
 ('PLANE112', 1, 44, 8, 'regular'),
 ('PLANE113', 1, 1, 9, 'business'),
+('PLANE120', 4, 53, 7, 'regular'),
+('PLANE121', 4, 36, 8, 'regular'),
+('PLANE122', 4, 17, 9, 'regular'),
+('PLANE123', 4, 4, 10, 'business'),
+('PLANE130', 10, 6, 7, 'business'),
+('PLANE131', 10, 3, 8, 'business'),
+('PLANE132', 10, 21, 9, 'regular'),
+('PLANE133', 10, 27, 10, 'regular'),
+('PLANE140', 17, 32, 7, 'regular'),
+('PLANE141', 17, 12, 8, 'regular'),
+('PLANE142', 17, 29, 9, 'regular'),
+('PLANE143', 17, 30, 10, 'regular'),
 ('BUS101', 5, 12, 9, 'regular'),
 ('BUS102', 5, 15, 8, 'regular'),
 ('BUS103', 5, 20, 7, 'regular');
@@ -285,6 +297,18 @@ CREATE TABLE Purchased(
 INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) VALUES
 ('PLANE112', '2023-04-01 19:00:00', 'creadit card', 999.00, NULL),
 ('PLANE113', '2023-05-01 21:00:00', 'creadit card', 1399.00, NULL),
+('PLANE120', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
+('PLANE121', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
+('PLANE122', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
+('PLANE123', '2023-05-01 21:00:00', 'creadit card', 1299.00, NULL),
+('PLANE130', '2023-05-01 21:00:00', 'creadit card', 1299.00, NULL),
+('PLANE131', '2023-05-01 21:00:00', 'creadit card', 1299.00, NULL),
+('PLANE132', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
+('PLANE133', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
+('PLANE140', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
+('PLANE141', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
+('PLANE142', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
+('PLANE143', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
 ('BUS102', '2023-05-10 08:00:00', 'creadit card', 299.00, NULL),
 ('BUS103', '2023-05-10 23:30:00', 'creadit card', 299.00, NULL);
 
@@ -323,5 +347,20 @@ CREATE TABLE Review(
 	FOREIGN KEY (traveler_id) REFERENCES Traveler(id)
 		ON DELETE CASCADE		
 );
+
+INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES
+(4, 7, "I had an amazing travel experience with your company! The accommodations were top-notch, the tour guides were knowledgeable, and the itinerary was perfectly planned. Highly recommended!", 5),
+(4, 8, "The travel arrangements were flawless. From the moment we landed, everything was taken care of. The hotels were fantastic, and the sightseeing tours were unforgettable. Thank you for a wonderful trip!", 5),
+(4, 9, "I was blown away by the breathtaking landscapes and cultural experiences during the travel. The local cuisine was incredible, and the activities offered were diverse and exciting. Can't wait to travel with you again!", 5),
+(4, 10, "While the destinations were beautiful, I found the accommodations to be average at best. The hotel rooms were small and lacked basic amenities. Improvement is needed in this area.", 3),
+(10, 7, "The travel itinerary was too rushed, leaving little time to fully appreciate each location. It felt like we were constantly on the move. More time for relaxation and exploration would have been appreciated.", 4),
+(10, 8, "I expected better organization during the trip. There were delays in transportation, and some of the tour guides seemed unprepared. It negatively impacted the overall experience.", 3),
+(10, 9, "The transportation arrangements were a nightmare. We experienced multiple cancellations and delays, resulting in missed connections and a disrupted itinerary. It was a frustrating and exhausting travel experience.", 1),
+(10, 10, "The customer service was appalling. Our concerns and complaints were dismissed or ignored, and there was no effort to rectify the issues we faced. It was a complete lack of professionalism and care.", 2),
+(17, 7, "The pricing of the travel package seemed reasonable at first, but there were many hidden costs along the way. It would have been helpful to have a clearer breakdown of expenses upfront.", 3),
+(17, 8, "The travel exceeded my expectations in every way. The attention to detail, the friendly staff, and the unique experiences made it a truly memorable journey. I would choose your company again without hesitation.", 5),
+(17, 9, "I had an incredible travel experience with your company. The accommodations were top-notch, with comfortable rooms and friendly staff. The itinerary was well-planned, and we got to visit breathtaking destinations.", 4),
+(17, 10, "The pricing of the travel package seemed reasonable at first, but there were many hidden costs along the way. It would have been helpful to have a clearer breakdown of expenses upfront.", 3),
+
 
 
