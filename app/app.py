@@ -531,6 +531,15 @@ def updateTravelerProfile(user_id):
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message=message)
+    
+@app.route('/balance/<int:user_id>', methods = [ 'GET', 'POST'])
+def balance(user_id):
+    if 'userid' in session and 'loggedin' in session:
+        return render_template('balancePage.html', user_id = user_id)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
 
 ##############################
 ### COMPANY RELATED ROUTES ###
