@@ -844,7 +844,64 @@ def deleteATravel(travelId):
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
+@app.route('/companyProfile/<int:companyId>', methods=['GET', 'POST'])
+def companyProfile(companyId): 
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        #get user information
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        query = """
+        SELECT id, email, phone, company_name, website, foundation_date, about
+        FROM User U NATURAL JOIN Company C
+        WHERE U.id = %s AND U.active = TRUE
+        """
+        cursor.execute(query, (companyId,))
+        companyInfo = cursor.fetchone()
+        return render_template('companyProfile.html', companyInfo = companyInfo)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/editCompanyProfile/<int:companyId>', methods=['GET', 'POST'])
+def editCompanyProfile(companyId):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        if request.method == 'POST':
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            # Get company information
+            queryGetCompany = """
+            SELECT id, email, phone, company_name, website, foundation_date, about
+            FROM User U NATURAL JOIN Company C
+            WHERE C.id = %s AND U.active = TRUE
+            """
+            cursor.execute(queryGetCompany, (companyId,))
+            companyCurrentInfo = cursor.fetchone()
 
+            newPhone = request.form['phone'] 
+            newEmail = request.form['email']
+            newName = request.form['companyName'] 
+            newWebsite = request.form['website'] 
+            newFoundationDate = request.form['foundationDate']
+            newAbout = request.form['aboutCompany']
+
+            if (companyCurrentInfo['email'] != newEmail or companyCurrentInfo['phone'] != newPhone):
+                updateQuery = "UPDATE User SET email = %s, phone = %s WHERE id = %s"
+                cursor.execute(updateQuery, (newEmail, newPhone, companyId,))
+
+            if (companyCurrentInfo['company_name'] != newName or companyCurrentInfo['website'] != newWebsite or companyCurrentInfo['foundation_date'] != newFoundationDate or companyCurrentInfo['about'] != newAbout ):
+                updateQuery = "UPDATE Company SET company_name = %s, website = %s, foundation_date = %s, about = %s WHERE id = %s"
+                cursor.execute(updateQuery, (newName, newWebsite, newFoundationDate, newAbout, companyId,))
+
+            # Commit the changes to the database
+            mysql.connection.commit()
+            message = 'Company information updated successfully!'
+            cursor.execute(queryGetCompany, (companyId,))
+            companyCurrentInfo = cursor.fetchone()
+            return render_template('companyProfile.html', message = message, companyInfo = companyCurrentInfo )
+
+        return companyProfile(companyId)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
