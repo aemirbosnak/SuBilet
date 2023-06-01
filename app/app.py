@@ -472,9 +472,36 @@ def updateTravelerProfile():
     
 @app.route('/balance', methods = [ 'GET', 'POST'])
 def balance():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
     if 'userid' in session and 'loggedin' in session:
         user_id = session['userid']
-        return render_template('balancePage.html', user_id = user_id)
+
+        # Get balance
+        query_balance = """
+        SELECT balance
+        FROM Traveler
+        WHERE Traveler.id = %s
+        """
+        cursor.execute(query_balance, (user_id,))
+        balance = cursor.fetchone()
+
+        # Send amount to balance
+        if request.method == 'POST':
+            amount = request.form.get('amount')
+            balance['balance'] += int(amount)
+
+            query_newbalance = """
+            UPDATE Traveler 
+            SET balance = %s
+            WHERE Traveler.id = %s
+            """
+            cursor.execute(query_newbalance, (balance['balance'], user_id))
+            mysql.connection.commit()
+
+            return redirect(url_for('balance'))
+        
+        return render_template('balancePage.html', user_id = user_id, balance=balance)
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
