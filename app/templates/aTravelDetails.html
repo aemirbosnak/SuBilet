@@ -13,79 +13,29 @@
     <title>ŞuBilet</title>
 </head>
 <body>
-  <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
-    <div class="container-fluid">
-      <ul class="navbar-nav">
-        <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Company Profile</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
-        </li>
-      </ul>
-    </div>
-  </nav>
 
-
-    <!-- <div class="container-fluid pt-4 pb-4 upperBar">
-        <div class="row">
-            <div class="col-3">
-                <form action="{{ request.path }}" method="get">
-                    <select class="form-select" name="sort_type" id="sort_type">
-                        <option value="earliest_to_latest" {% if sortType == 'earliest_to_latest' %}selected{% endif %}>Time (earliest to latest)</option>
-                        <option value="latest_to_earliest" {% if sortType == 'latest_to_earliest' %}selected{% endif %}>Time (latest to earliest)</option>
-                        <option value="low_to_high" {% if sortType == 'low_to_high' %}selected{% endif %}>Price (low to high)</option>
-                        <option value="high_to_low" {% if sortType == 'high_to_low' %}selected{% endif %}>Price (high to low)</option>
-                    </select>
-
-                   <button type="submit" id="sort-button" class="btn btn-outline-danger" style="display: none;">Sort</button>
-                </form>
-            </div>
-
-            <div class="col-2">
-                <button type="submit" class="btn btn-outline-danger"
-                onclick="document.getElementById('sort-button').click()">Sort</button>
-            </div>
-
+    <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+        <div class="container-fluid">
+        <ul class="navbar-nav">
+            <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+            <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="#">Company Profile</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+            </li>
+        </ul>
         </div>
-    </div> -->
-    
-    <!-- <div class="container ">
-        <div class="d-flex justify-content-around mt-4 mb-3 ">
-          <div class="flex-fill justify-content-center text-center">
-            <a href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}" class="justify-content-center">
-              <button
-                type="button"
-                class="btn btn-lg w-50 {% if request.path == '/companysAllTravels/upcoming' %} btn-secondary {% else %} btn-danger {% endif %}"
-              >
-                Upcoming Travels
-              </button>
-            </a>
-          </div>
-      
-          <div class=" flex-fill justify-content-center text-center">
-            <a href="{{ url_for('companysAllTravels', upcomingOrPast = 'past') }}" class="justify-content-center">
-              <button
-                type="button"
-                class="btn btn-lg w-50 {% if request.path == '/companysAllTravels/past' %}btn-secondary {% else %} btn-danger {% endif %}"
-              >
-                Past Travels
-              </button>
-            </a>
-          </div>
-        </div>
-    </div> -->
-      
+    </nav> 
     
     {% if theTravel %}
         <div class="container pt-5 ">
