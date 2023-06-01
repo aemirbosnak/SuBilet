@@ -15,24 +15,24 @@
     {% if is_logged_in and session['userType'] == 'traveler' %} 
         <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
             <div class="container-fluid">
-            <ul class="navbar-nav">
-                <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
-                <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('balance', user_id=user_id) }}">Balance</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('coupons', user_id=user_id) }}">Coupons</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('userProfile', user_id=user_id) }}">Profile</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
-                </li>
-            </ul>
+                <ul class="navbar-nav">
+                    <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('balance')}}">Balance</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('coupons') }}">Coupons</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('userProfile') }}">Profile</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+                    </li>
+                </ul>
             </div>
         </nav>
     {% else %}
