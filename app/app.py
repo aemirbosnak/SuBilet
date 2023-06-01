@@ -324,6 +324,9 @@ def buy_travel(travel_id):
     cursor.execute(query_coupons, (user_id,))
     coupons = cursor.fetchall()
 
+    pnr = generatePNR()
+    seat_number = generateSeatNumber(travel_id)
+
     if request.method == 'POST':
         coupon_id = request.form.get('coupon_id')
         if coupon_id:
@@ -348,8 +351,9 @@ def buy_travel(travel_id):
 
     return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id)
 
-@app.route('/coupons/<int:user_id>', methods=['GET', 'POST'])
-def coupons(user_id):
+@app.route('/coupons', methods=['GET', 'POST'])
+def coupons():
+    user_id = ['userid']
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Retrieve available coupons for the user
@@ -405,9 +409,10 @@ def coupons(user_id):
 
     return render_template('couponsPage.html', user_id=user_id, available_coupons=available_coupons, past_coupons=past_coupons)
 
-@app.route('/userProfile/<int:user_id>', methods=['GET', 'POST'])
-def userProfile(user_id): 
+@app.route('/userProfile', methods=['GET', 'POST'])
+def userProfile(): 
     if 'userid' in session and 'loggedin' in session:
+        user_id = session['userid']
         #get user information
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         query = """
@@ -422,9 +427,10 @@ def userProfile(user_id):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
     
-@app.route('/updateTravelerProfile/<int:user_id>', methods=['GET', 'POST'])
-def updateTravelerProfile(user_id):
+@app.route('/updateTravelerProfile/', methods=['GET', 'POST'])
+def updateTravelerProfile():
     if 'userid' in session and 'loggedin' in session:
+        user_id = session['userid']
         if request.method == 'POST':
             # Get user information
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -464,9 +470,10 @@ def updateTravelerProfile(user_id):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message=message)
     
-@app.route('/balance/<int:user_id>', methods = [ 'GET', 'POST'])
-def balance(user_id):
+@app.route('/balance', methods = [ 'GET', 'POST'])
+def balance():
     if 'userid' in session and 'loggedin' in session:
+        user_id = session['userid']
         return render_template('balancePage.html', user_id = user_id)
     else:
         message = 'Session was not valid, please log in!'
