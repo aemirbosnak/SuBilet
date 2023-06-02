@@ -192,9 +192,10 @@
                         <hr/>
                         <div class="row">
                             <div class="d-grid gap-2 col-6 mx-auto">
-                                <button class="btn btn-outline-success btn-lg" type="button">Reserve Ticket</button>
-                                <button class="btn btn-outline-success btn-lg" type="button">Purchase Ticket</button>
-                                
+                                <form method='POST' action="{{ url_for('buy_travel', travel_id=travel_id) }}">
+                                    <button class="btn btn-outline-success btn-lg" type="submit" name="reserve">Reserve Ticket</button>
+                                    <button class="btn btn-outline-success btn-lg" type="submit" name="purchase">Purchase Ticket</button>
+                                </form>
                                 <hr/>
                                 
                                 <form method="POST" action="{{ url_for('buy_travel', travel_id=travel_id) }}">
