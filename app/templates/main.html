@@ -193,37 +193,9 @@
                   Find Travel
                 </button>
               </div>
-
-              <!-- Look at the below comment for details regarding updateFormAction
-              <div class="d-grid pt-4 justify-content-center">
-                <button type="button" onclick="updateFormAction()" class="btn btn-lg btn-danger">
-                  Find Travel
-                </button>
-              </div>
-              -->
             </div>
           </div>
       </div>
     </form>
-
-    <!-- Why javascript code here? 
-        I modified the app.py file to get the necessary information using flask form request
-        not deleting it since I do not know its function but commenting it out for now
-    <script>
-      function updateFormAction() {
-        var form = document.getElementById('searchForm');
-        var vehicleType = document.querySelector('input[name=vehicle_type]:checked').value;
-        var departureCity = document.getElementById('departs_from').value;
-        var arrivalCity = document.getElementById('arrives_to').value;
-        var departure_date = document.getElementById('departure_date').value;
-        var url = "/travel/" + vehicleType + "/from:" + departureCity + "/to:" + arrivalCity + "/date:" + departure_date;
-        window.location.href = url;
-        // form.action = url;
-        // form.submit();
-      }
-    </script>
-    -->
-
-
   </body>
 </html>
