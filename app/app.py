@@ -7,8 +7,6 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 
-##test
-
 app = Flask(__name__, static_folder='static') 
 
 app.secret_key = 'abcdefgh'
