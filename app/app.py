@@ -536,6 +536,23 @@ def companysAllTravels(upcomingOrPast):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         userid = session['userid']
+       
+       
+        sort_type = 'T.depart_time'
+        sort_in = 'earliest_to_latest'
+
+        if request.method == 'GET' and 'sort_type' in request.args:
+            sort_in = request.args.get('sort_type')
+
+            if sort_in == 'earliest_to_latest':
+                sort_type = 'T.depart_time'
+            elif sort_in == 'latest_to_earliest':
+                sort_type = 'T.depart_time DESC'
+            elif sort_in == 'low_to_high':
+                sort_type = 'T.price'
+            elif sort_in == 'high_to_low':
+                sort_type = 'T.price DESC'
+
         if upcomingOrPast == 'upcoming':
             #get upcoming travels belongs to this company and list
             query = """
@@ -546,7 +563,9 @@ def companysAllTravels(upcomingOrPast):
             JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
             JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
             WHERE  C.id = %s AND T.depart_time > %s
-            """
+            ORDER BY {}
+            """.format(sort_type)
+
             cursor.execute(query, (userid, datetime.now()))
             travelDetailList = cursor.fetchall()
         elif upcomingOrPast == 'past':
@@ -559,12 +578,13 @@ def companysAllTravels(upcomingOrPast):
             JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
             JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
             WHERE  C.id = %s AND T.depart_time < %s
-            """
+            ORDER BY {}
+            """.format(sort_type)
             cursor.execute(query, (userid, datetime.now()))
             travelDetailList = cursor.fetchall()
         
         cursor.close()
-        return render_template('companysAllTravels.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast )
+        return render_template('companysAllTravels.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast, sort_type = sort_in )
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)

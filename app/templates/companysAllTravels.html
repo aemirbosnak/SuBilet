@@ -42,10 +42,10 @@
             <div class="col-3">
                 <form action="{{ request.path }}" method="get">
                     <select class="form-select" name="sort_type" id="sort_type">
-                        <option value="earliest_to_latest" {% if sortType == 'earliest_to_latest' %}selected{% endif %}>Time (earliest to latest)</option>
-                        <option value="latest_to_earliest" {% if sortType == 'latest_to_earliest' %}selected{% endif %}>Time (latest to earliest)</option>
-                        <option value="low_to_high" {% if sortType == 'low_to_high' %}selected{% endif %}>Price (low to high)</option>
-                        <option value="high_to_low" {% if sortType == 'high_to_low' %}selected{% endif %}>Price (high to low)</option>
+                        <option value="earliest_to_latest" {% if sort_type == 'earliest_to_latest' %}selected{% endif %}>Time (earliest to latest)</option>
+                        <option value="latest_to_earliest" {% if sort_type == 'latest_to_earliest' %}selected{% endif %}>Time (latest to earliest)</option>
+                        <option value="low_to_high" {% if sort_type == 'low_to_high' %}selected{% endif %}>Price (low to high)</option>
+                        <option value="high_to_low" {% if sort_type == 'high_to_low' %}selected{% endif %}>Price (high to low)</option>
                     </select>
 
                    <button type="submit" id="sort-button" class="btn btn-outline-danger" style="display: none;">Sort</button>
