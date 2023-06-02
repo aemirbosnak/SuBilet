@@ -1156,10 +1156,91 @@ def deleteAndRefundAPurchase(PNRToBeDeleted):
             mysql.connection.commit()
             message = message + ' Paid amount for the travel with the ' + PNRToBeDeleted + ' PNR is refunded to the traveler.'
         else:
-            message = "This PNR doesn't belongs to one of your travels, so you cannot delete corresponding booking!"
+            message = "This PNR doesn't belong to one of your travels, so you cannot delete corresponding booking!"
         
         flash(message)
         return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/deleteAndGiveFreeTravel/<string:PNRToBeDeleted>')
+def deleteAndGiveFreeTravel(PNRToBeDeleted):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        companyId = session['userid']
+
+        # Get user TCK, name, surname, travel_id which PNR belongs to, seat number, seat type, arrival and departure informations
+        queryGetCurrentInfo = """
+        SELECT 
+        T.TCK, 
+        T.name AS traveler_name, 
+        T.surname AS traveler_surname, 
+        B.travel_id, 
+        B.seat_number, 
+        B.seat_type, 
+        Dep.city AS dep_ter_city, 
+        Dep.name AS dep_ter_name, 
+        Ar.city AS ar_ter_city,
+        Ar.name AS ar_ter_name,
+        TL.depart_time,
+        TL.arrive_time
+        FROM Traveler T
+        JOIN Booking B ON T.id = B.traveler_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        JOIN Travel TL ON TL.travel_id = B.travel_id
+        JOIN Terminal Dep ON Dep.terminal_id = TL.departure_terminal_id
+        JOIN Terminal Ar ON Ar.terminal_id = TL.arrival_terminal_id
+        WHERE B.PNR = %s
+        """
+        cursor.execute(queryGetCurrentInfo, (PNRToBeDeleted,))
+        currrentInfo = cursor.fetchone()
+
+        # Check if the PNR is for the travel of the logged in company
+        queryIsTravelBelongsToCompany = """
+        SELECT *
+        FROM Travel T
+        WHERE T.travel_id = %s AND T.travel_company_id = %s
+        """
+        cursor.execute(queryIsTravelBelongsToCompany, (currrentInfo['travel_id'], companyId))
+        isExist = cursor.fetchone()
+
+        if isExist:
+            # get all other upcoming travels of the company
+            query = """
+            SELECT *
+            FROM Company C 
+            JOIN Travel T ON C.id = T.travel_company_id
+            JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+            JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+            JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+            WHERE  C.id = %s AND T.depart_time > %s AND T.travel_id <> %s
+            """
+
+            cursor.execute(query, (companyId, datetime.now(), currrentInfo['travel_id']))
+            travelDetailList = cursor.fetchall()
+
+            # # Delete PNR from both Purchase and Booking
+            # # Thanks to cascade, deleting from Booking is enough
+            # queryDeletePNRFromBooking = """
+            # DELETE FROM Booking WHERE PNR = %s
+            # """
+            # cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
+            # cursor.connection.commit()
+            # message = "The booking is deleted."
+
+            # # Refund the paid amount
+            # queryRefund = """
+            # UPDATE Traveler SET balance = balance + %s WHERE id = %s
+            # """
+            # cursor.execute(queryRefund, (currrentInfo['paid_amount'], currrentInfo['traveler_id']))
+            # mysql.connection.commit()
+            # message = message + ' Paid amount for the travel with the ' + PNRToBeDeleted + ' PNR is refunded to the traveler.'
+        else:
+            message = "This PNR doesn't belong to one of your travels, so you cannot delete corresponding booking!"
+        
+        # flash(message)
+        return render_template('deleteAndGiveFreeTravel.html', PNRToBeDeleted = PNRToBeDeleted, currrentInfo = currrentInfo, travelDetailList = travelDetailList )
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
