@@ -366,7 +366,7 @@ def buy_travel(travel_id):
             discounted_price = travel_details['price'] * (1 - sale_rate)
             
             # Update the travel_details dictionary with the discounted price
-            travel_details['discounted_price'] = discounted_price
+            travel_details['discounted_price'] = '{0:.5}'.format(discounted_price)
         else:
             travel_details['discounted_price'] = travel_details['price']
 
