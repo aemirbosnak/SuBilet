@@ -287,24 +287,79 @@ def findTravel():
 
 @app.route('/myTravels', methods=['GET', 'POST'])
 def myTravels():
-    user_id = session.get('userid')
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'traveler':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        user_id = session.get('userid')
+
+        commentAreaOnAPNR = None
+        if request.method == 'GET' and 'commentAreaOnAPNR' in request.args:
+            commentAreaOnAPNR = request.args.get('commentAreaOnAPNR')
+
+
+        upcomingOrPast = 'upcoming'
+        if request.method == 'GET' and 'upcomingOrPast' in request.args:
+            upcomingOrPast = request.args.get('upcomingOrPast')
+
+        query = """
+        SELECT Travel.travel_id, Booking.PNR, Booking.seat_number, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
+        FROM Booking
+        JOIN Travel ON Booking.travel_id = Travel.travel_id
+        JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
+        JOIN Terminal AS Terminal2 ON Travel.arrival_terminal_id = Terminal2.terminal_id
+        JOIN Company ON Travel.travel_company_id = Company.id
+        WHERE Booking.traveler_id = %s
+        AND Travel.depart_time {} %s
+        ORDER BY Travel.depart_time {}
+        """
+
+        if upcomingOrPast == 'past':
+            comparison_operator = '<'
+            order_by = 'DESC'
+        else:
+            comparison_operator = '>'
+            order_by = 'ASC'
+
+        formatted_query = query.format(comparison_operator, order_by)
+        cursor.execute(formatted_query, (user_id, datetime.now()))
+        user_travels = cursor.fetchall()
+
+        currentRating = '1'
+        if request.method == 'GET' and 'rating' in request.args:
+            currentRating = request.args.get('rating')
+
+        cursor.close()
+        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating)
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
     
-    query = """
-    SELECT Booking.PNR, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
-    FROM Booking
-    JOIN Travel ON Booking.travel_id = Travel.travel_id
-    JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
-    JOIN Terminal AS Terminal2 ON Travel.arrival_terminal_id = Terminal2.terminal_id
-    JOIN Company ON Travel.travel_company_id = Company.id
-    WHERE Booking.traveler_id = %s;
-    """
-    cursor.execute(query, (user_id,))
-    user_travels = cursor.fetchall()
+@app.route('/makeComment/<int:travel_id>', methods = ['GET', 'POST'])
+def makeComment(travel_id):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'traveler':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        user_id = session.get('userid')
+        message = ""
 
-    cursor.close()
+        if request.method == 'POST':
+            if 'comment' in request.form and 'rating' in request.form:
+                # get comment and rating from the request form
+                comment = request.form['comment']
+                rating = request.form['rating']
 
-    return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id)
+                queryMakeComment = """
+                INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES (%s, % s, % s, % s)
+                """
+                cursor.execute(queryMakeComment, (travel_id, user_id, comment, rating))
+                mysql.connection.commit()
+                message = "Comment successfully made! "
+            else:
+                message = "Please fill the form!"
+
+        flash(message)
+        return redirect(url_for('myTravels'))
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
 
 @app.route('/travel/buy/<int:travel_id>/', methods=['GET', 'POST'])
 def buy_travel(travel_id):
@@ -536,6 +591,23 @@ def companysAllTravels(upcomingOrPast):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         userid = session['userid']
+       
+       
+        sort_type = 'T.depart_time'
+        sort_in = 'earliest_to_latest'
+
+        if request.method == 'GET' and 'sort_type' in request.args:
+            sort_in = request.args.get('sort_type')
+
+            if sort_in == 'earliest_to_latest':
+                sort_type = 'T.depart_time'
+            elif sort_in == 'latest_to_earliest':
+                sort_type = 'T.depart_time DESC'
+            elif sort_in == 'low_to_high':
+                sort_type = 'T.price'
+            elif sort_in == 'high_to_low':
+                sort_type = 'T.price DESC'
+
         if upcomingOrPast == 'upcoming':
             #get upcoming travels belongs to this company and list
             query = """
@@ -546,7 +618,9 @@ def companysAllTravels(upcomingOrPast):
             JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
             JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
             WHERE  C.id = %s AND T.depart_time > %s
-            """
+            ORDER BY {}
+            """.format(sort_type)
+
             cursor.execute(query, (userid, datetime.now()))
             travelDetailList = cursor.fetchall()
         elif upcomingOrPast == 'past':
@@ -559,12 +633,13 @@ def companysAllTravels(upcomingOrPast):
             JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
             JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
             WHERE  C.id = %s AND T.depart_time < %s
-            """
+            ORDER BY {}
+            """.format(sort_type)
             cursor.execute(query, (userid, datetime.now()))
             travelDetailList = cursor.fetchall()
         
         cursor.close()
-        return render_template('companysAllTravels.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast )
+        return render_template('companysAllTravels.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast, sort_type = sort_in )
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)

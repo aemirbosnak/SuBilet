@@ -8,3 +8,25 @@
     font-family: 'Raleway', sans-serif;
     
 }
+
+.rating-stars input[type="radio"] {
+    display: none;
+}
+
+.rating-stars{
+    display: none;
+}
+  
+.rating-stars label {
+    display: inline-block;
+    cursor: pointer;
+}
+
+.rating-stars label svg path {
+/* Add styles for empty star */
+}
+
+.rating-stars input[type="radio"]:checked ~ label svg path {
+/* Add styles for filled star */
+}
+  
