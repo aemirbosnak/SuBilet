@@ -952,7 +952,7 @@ def deleteATravel(travelId):
         # Check if the travel is of the logged in company
         if( theTravel['travel_company_id'] != companyId):
             message = "This travel doesn't belong to your company. You cannot delete!"
-        elif booking_count:
+        elif booking_count[0]['booking_count'] > 0:
             message = "There are " + str(booking_count[0]['booking_count']) 
             message = message + " bookings for this travel. To be able to delete this travel you need to delete these bookings first."
             message2 = "deleteTravelError"
@@ -987,22 +987,34 @@ def deleteAndRefundAPurchase(PNRToBeDeleted):
         cursor.execute(queryGetInfo, (PNRToBeDeleted,))
         info = cursor.fetchone()
 
-        # Delete PNR from both purchase and Booking
-        queryDeletePNRFromBooking = """
-        DELETE FROM Booking WHERE PNR = %s
+        # Check if the PNR is for the travel of the logged in company
+        queryIsTravelBelongsToCompany = """
+        SELECT *
+        FROM Travel T
+        WHERE T.travel_id = %s AND T.travel_company_id = %s
         """
-        cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
-        cursor.connection.commit()
-        message = "The booking is deleted."
+        cursor.execute(queryIsTravelBelongsToCompany, (info['travel_id'], companyId))
+        isExist = cursor.fetchone()
 
-        # Refund the paid amount
-        queryRefund = """
-        UPDATE Traveler SET balance = balance + %s WHERE id = %s
-        """
-        cursor.execute(queryRefund, (info['paid_amount'], info['traveler_id']))
-        mysql.connection.commit()
-        message = message + ' Paid amount for the ' + PNRToBeDeleted + ' is refunded.'
+        if isExist:
+            # Delete PNR from both Purchase and Booking
+            # Thanks to cascade, deleting from Booking is enough
+            queryDeletePNRFromBooking = """
+            DELETE FROM Booking WHERE PNR = %s
+            """
+            cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
+            cursor.connection.commit()
+            message = "The booking is deleted."
 
+            # Refund the paid amount
+            queryRefund = """
+            UPDATE Traveler SET balance = balance + %s WHERE id = %s
+            """
+            cursor.execute(queryRefund, (info['paid_amount'], info['traveler_id']))
+            mysql.connection.commit()
+            message = message + ' Paid amount for the travel with the ' + PNRToBeDeleted + ' PNR is refunded to the traveler.'
+        else:
+            message = "This PNR doesn't belongs to one of your travels, so you cannot delete corresponding booking!"
         
         flash(message)
         return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
@@ -1010,6 +1022,48 @@ def deleteAndRefundAPurchase(PNRToBeDeleted):
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
 
+@app.route('/deleteAReservation/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
+def deleteAReservation(PNRToBeDeleted):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        companyId = session['userid']
+
+        # Get user id, travel id and paid amount for the purchase
+        queryGetInfo = """
+        SELECT T.id AS traveler_id, B.travel_id AS travel_id
+        FROM Traveler T
+        JOIN Booking B ON T.id = B.traveler_id
+        WHERE B.PNR = %s
+        """
+        cursor.execute(queryGetInfo, (PNRToBeDeleted,))
+        info = cursor.fetchone()
+
+        # Check if the PNR is for the travel of the logged in company
+        queryIsTravelBelongsToCompany = """
+        SELECT *
+        FROM Travel T
+        WHERE T.travel_id = %s AND T.travel_company_id = %s
+        """
+        cursor.execute(queryIsTravelBelongsToCompany, (info['travel_id'], companyId))
+        isExist = cursor.fetchone()
+
+        if isExist:
+            # Delete PNR from both Reserved and Booking
+            # Deleting from Booking is enough due to cascade feature
+            queryDeletePNRFromReserved = """
+            DELETE FROM Booking WHERE PNR = %s
+            """
+            cursor.execute(queryDeletePNRFromReserved, (PNRToBeDeleted,))
+            cursor.connection.commit()
+            message = "The reservation is deleted."
+        else:
+            message = "This PNR doesn't belongs to one of your travels, so you cannot delete corresponding reservation!"
+        
+        flash(message)
+        return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
     
 @app.route('/companyProfile/<int:companyId>', methods=['GET', 'POST'])
 def companyProfile(companyId): 

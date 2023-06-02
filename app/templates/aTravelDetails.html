@@ -274,6 +274,12 @@
                                     <p class="">{{ singleReservationDetail['purchased_deadline'] }}</p>
                                 </div>
                             </div>
+
+                            <div class="col align-items-center">
+                                <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteAReservation', PNRToBeDeleted = singleReservationDetail['PNR'] ) }}">
+                                    <button class="btn btn-danger">Delete Reservation</button>
+                                </a>
+                            </div>
                             
                         </div>
                     </div>
