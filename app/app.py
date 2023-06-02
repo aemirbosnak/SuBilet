@@ -287,24 +287,44 @@ def findTravel():
 
 @app.route('/myTravels', methods=['GET', 'POST'])
 def myTravels():
-    user_id = session.get('userid')
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'traveler':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        user_id = session.get('userid')
+
+        upcomingOrPast = 'upcoming'
+        if request.method == 'GET' and 'upcomingOrPast' in request.args:
+            upcomingOrPast = request.args.get('upcomingOrPast')
+        
+
+        query = """
+        SELECT Booking.PNR, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
+        FROM Booking
+        JOIN Travel ON Booking.travel_id = Travel.travel_id
+        JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
+        JOIN Terminal AS Terminal2 ON Travel.arrival_terminal_id = Terminal2.terminal_id
+        JOIN Company ON Travel.travel_company_id = Company.id
+        WHERE Booking.traveler_id = %s
+        AND Travel.depart_time {} %s
+        ORDER BY Travel.depart_time {}
+        """
+
+        if upcomingOrPast == 'past':
+            comparison_operator = '<'
+            order_by = 'DESC'
+        else:
+            comparison_operator = '>'
+            order_by = 'ASC'
+
+        formatted_query = query.format(comparison_operator, order_by)
+
+        cursor.execute(formatted_query, (user_id, datetime.now()))
+        user_travels = cursor.fetchall()
+        cursor.close()
+        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast)
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
     
-    query = """
-    SELECT Booking.PNR, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
-    FROM Booking
-    JOIN Travel ON Booking.travel_id = Travel.travel_id
-    JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
-    JOIN Terminal AS Terminal2 ON Travel.arrival_terminal_id = Terminal2.terminal_id
-    JOIN Company ON Travel.travel_company_id = Company.id
-    WHERE Booking.traveler_id = %s;
-    """
-    cursor.execute(query, (user_id,))
-    user_travels = cursor.fetchall()
-
-    cursor.close()
-
-    return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id)
 
 @app.route('/travel/buy/<int:travel_id>/', methods=['GET', 'POST'])
 def buy_travel(travel_id):
