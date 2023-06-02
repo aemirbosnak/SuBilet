@@ -144,7 +144,7 @@
                         {% endif %}
                     </div>
 
-                    <!-- {% if commentAreaOnAPNR == row['PNR'] %} -->
+                    {% if commentAreaOnAPNR == row['PNR'] %}
                     <hr>
                     <div class="row mt-2">
                         
@@ -235,7 +235,7 @@
                             </form>
                         </div>
 
-                        <form id="commentForm" action="{{ url_for('makeComment', travel_id = row['travel_id'] ) }}" method="POST"></form>
+                        <form id="commentForm" action="{{ url_for('makeComment', travel_id = row['travel_id'] ) }}" method="POST">
                             <textarea name="comment" id="comment" rows="5" class="w-100 rounded bg-light border" placeholder="Enter your comment here..."></textarea>
                             <input type="hidden" id="rating" name="rating" value="{{ currentRating }}" />
                             <div class="row mt-3">
@@ -257,7 +257,7 @@
                             </div>
                         </form>
                     </div>
-                    <!-- {% endif %} -->
+                    {% endif %}
                 </div>
             </div>
         </div>
