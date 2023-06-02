@@ -727,8 +727,6 @@ def commentsOnATravel(travelId):
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
-
-
 @app.route('/editUpcomingTravel/<int:travelId>', methods = [ 'GET', 'POST'])
 def editUpcomingTravel(travelId):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
