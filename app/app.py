@@ -291,13 +291,17 @@ def myTravels():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         user_id = session.get('userid')
 
+        commentAreaOnAPNR = None
+        if request.method == 'GET' and 'commentAreaOnAPNR' in request.args:
+            commentAreaOnAPNR = request.args.get('commentAreaOnAPNR')
+
+
         upcomingOrPast = 'upcoming'
         if request.method == 'GET' and 'upcomingOrPast' in request.args:
             upcomingOrPast = request.args.get('upcomingOrPast')
-        
 
         query = """
-        SELECT Booking.PNR, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
+        SELECT Travel.travel_id, Booking.PNR, Booking.seat_number, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
         FROM Booking
         JOIN Travel ON Booking.travel_id = Travel.travel_id
         JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
@@ -316,15 +320,46 @@ def myTravels():
             order_by = 'ASC'
 
         formatted_query = query.format(comparison_operator, order_by)
-
         cursor.execute(formatted_query, (user_id, datetime.now()))
         user_travels = cursor.fetchall()
+
+        currentRating = '1'
+        if request.method == 'GET' and 'rating' in request.args:
+            currentRating = request.args.get('rating')
+
         cursor.close()
-        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast)
+        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating)
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
     
+@app.route('/makeComment/<int:travel_id>', methods = ['GET', 'POST'])
+def makeComment(travel_id):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'traveler':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        user_id = session.get('userid')
+        message = ""
+
+        if request.method == 'POST':
+            if 'comment' in request.form and 'rating' in request.form:
+                # get comment and rating from the request form
+                comment = request.form['comment']
+                rating = request.form['rating']
+
+                queryMakeComment = """
+                INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES (%s, % s, % s, % s)
+                """
+                cursor.execute(queryMakeComment, (travel_id, user_id, comment, rating))
+                mysql.connection.commit()
+                message = "Comment successfully made! "
+            else:
+                message = "Please fill the form!"
+
+        flash(message)
+        return redirect(url_for('myTravels'))
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
 
 @app.route('/travel/buy/<int:travel_id>/', methods=['GET', 'POST'])
 def buy_travel(travel_id):
