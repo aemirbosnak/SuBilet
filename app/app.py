@@ -345,8 +345,29 @@ def buy_travel(travel_id):
     cursor.execute(query_coupons, (user_id,))
     coupons = cursor.fetchall()
 
+    # Get list of all journeys
+    query_journey = """
+    SELECT *
+    FROM Journey J
+    WHERE J.traveler_id = %s
+    """
+    cursor.execute(query_journey, (user_id,))
+    journeys = cursor.fetchall()
+
+
     pnr = generatePNR()
     seat_number = generateSeatNumber(travel_id)
+
+    if request.method == 'POST' and "addTravelToJourney" in request.form:
+        selected_journey = request.form['selectedJourney']
+        query_addTravelToJourney = """
+        INSERT INTO Travels_In_Journey VALUES
+        (%s, %s, %s)
+        """
+        cursor.execute(query_addTravelToJourney, (selected_journey, user_id, travel_id,))
+        mysql.connection.commit()
+        return redirect(url_for('buy_travel', travel_id=travel_id))
+
 
     if request.method == 'POST':
         coupon_id = request.form.get('coupon_id')
@@ -370,7 +391,7 @@ def buy_travel(travel_id):
         else:
             travel_details['discounted_price'] = travel_details['price']
 
-    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id)
+    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys)
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
@@ -526,6 +547,51 @@ def balance():
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
+
+@app.route('/journeys', methods = [ 'GET', 'POST'])
+def journeys():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    if 'userid' in session and 'loggedin' in session:
+        user_id = session['userid']
+
+        # Get list of all journeys
+        query_journey = """
+        SELECT *
+        FROM Journey J
+        WHERE J.traveler_id = %s
+        """
+        cursor.execute(query_journey, (user_id,))
+        journeys = cursor.fetchall()
+
+        # Get list of all travels that are inside journeys
+        query_travelInJourney = """
+        SELECT *, T1.city as dep_city, T2.city as arr_city
+        FROM Travels_In_Journey natural join Travel join Company on travel_company_id = id join Terminal T1 on departure_terminal_id = T1.terminal_id join Terminal T2 on arrival_terminal_id = T2.terminal_id
+        WHERE traveler_id = %s
+        """
+        cursor.execute(query_travelInJourney, (user_id,))
+        travelsInJourneys = cursor.fetchall()
+
+        if request.method == 'POST':
+            newJourneyName = request.form.get('journeyForm')
+            createdTime = datetime.now()
+
+            query_addNewJourney = """
+            INSERT INTO Journey VALUES 
+            (%s, %s, %s, "valid")
+            """
+            cursor.execute(query_addNewJourney, (newJourneyName, user_id, createdTime,))
+            mysql.connection.commit()
+
+            return redirect(url_for('journeys'))
+        
+        return render_template("journeysPage.html", journeys = journeys, travelsInJourneys = travelsInJourneys)
+    else:
+        message = "Session is not valid, please log in!"
+        return render_template("login.html", message = message)
+
+
 
 ##############################
 ### COMPANY RELATED ROUTES ###

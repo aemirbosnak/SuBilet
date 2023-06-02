@@ -22,6 +22,9 @@
           <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('journeys') }}">My Journeys</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" href="{{ url_for('balance')}}">Balance</a>
         </li>
         <li class="nav-item">
@@ -172,7 +175,7 @@
             {% endfor %}
         {% else %}
             <div>
-                <h3>Unfortunetelly, there is no such travel.</h3>
+                <h3>There are no travels that match your specified limitations.</h3>
             </div>
         {% endif %}
 
