@@ -1329,7 +1329,7 @@ def deleteAReservation(PNRToBeDeleted):
     
 @app.route('/companyProfile/<int:companyId>', methods=['GET', 'POST'])
 def companyProfile(companyId): 
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         #get user information
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         query = """
@@ -1346,7 +1346,7 @@ def companyProfile(companyId):
     
 @app.route('/editCompanyProfile/<int:companyId>', methods=['GET', 'POST'])
 def editCompanyProfile(companyId):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         if request.method == 'POST':
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             # Get company information
@@ -1384,6 +1384,63 @@ def editCompanyProfile(companyId):
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
+    
+
+###############################
+### ADMIN RELATED ROUTES ###
+###############################
+
+@app.route('/companies', methods=['GET', 'POST'])
+def companies():
+    
+    if 'userid' in session and 'loggedin' in session:
+        sort_type = 'C.company_name'
+        sort_in = 'sort_by_name'
+
+        if request.method == 'GET' and 'sort_type' in request.args:
+            sort_in = request.args.get('sort_type')
+
+            if sort_in == 'sort_by_name':
+                sort_type = 'C.company_name'
+            elif sort_in == 'validation_date_earliest_to_latest':
+                sort_type = ' C.validation_date DESC'
+            elif sort_in == 'validation_date_latest_to_earliest':
+                sort_type = ' C.validation_date ASC'
+            elif sort_in == 'foundation_date_earliest_to_latest':
+                sort_type = 'C.foundation_date DESC'
+            elif sort_in == 'foundation_date_latest_to_earliest':
+                sort_type = 'C.foundation_date ASC'
+            elif sort_in == 'sort_by_id':
+                sort_type = 'C.id ASC'
+            else:
+                sort_type = 'C.id ASC'
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        queryCompanies = """
+        SELECT
+        C.id,
+        C.company_name,
+        C.website,
+        C.foundation_date,
+        C.about,
+        C.validation_date,
+        U.email,
+        U.phone,
+        U.active,
+        A.username as admin_username
+        FROM Company C
+        NATURAL JOIN User U
+        JOIN Administrator A ON A.id = C.validator_id
+        ORDER BY {}
+        """.format(sort_type)
+        cursor.execute(queryCompanies)
+        allCompanies = cursor.fetchall()
+
+        return render_template('companies.html', allCompanies = allCompanies, sortType = sort_in)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
     
 ########################
 ### HELPER FUNCTIONS ###

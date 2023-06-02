@@ -21,7 +21,7 @@
   </head>
 
   <body>
-    {% if is_logged_in and session['userType'] == 'traveler' %} 
+    {% if session['loggedin']  and session['userType'] == 'traveler' %} 
       <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
           <ul class="navbar-nav">
@@ -47,7 +47,7 @@
           </ul>
         </div>
       </nav>
-    {% elif is_logged_in and session['userType'] == 'company' %}
+    {% elif session['loggedin']  and session['userType'] == 'company' %}
       <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
           <ul class="navbar-nav">
@@ -70,7 +70,7 @@
           </ul>
         </div>
       </nav>
-    {% elif is_logged_in and session['userType'] == 'admin' %}
+    {% elif session['loggedin']  and session['userType'] == 'admin' %}
       <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
           <ul class="navbar-nav">
@@ -79,7 +79,7 @@
               <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">???</a>
+              <a class="nav-link" href="{{ url_for('companies')}}">Companies</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">???</a>
