@@ -190,8 +190,8 @@ def main():
     #main displays findTravelPage wheter a user is logged in or not
     return findTravel()
  
-@app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/', methods=['GET'])
-def travels(vehicle_type, departure_city, arrival_city, departure_date):
+@app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/extra_date:<string:extra_date>', methods=['GET'])
+def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_date):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     sort_type = 'T.depart_time'
@@ -209,26 +209,43 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
         elif sort_in == 'high_to_low':
             sort_type = 'T.price DESC'
 
-    query = """
-    SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
-    FROM Travel T
-    JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-    JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-    JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-    JOIN Company C ON T.travel_company_id = C.id
-    WHERE Dep.city = %s
-    AND Ar.city = %s
-    AND DATE(T.depart_time) = %s
-    AND V.type = %s
-    ORDER BY {}
-    """.format(sort_type)
+    if extra_date == 'none':
+        query = """
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        FROM Travel T
+        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+        JOIN Company C ON T.travel_company_id = C.id
+        WHERE Dep.city = %s
+        AND Ar.city = %s
+        AND DATE(T.depart_time) = %s
+        AND V.type = %s
+        ORDER BY {}
+        """.format(sort_type)
+        cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
+        searchedTravels = cursor.fetchall()
+    else:
+        query = """
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        FROM Travel T
+        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+        JOIN Company C ON T.travel_company_id = C.id
+        WHERE Dep.city = %s
+        AND Ar.city = %s
+        AND DATE(T.depart_time) <= %s
+        AND DATE(T.depart_time) >= %s
+        AND V.type = %s
+        ORDER BY {}
+        """.format(sort_type)
+        cursor.execute(query, (departure_city, arrival_city, extra_date, departure_date, vehicle_type))
+        searchedTravels = cursor.fetchall()
+
 
     is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
     user_id = session.get('userid')
-    
-    # cursor.execute(query)
-    cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
-    searchedTravels = cursor.fetchall()
 
     cursor.close()
 
@@ -251,13 +268,17 @@ def findTravel():
         arrival_city = request.form['to-location']
         departure_date = request.form['departure_date']
 
+        extra_date = 'none'
+        if 'extra_date' in request.form:
+            extra_date = request.form['extra_date']
+
         #perform checks
         if not departure_city or not arrival_city or not departure_date:
             error_message = "Please select fill in the form."
             return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id =user_id, error_message=error_message)
 
         #redirect to listAvailableTravelsPage.html with relevant information
-        return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
+        return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date, extra_date=extra_date))
         
     cursor.close()
 
