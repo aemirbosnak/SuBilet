@@ -127,8 +127,24 @@
         <h4> Companies </h4>
         <hr>
     </div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class=flashes>
+      {% for message in messages %}
+        {% if message != 'Session was not valid, please log in!' %}
+          <div class="container mt-2">
+            <h4 class="text-danger">{{ message }}</h4>
+          </div>
+        {% endif %}
+      {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
+
+
     {% if allCompanies%}
-    <div class="container ">
+    <div class="container mt-2">
         {% for singleCompany in allCompanies %}
             <div class="card card-person bg-secondary text-white">
                 <div class="card-body">
@@ -195,9 +211,15 @@
                               <a class="row mb-2 text-decoration-none" href="{{ url_for('companyProfile', companyId = singleCompany['id']) }}">
                                   <button class="btn btn-danger">Edit Company</button>
                               </a>
-                              <a class="row mb-2 text-decoration-none" href="#">
+                              {% if singleCompany['active'] %}
+                              <a class="row mb-2 text-decoration-none" href="{{ url_for('deactivateCompany', companyId = singleCompany['id']) }}">
                                   <button class="btn btn-danger">Deacivate Company</button>
                               </a>
+                              {% else %}
+                              <a class="row mb-2 text-decoration-none" href="{{ url_for('activateCompany', companyId = singleCompany['id']) }}">
+                                <button class="btn btn-success">Activate Company</button>
+                              </a>
+                              {% endif%}
                         </div>
 
                     </div>

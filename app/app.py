@@ -1392,7 +1392,6 @@ def editCompanyProfile(companyId):
 
 @app.route('/companies', methods=['GET', 'POST'])
 def companies():
-    
     if 'userid' in session and 'loggedin' in session:
         sort_type = 'C.company_name'
         sort_in = 'sort_by_name'
@@ -1440,6 +1439,65 @@ def companies():
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
+    
+@app.route('/deactivateCompany/<int:companyId>', methods = ['GET', 'POST'] )
+def deactivateCompany(companyId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # check the company
+        queryGetCompany = """
+        SELECT company_name
+        FROM Company
+        WHERE id = %s
+        """
+        cursor.execute(queryGetCompany, (companyId,))
+        companyInfo = cursor.fetchone()
+        
+        if companyInfo:
+            queryDeactivate = """
+            UPDATE User SET active = FALSE WHERE id = %s
+            """
+            cursor.execute(queryDeactivate, (companyId,))
+            cursor.connection.commit()
+            message = 'Company ' + companyInfo['company_name'] + ' is succesfully deactivated.'
+
+        flash(message)
+        return redirect(url_for('companies'))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/activateCompany/<int:companyId>', methods = ['GET', 'POST'] )
+def activateCompany(companyId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # check the company
+        queryGetCompany = """
+        SELECT company_name
+        FROM Company
+        WHERE id = %s
+        """
+        cursor.execute(queryGetCompany, (companyId,))
+        companyInfo = cursor.fetchone()
+        
+        if companyInfo:
+            queryDeactivate = """
+            UPDATE User SET active = TRUE WHERE id = %s
+            """
+            cursor.execute(queryDeactivate, (companyId,))
+            cursor.connection.commit()
+            message = 'Company ' + companyInfo['company_name'] + ' is succesfully activated.'
+
+        flash(message)
+        return redirect(url_for('companies'))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
 
     
 ########################
