@@ -108,8 +108,37 @@
       </div>
     {% endif %}
     {% endwith %}
+
     
-    <div class="container pt-5 ">
+    <div class="container">
+        <div class="row">
+            <div class="col-2">
+                <h4>
+                    Possible Travels
+                </h4>
+            </div>
+            <div class="col-4">
+                <form action="{{ request.path }}" method="get">
+                    <div class="row">
+                        <select class="form-select col" name="sort_type" id="sort_type">
+                            <option value="earliest_to_latest" {% if sort_type == 'earliest_to_latest' %}selected{% endif %}>Time (earliest to latest)</option>
+                            <option value="latest_to_earliest" {% if sort_type == 'latest_to_earliest' %}selected{% endif %}>Time (latest to earliest)</option>
+                            <option value="low_to_high" {% if sort_type == 'low_to_high' %}selected{% endif %}>Price (low to high)</option>
+                            <option value="high_to_low" {% if sort_type == 'high_to_low' %}selected{% endif %}>Price (high to low)</option>
+                        </select>
+                        <div class="col">
+                            <button type="submit" class="btn btn-outline-danger">Sort</button>
+                        </div> 
+                    </div>
+                </form>
+            </div>
+
+            
+        </div>   
+        <hr>
+    </div>
+
+    <div class="container pt-4 ">
         {% if travelDetailList %}
             {% for singleTravel in travelDetailList %}
                 <div class="card bg-secondary text-white">
@@ -117,26 +146,40 @@
                         <div class="container-fluid">
                             <div class="row">
                                 
-                                <div class="col">
-                                    <div class="row">
-                                        <h6 class=" blockTitle">Departure Terminal</h6>
-                                        <p class="">{{ singleTravel['name'] }}</p>
-                                    </div>
+                                <div class="col-3">
                                     <div class="row">
                                         <h6 class="blockTitle">Departure Time</h6>
                                         <p class="">{{ singleTravel['depart_time'] }}</p>
                                     </div>
-                                </div>
-                                <div class="col">
-                                    <div class="row">
-                                        <h6 class="blockTitle">Arrival Terminal</h6>
-                                        <p class="">{{ singleTravel['Ar.name'] }}</p>
-                                    </div>
+                                    
                                     <div class="row">
                                         <h6 class="blockTitle">Arrival Time</h6>
                                         <p class="">{{ singleTravel['arrive_time'] }}</p>
                                     </div>
                                 </div>
+
+                                <div class="col-3">
+                                    <div class="row">
+                                        <h6 class=" blockTitle">Departure Terminal</h6>
+                                        <p class="">{{ singleTravel['name'] }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <h6 class="blockTitle">Arrival Terminal</h6>
+                                        <p class="">{{ singleTravel['Ar.name'] }}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-2">
+                                    <div class="row">
+                                        <h6 class="blockTitle">Departure City</h6>
+                                        <p class="">{{ singleTravel['city'] }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <h6 class="blockTitle">Arrival City</h6>
+                                        <p class="">{{ singleTravel['Ar.city'] }}</p>
+                                    </div>
+                                </div>
+
                                 <div class="col">
                                     <div class="row">
                                         <h6 class="blockTitle">Vehicle Type</h6>
@@ -147,24 +190,11 @@
                                         <p class="">{{ singleTravel['model'] }}</p>
                                     </div>
                                 </div>
-                                <div class="col">
-                                    <div class="row">
-                                        <h6 class="blockTitle">Price</h6>
-                                        <p class="">{{ singleTravel['price'] }}</p>
-                                    </div>
-                                    <div class="row">
-                                        <h6 class="blockTitle">Business Price</h6>
-                                        {% if singleTravel['business_price'] %}
-                                            <p class="">{{ singleTravel['business_price'] }} ₺</p>
-                                        {% else %}
-                                            <p>-</p>
-                                        {% endif %}
-                                    </div>
-                                </div>
                                 <div class="col d-flex flex-column justify-content-around">
-                                    <a class="row mb-2 text-decoration-none" href="#">
-                                      <button class="btn btn-danger">Give Free</button>
-                                    </a>
+                                    <form action="{{ request.path }}" method="POST">
+                                        <input type="hidden" name="freeTravelId" id="freeTravelId" value="{{ singleTravel['travel_id'] }}">
+                                        <button type="submit" class="btn btn-lg btn-danger">Give Free</button>
+                                    </form>
                                 </div>
                             </div>
                         </div>

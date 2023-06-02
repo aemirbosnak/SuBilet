@@ -241,7 +241,7 @@ CREATE TABLE Booking(
 	travel_id INT,
 	seat_number INT NOT NULL,
 	traveler_id INT,
-    seat_type ENUM( 'business', 'regular' ) NOT NULL DEFAULT 'regular',
+    seat_type ENUM( 'business', 'regular', 'random' ) NOT NULL DEFAULT 'regular',
 	PRIMARY KEY(PNR),
 	FOREIGN KEY (travel_id) REFERENCES Travel(travel_id)
 		ON DELETE CASCADE,

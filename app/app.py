@@ -1164,7 +1164,7 @@ def deleteAndRefundAPurchase(PNRToBeDeleted):
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
-@app.route('/deleteAndGiveFreeTravel/<string:PNRToBeDeleted>')
+@app.route('/deleteAndGiveFreeTravel/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
 def deleteAndGiveFreeTravel(PNRToBeDeleted):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -1173,7 +1173,8 @@ def deleteAndGiveFreeTravel(PNRToBeDeleted):
         # Get user TCK, name, surname, travel_id which PNR belongs to, seat number, seat type, arrival and departure informations
         queryGetCurrentInfo = """
         SELECT 
-        T.TCK, 
+        T.id AS traveler_id,
+        T.TCK,
         T.name AS traveler_name, 
         T.surname AS traveler_surname, 
         B.travel_id, 
@@ -1205,6 +1206,21 @@ def deleteAndGiveFreeTravel(PNRToBeDeleted):
         cursor.execute(queryIsTravelBelongsToCompany, (currrentInfo['travel_id'], companyId))
         isExist = cursor.fetchone()
 
+        # For sorting possible travels, get request is used
+        sort_type = 'T.depart_time'
+        sort_in = 'earliest_to_latest'
+        if request.method == 'GET' and 'sort_type' in request.args:
+            sort_in = request.args.get('sort_type')
+
+            if sort_in == 'earliest_to_latest':
+                sort_type = 'T.depart_time'
+            elif sort_in == 'latest_to_earliest':
+                sort_type = 'T.depart_time DESC'
+            elif sort_in == 'low_to_high':
+                sort_type = 'T.price'
+            elif sort_in == 'high_to_low':
+                sort_type = 'T.price DESC'
+
         if isExist:
             # get all other upcoming travels of the company
             query = """
@@ -1215,32 +1231,55 @@ def deleteAndGiveFreeTravel(PNRToBeDeleted):
             JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
             JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
             WHERE  C.id = %s AND T.depart_time > %s AND T.travel_id <> %s
-            """
+            ORDER BY {}
+            """.format(sort_type)
 
             cursor.execute(query, (companyId, datetime.now(), currrentInfo['travel_id']))
             travelDetailList = cursor.fetchall()
 
-            # # Delete PNR from both Purchase and Booking
-            # # Thanks to cascade, deleting from Booking is enough
-            # queryDeletePNRFromBooking = """
-            # DELETE FROM Booking WHERE PNR = %s
-            # """
-            # cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
-            # cursor.connection.commit()
-            # message = "The booking is deleted."
-
-            # # Refund the paid amount
-            # queryRefund = """
-            # UPDATE Traveler SET balance = balance + %s WHERE id = %s
-            # """
-            # cursor.execute(queryRefund, (currrentInfo['paid_amount'], currrentInfo['traveler_id']))
-            # mysql.connection.commit()
-            # message = message + ' Paid amount for the travel with the ' + PNRToBeDeleted + ' PNR is refunded to the traveler.'
         else:
             message = "This PNR doesn't belong to one of your travels, so you cannot delete corresponding booking!"
+            flash(message)
+            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'] ))
         
+        if request.method == 'POST' and 'freeTravelId' in request.form:
+            freeTravelId = request.form['freeTravelId']
+            newPNR = generatePNR()
+            newSeat = generateSeatNumber(freeTravelId)
+            paymentMethod = 'gift'
+            paymentPrice = 0
+            seat_type = 'random'
+
+            # add a tuple to the Booking table
+            queryInsertBooking = """
+            INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(queryInsertBooking, (newPNR, freeTravelId, newSeat, currrentInfo['traveler_id'], seat_type))
+            cursor.connection.commit()
+
+            # add a tuple to the Purchased table
+            queryInsertPurchased = """
+            INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) 
+            VALUES (%s, %s, %s, %s, NULL)
+            """
+            cursor.execute(queryInsertPurchased, (newPNR, datetime.now(), paymentMethod, paymentPrice))
+            cursor.connection.commit()
+            message1 = "A new Booking is completed for traveler with " + currrentInfo['TCK'] + " TCK number."
+
+            # Delete PNR from both Purchase and Booking
+            # Thanks to cascade, deleting from Booking is enough
+            queryDeletePNRFromBooking = """
+            DELETE FROM Booking WHERE PNR = %s
+            """
+            cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
+            cursor.connection.commit()
+            message = "The current booking is deleted." + message1
+            flash(message)
+            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'] ))
+       
         # flash(message)
-        return render_template('deleteAndGiveFreeTravel.html', PNRToBeDeleted = PNRToBeDeleted, currrentInfo = currrentInfo, travelDetailList = travelDetailList )
+        return render_template('deleteAndGiveFreeTravel.html', PNRToBeDeleted = PNRToBeDeleted, currrentInfo = currrentInfo, travelDetailList = travelDetailList, sort_type = sort_in )
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
