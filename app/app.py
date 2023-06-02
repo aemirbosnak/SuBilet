@@ -476,14 +476,29 @@ def buy_travel(travel_id):
         # Generate the current timestamp
         purchase_time = datetime.now()
 
-        # check if coupon used
+        # Check if a coupon is used
         coupon_id = request.form.get('coupon_id')
-        discounted_price = travel_details['discounted_price']
-        coupon_id = coupon_id if coupon_id else None
 
-        # calculate updated balance
-        ### COUPON DISCOUNT IS NOT WORKING ###
-        updated_balance = balance['balance'] - travel_details['discounted_price']
+        # Calculate the price to be deducted from the balance
+        if coupon_id:
+            # Fetch the coupon details based on the coupon ID
+            query_coupon = """
+            SELECT sale_rate
+            FROM Sale_Coupon
+            WHERE coupon_id = %s
+            """
+            cursor.execute(query_coupon, (coupon_id,))
+            coupon = cursor.fetchone()
+            sale_rate = coupon['sale_rate']
+
+            # Calculate the discounted price
+            discounted_price = travel_details['price'] * (1 - sale_rate)
+        else:
+            # No coupon applied, use the original price
+            discounted_price = travel_details['price']
+
+        # Calculate the updated balance
+        updated_balance = balance['balance'] - discounted_price
 
         query_insert_booking = """
         INSERT INTO Booking(PNR, travel_id, seat_number, traveler_id)
