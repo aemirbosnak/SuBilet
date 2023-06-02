@@ -200,7 +200,7 @@
                                 <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteAndRefundAPurchase', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}">
                                     <button class="btn btn-danger">Delete & Refund</button>
                                 </a>
-                                <a class="row mb-2 text-decoration-none" href="#">
+                                <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteAndGiveFreeTravel', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}">
                                     <button class="btn btn-danger">Delete & Give Free Travel </button>
                                 </a>
                             </div>
