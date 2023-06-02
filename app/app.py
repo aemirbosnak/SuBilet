@@ -409,10 +409,6 @@ def buy_travel(travel_id):
     cursor.execute(query_journey, (user_id,))
     journeys = cursor.fetchall()
 
-
-    pnr = generatePNR()
-    seat_number = generateSeatNumber(travel_id)
-
     if request.method == 'POST' and "addTravelToJourney" in request.form:
         selected_journey = request.form['selectedJourney']
         query_addTravelToJourney = """
@@ -446,7 +442,7 @@ def buy_travel(travel_id):
         else:
             travel_details['discounted_price'] = travel_details['price']
 
-    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys)
+    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys)
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
