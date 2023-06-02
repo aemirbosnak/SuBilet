@@ -30,13 +30,13 @@
               <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('balance', user_id=user_id) }}">Balance</a>
+              <a class="nav-link" href="{{ url_for('balance')}}">Balance</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('coupons', user_id=user_id) }}">Coupons</a>
+              <a class="nav-link" href="{{ url_for('coupons') }}">Coupons</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('userProfile', user_id=user_id) }}">Profile</a>
+              <a class="nav-link" href="{{ url_for('userProfile') }}">Profile</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
@@ -116,114 +116,109 @@
     </div>
     {% endif %}
 
-    <form action="{{ url_for('findTravel') }}" method="post">
-      <!-- form is needed to send info when button is clicked (for flask) -->
-      <div class="container pt-5">
-          <div class="container d-flex justify-content-center">
-            <div
-              class="btn-group btn-group-lg"
-              role="group"
-              aria-label="Basic radio toggle button group"
-            >
-              <input
-                type="radio"
-                class="btn-check"
-                name="vehicle_type"
-                id="btnradio1"
-                autocomplete="off"
-                value="bus"
-                checked
-              />
-              <label class="btn btn-outline-danger" for="btnradio1">Bus</label>
+    <div class="container pt-5">
+      <form action="{{ url_for('findTravel') }}" method="post">
+        <!-- form is needed to send info when button is clicked (for flask) -->
+        <div class="container d-flex justify-content-center">
+          <div
+            class="btn-group btn-group-lg"
+            role="group"
+            aria-label="Basic radio toggle button group"
+          >
+            <input
+              type="radio"
+              class="btn-check"
+              name="vehicle_type"
+              id="btnradio1"
+              autocomplete="off"
+              value="bus"
+              checked
+            />
+            <label class="btn btn-outline-danger" for="btnradio1">Bus</label>
 
-              <input
-                type="radio"
-                class="btn-check"
-                name="vehicle_type"
-                id="btnradio2"
-                autocomplete="off"
-                value="plane"
-              />
-              <label class="btn btn-outline-danger" for="btnradio2">Plane</label>
+            <input
+              type="radio"
+              class="btn-check"
+              name="vehicle_type"
+              id="btnradio2"
+              autocomplete="off"
+              value="plane"
+            />
+            <label class="btn btn-outline-danger" for="btnradio2">Plane</label>
 
-              <input
-                type="radio"
-                class="btn-check"
-                name="vehicle_type"
-                id="btnradio3"
-                autocomplete="off"
-                value="train"
-              />
-              <label class="btn btn-outline-danger" for="btnradio3">Train</label>
-            </div>
+            <input
+              type="radio"
+              class="btn-check"
+              name="vehicle_type"
+              id="btnradio3"
+              autocomplete="off"
+              value="train"
+            />
+            <label class="btn btn-outline-danger" for="btnradio3">Train</label>
           </div>
+        </div>
 
-          <br />
-          <div class="card text-white justify-content-center">
-            <div class="card-header text-center">
-              <h1>Search for a travel</h1>
-            </div>
-            <div class="card-body">
+        <br />
+        <div class="card text-white justify-content-center">
+          <div class="card-header text-center">
+            <h1>Search for a travel</h1>
+          </div>
+          <div class="card-body">
 
-              <div class="container pt-2">
-                <label for="from-location" class="form-label">From:</label>
-                <select class="form-select" name="from-location" id="from-location">
-                    {% for city in cities %}
-                    <option>{{ city }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            
             <div class="container pt-2">
-                <label for="to-location" class="form-label">To:</label>
-                <select class="form-select" name="to-location" id="to-location">
-                    {% for city in cities %}
-                    <option>{{ city }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+              <label for="from-location" class="form-label">From:</label>
+              <select class="form-select" name="from-location" id="from-location">
+                  {% for city in cities %}
+                  <option>{{ city }}</option>
+                  {% endfor %}
+              </select>
+          </div>
+          
+          <div class="container pt-2">
+              <label for="to-location" class="form-label">To:</label>
+              <select class="form-select" name="to-location" id="to-location">
+                  {% for city in cities %}
+                  <option>{{ city }}</option>
+                  {% endfor %}
+              </select>
+          </div>
 
               <div class="container pt-4">
                 <label for="departure_date">Travel Date:</label>
                 <input type="date" id="departure_date" name="departure_date" />
+                <label style="width: 50px;" for=""></label>
+                <label for="extra_date">Extra Date:</label>
+                <input type="date" id="extra_date" name="extra_date" disabled />
               </div>
 
+              <div class="container pt-4">
+                <input type="checkbox" id="enable_date" onchange="toggleDateSelector()" />
+                <label for="enable_date">Search in Date Range</label>
+              </div>
+    
               <div class="d-grid pt-4 justify-content-center">
                 <button type="submit" class="btn btn-lg btn-danger">
                   Find Travel
                 </button>
               </div>
-
-              <!-- Look at the below comment for details regarding updateFormAction
-              <div class="d-grid pt-4 justify-content-center">
-                <button type="button" onclick="updateFormAction()" class="btn btn-lg btn-danger">
-                  Find Travel
-                </button>
-              </div>
-              -->
             </div>
           </div>
-      </div>
-    </form>
-
-    <!-- Why javascript code here? 
-        I modified the app.py file to get the necessary information using flask form request
-        not deleting it since I do not know its function but commenting it out for now
+        </div>
+      </form>
+    </div>
+    
     <script>
-      function updateFormAction() {
-        var form = document.getElementById('searchForm');
-        var vehicleType = document.querySelector('input[name=vehicle_type]:checked').value;
-        var departureCity = document.getElementById('departs_from').value;
-        var arrivalCity = document.getElementById('arrives_to').value;
-        var departure_date = document.getElementById('departure_date').value;
-        var url = "/travel/" + vehicleType + "/from:" + departureCity + "/to:" + arrivalCity + "/date:" + departure_date;
-        window.location.href = url;
-        // form.action = url;
-        // form.submit();
+      function toggleDateSelector() {
+        const extraDateInput = document.getElementById('extra_date');
+        const enableDateCheckbox = document.getElementById('enable_date');
+    
+        if (enableDateCheckbox.checked) {
+          extraDateInput.disabled = false;
+        } else {
+          extraDateInput.disabled = true;
+        }
       }
     </script>
-    -->
-
-
+    
   </body>
 </html>

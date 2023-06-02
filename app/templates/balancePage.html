@@ -48,7 +48,7 @@
                     <div class="col"><h1>Current Balance: </h1></div>
                     <div class="col">
                         <div class="card bg-danger text-white text-center" style="font-size: 30px;">
-                            1000 ₺
+                            {{ balance['balance'] }} ₺
                         </div>
                     </div>
                 </div>
@@ -111,13 +111,13 @@
     
                 </div>
 
-                <div class="d-grid gap-2 mx-auto">
-                    <label for="amount">Amount to add:</label>
-                    <input type="number" class="form-control" id="amount" name="amount">
-                </div>
-
-                <button class="btn mt-4 btn-danger btn-lg">Add Money</button>
-
+                <form method="post" action="{{ url_for('balance') }}">
+                    <div class="d-grid gap-2 mx-auto">
+                        <label for="amount">Amount to add:</label>
+                        <input type="number" class="form-control" id="amount" name="amount">
+                        <button type="submit" class="btn mt-4 btn-danger btn-lg">Add Money</button>
+                    </div>
+                </form>
 
             </div>
         </div>

@@ -22,13 +22,13 @@
           <a class="nav-link" href="{{ url_for('myTravels') }}">My Travels</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('balance', user_id=user_id) }}">Balance</a>
+          <a class="nav-link" href="{{ url_for('balance')}}">Balance</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('coupons', user_id=user_id) }}">Coupons</a>
+          <a class="nav-link" href="{{ url_for('coupons') }}">Coupons</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('userProfile', user_id=user_id) }}">Profile</a>
+          <a class="nav-link" href="{{ url_for('userProfile') }}">Profile</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
@@ -122,23 +122,23 @@
             </div>
 
             <div class="col-2">
-                <!--Replace with actual data from database-->
                 From: {{ departureCity }}
             </div>
             <div class="col-2">
-                <!--Replace with actual data from database-->
                 To: {{ arrivalCity }}
             </div>
             <div class="col-3">
-                <!--Replace with actual data from database-->
-                Date: {{ departureDate }}
+                {% if extra_date=='none' %}
+                  Date: {{ departureDate }}
+                {% else %}
+                  Date Range: {{ departureDate }} - {{ extra_date }}
+                {% endif %}
             </div>
         </div>
     </div>
 
 
     <div class="container pt-5">
-        <!--This will be handled by a loop from the database of course-->
         <div>{{ departure_city }}</div>
         {% if searchedTravels %}
             {% for singleTravel in searchedTravels %}

@@ -190,8 +190,8 @@ def main():
     #main displays findTravelPage wheter a user is logged in or not
     return findTravel()
  
-@app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/', methods=['GET'])
-def travels(vehicle_type, departure_city, arrival_city, departure_date):
+@app.route('/travel/<string:vehicle_type>/from:<string:departure_city>/to:<string:arrival_city>/date:<string:departure_date>/extra_date:<string:extra_date>', methods=['GET'])
+def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_date):
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     sort_type = 'T.depart_time'
@@ -209,30 +209,47 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date):
         elif sort_in == 'high_to_low':
             sort_type = 'T.price DESC'
 
-    query = """
-    SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
-    FROM Travel T
-    JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-    JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-    JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-    JOIN Company C ON T.travel_company_id = C.id
-    WHERE Dep.city = %s
-    AND Ar.city = %s
-    AND DATE(T.depart_time) = %s
-    AND V.type = %s
-    ORDER BY {}
-    """.format(sort_type)
+    if extra_date == 'none':
+        query = """
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        FROM Travel T
+        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+        JOIN Company C ON T.travel_company_id = C.id
+        WHERE Dep.city = %s
+        AND Ar.city = %s
+        AND DATE(T.depart_time) = %s
+        AND V.type = %s
+        ORDER BY {}
+        """.format(sort_type)
+        cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
+        searchedTravels = cursor.fetchall()
+    else:
+        query = """
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        FROM Travel T
+        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+        JOIN Company C ON T.travel_company_id = C.id
+        WHERE Dep.city = %s
+        AND Ar.city = %s
+        AND DATE(T.depart_time) <= %s
+        AND DATE(T.depart_time) >= %s
+        AND V.type = %s
+        ORDER BY {}
+        """.format(sort_type)
+        cursor.execute(query, (departure_city, arrival_city, extra_date, departure_date, vehicle_type))
+        searchedTravels = cursor.fetchall()
+
 
     is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
     user_id = session.get('userid')
-    
-    # cursor.execute(query)
-    cursor.execute(query, (departure_city, arrival_city, departure_date, vehicle_type))
-    searchedTravels = cursor.fetchall()
 
     cursor.close()
 
-    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
+    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city, departureCity=departure_city, departureDate=departure_date, extra_date=extra_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():
@@ -251,13 +268,17 @@ def findTravel():
         arrival_city = request.form['to-location']
         departure_date = request.form['departure_date']
 
+        extra_date = 'none'
+        if 'extra_date' in request.form:
+            extra_date = request.form['extra_date']
+
         #perform checks
         if not departure_city or not arrival_city or not departure_date:
             error_message = "Please select fill in the form."
             return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id =user_id, error_message=error_message)
 
         #redirect to listAvailableTravelsPage.html with relevant information
-        return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date))
+        return redirect(url_for('travels', vehicle_type=vehicle_type, departure_city=departure_city, arrival_city=arrival_city, departure_date=departure_date, extra_date=extra_date))
         
     cursor.close()
 
@@ -345,7 +366,7 @@ def buy_travel(travel_id):
             discounted_price = travel_details['price'] * (1 - sale_rate)
             
             # Update the travel_details dictionary with the discounted price
-            travel_details['discounted_price'] = discounted_price
+            travel_details['discounted_price'] = '{0:.5}'.format(discounted_price)
         else:
             travel_details['discounted_price'] = travel_details['price']
 
@@ -353,7 +374,7 @@ def buy_travel(travel_id):
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
-    user_id = ['userid']
+    user_id = session['userid']
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Retrieve available coupons for the user
@@ -402,12 +423,12 @@ def coupons():
                 mysql.connection.commit()
 
                 # Redirect to the same page to display the updated list of available coupons
-                return redirect(url_for('coupons', user_id=user_id))
+                return redirect(url_for('coupons'))
         else:
             # Display an error message if the coupon does not exist
             flash("Invalid coupon number.", "error")
 
-    return render_template('couponsPage.html', user_id=user_id, available_coupons=available_coupons, past_coupons=past_coupons)
+    return render_template('couponsPage.html', available_coupons=available_coupons, past_coupons=past_coupons)
 
 @app.route('/userProfile', methods=['GET', 'POST'])
 def userProfile(): 
@@ -472,9 +493,36 @@ def updateTravelerProfile():
     
 @app.route('/balance', methods = [ 'GET', 'POST'])
 def balance():
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
     if 'userid' in session and 'loggedin' in session:
         user_id = session['userid']
-        return render_template('balancePage.html', user_id = user_id)
+
+        # Get balance
+        query_balance = """
+        SELECT balance
+        FROM Traveler
+        WHERE Traveler.id = %s
+        """
+        cursor.execute(query_balance, (user_id,))
+        balance = cursor.fetchone()
+
+        # Send amount to balance
+        if request.method == 'POST':
+            amount = request.form.get('amount')
+            balance['balance'] += int(amount)
+
+            query_newbalance = """
+            UPDATE Traveler 
+            SET balance = %s
+            WHERE Traveler.id = %s
+            """
+            cursor.execute(query_newbalance, (balance['balance'], user_id))
+            mysql.connection.commit()
+
+            return redirect(url_for('balance'))
+        
+        return render_template('balancePage.html', user_id = user_id, balance=balance)
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
@@ -700,8 +748,6 @@ def commentsOnATravel(travelId):
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
-
-
 @app.route('/editUpcomingTravel/<int:travelId>', methods = [ 'GET', 'POST'])
 def editUpcomingTravel(travelId):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
@@ -799,7 +845,6 @@ def editUpcomingTravel(travelId):
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
-
 @app.route('/deleteATravel/<int:travelId>', methods = ['GET', 'POST'])
 def deleteATravel(travelId):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
