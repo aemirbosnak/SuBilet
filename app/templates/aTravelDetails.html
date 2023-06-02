@@ -99,6 +99,20 @@
         </div>
     {% endif %}
 
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class=flashes>
+      {% for message in messages %}
+        {% if message != 'Session was not valid, please log in!' %}
+          <div class="container mt-5">
+            <h4 class="text-danger">{{ message }}</h4>
+          </div>
+        {% endif %}
+      {% endfor %}
+      </div>
+    {% endif %}
+    {% endwith %}
+
     <div class="container pt-4 ">
         <h4> All Purchases For This Travel</h4>
         <hr>
@@ -183,7 +197,7 @@
                             <!-- If the travel is past travel then company cannot delete or do anything about the purchase -->
                             {% if theTravel['depart_time'] > current_time %}
                             <div class="col align-items-center">
-                                <a class="row mb-2 text-decoration-none" href="#">
+                                <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteAndRefundAPurchase', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}">
                                     <button class="btn btn-danger">Delete & Refund</button>
                                 </a>
                                 <a class="row mb-2 text-decoration-none" href="#">
@@ -199,7 +213,7 @@
     </div>
     {% else %}
     <div class="container ">
-        <h5> There is no purchase yet. </h5>
+        <h5> There is no purchase. </h5>
     </div>
     {% endif %}
 
@@ -269,7 +283,7 @@
     </div>
     {% else %}
     <div class="container">
-        <h5> There is no reservation yet. </h5>
+        <h5> There is no reservation. </h5>
     </div>
     {% endif %}
     {% endif %}

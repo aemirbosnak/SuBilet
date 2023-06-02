@@ -99,7 +99,7 @@ def travelerRegister():
         elif password != passwordRepeat:
             message = 'Password mismatch. Please enter same password!'
         elif int(age) < 18:
-            message = 'To register, you must be bigger than 18 years old!'   
+            message = 'To register, you should be older than 18!'   
         else:
             cursor.execute('INSERT INTO User (id, email, password, phone, active) VALUES (NULL, % s, % s, % s, TRUE)', (email, password, phone, ))
             mysql.connection.commit()
@@ -926,6 +926,7 @@ def deleteATravel(travelId):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
         message = ''
+        message2 = None
 
         queryGetTravelInfo = """
         SELECT *
@@ -937,23 +938,78 @@ def deleteATravel(travelId):
         """
         cursor.execute(queryGetTravelInfo, (travelId, ))
         theTravel = cursor.fetchone()
+
+        # Find if there is any booking (reservations and purchase) on the travel
+        queryFindAnyBooking = """
+        SELECT COUNT(*) AS booking_count
+        FROM Booking 
+        WHERE travel_id = %s
+        """
+
+        cursor.execute(queryFindAnyBooking, (travelId,))
+        booking_count = cursor.fetchall()
         
         # Check if the travel is of the logged in company
         if( theTravel['travel_company_id'] != companyId):
             message = "This travel doesn't belong to your company. You cannot delete!"
+        elif booking_count:
+            message = "There are " + str(booking_count[0]['booking_count']) 
+            message = message + " bookings for this travel. To be able to delete this travel you need to delete these bookings first."
+            message2 = "deleteTravelError"
         else:
             queryDeleteATravel = """
             DELETE FROM Travel WHERE travel_id = %s
             """
             cursor.execute(queryDeleteATravel, (travelId,))
             mysql.connection.commit()
-            message = "The travel is deleted successfully!"
+            message = "The travel is deleted successfully."
 
-        flash(message)
+        flash(message, message2)
         return redirect(url_for('companysAllTravels', upcomingOrPast = 'upcoming'))
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
+    
+@app.route('/deleteAndRefundAPurchase/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
+def deleteAndRefundAPurchase(PNRToBeDeleted):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        companyId = session['userid']
+
+        # Get user id, travel id and paid amount for the purchase
+        queryGetInfo = """
+        SELECT T.id AS traveler_id, B.travel_id AS travel_id, P.price AS paid_amount
+        FROM Traveler T
+        JOIN Booking B ON T.id = B.traveler_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        WHERE B.PNR = %s
+        """
+        cursor.execute(queryGetInfo, (PNRToBeDeleted,))
+        info = cursor.fetchone()
+
+        # Delete PNR from both purchase and Booking
+        queryDeletePNRFromBooking = """
+        DELETE FROM Booking WHERE PNR = %s
+        """
+        cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
+        cursor.connection.commit()
+        message = "The booking is deleted."
+
+        # Refund the paid amount
+        queryRefund = """
+        UPDATE Traveler SET balance = balance + %s WHERE id = %s
+        """
+        cursor.execute(queryRefund, (info['paid_amount'], info['traveler_id']))
+        mysql.connection.commit()
+        message = message + ' Paid amount for the ' + PNRToBeDeleted + ' is refunded.'
+
+        
+        flash(message)
+        return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
+
     
 @app.route('/companyProfile/<int:companyId>', methods=['GET', 'POST'])
 def companyProfile(companyId): 
