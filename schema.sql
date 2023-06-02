@@ -83,8 +83,8 @@ CREATE TABLE Company (
 
 INSERT INTO Company (id, company_name, website, foundation_date, about, validator_id, validation_date) VALUES
 (4, 'company1', 'https://company1.com.tr', '2000-01-01', 'about company 1', 1, '2000-01-02' ),
-(5, 'company2', 'https://company2.com.tr', '2000-01-01', 'about company 2', 1, '2000-01-02' ),
-(6, 'company3', 'https://company3.com.tr', '2000-01-01', 'about company 3', 1, '2000-01-02' );
+(5, 'company2', 'https://company2.com.tr', '2001-02-03', 'about company 2', 1, '2001-02-05' ),
+(6, 'company3', 'https://company3.com.tr', '2002-03-04', 'about company 3', 1, '2002-03-05' );
 
 CREATE TABLE Report (
     report_id INT,

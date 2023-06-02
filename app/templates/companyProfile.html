@@ -12,6 +12,7 @@
     <title>ŞuBilet</title>
 </head>
 <body>
+    {% if session['userType'] and session['userType'] == 'company' %} 
     <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
           <ul class="navbar-nav">
@@ -33,7 +34,31 @@
             </li>
           </ul>
         </div>
-    </nav>    
+    </nav> 
+    {% elif session['loggedin']  and session['userType'] == 'admin' %}
+    <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+        <div class="container-fluid">
+          <ul class="navbar-nav">
+            <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('companies')}}">Companies</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">???</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">???</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+            </li>
+          </ul>
+        </div>
+    </nav>
+    {% endif %}   
 
     <div class="container-fluid mt-4">
         <h3 class="ml-6 ">{{ companyInfo['company_name'].capitalize() }} Profile </h3>
@@ -75,7 +100,7 @@
                             <h5 class="text-decoration-underline">About Company:</h5>
                             <h5> {{ companyInfo['about'] }} </h5>
                     </div>
-                    <div class="row">
+                    <div class="row {% if request.path.startswith('/editCompanyProfile/') %} d-none {% endif %}" >
                         <a class="col-md-12 text-center" href="{{ url_for('editCompanyProfile', companyId = companyInfo['id'] ) }}">
                             <button type="button" class="btn btn-lg btn-danger">Edit Company Profile</button>
                         </a>
