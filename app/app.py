@@ -421,7 +421,7 @@ def buy_travel(travel_id):
         """
         cursor.execute(query_addTravelToJourney, (selected_journey, user_id, travel_id,))
         mysql.connection.commit()
-        return redirect(url_for('buy_travel', travel_id=travel_id))
+        return redirect(url_for('journeys'))
 
 
     if request.method == 'POST':
