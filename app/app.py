@@ -35,34 +35,34 @@ def login():
         cursor.execute('SELECT * FROM User WHERE email = % s AND password = % s', (email, password, ))
         user = cursor.fetchone()
 
-        cursor.execute('SELECT * From Traveler WHERE id = %s ', (user['id'],))
-        userTraveler = cursor.fetchone()
+        if user:
+            cursor.execute('SELECT * From Traveler WHERE id = %s ', (user['id'],))
+            userTraveler = cursor.fetchone()
 
-        cursor.execute('SELECT * From Company WHERE id = %s ', (user['id'],))
-        userCompany = cursor.fetchone()
+            cursor.execute('SELECT * From Company WHERE id = %s ', (user['id'],))
+            userCompany = cursor.fetchone()
 
-        cursor.execute('SELECT * From Administrator WHERE id = %s', (user['id'],))
-        userAdmin = cursor.fetchone()
+            cursor.execute('SELECT * From Administrator WHERE id = %s', (user['id'],))
+            userAdmin = cursor.fetchone()
 
-        if userTraveler:
-            userType = 'traveler'
-        elif userCompany:
-            userType = 'company'
-        elif userAdmin:
-            userType = 'admin'
+            if userTraveler:
+                userType = 'traveler'
+            elif userCompany:
+                userType = 'company'
+            elif userAdmin:
+                userType = 'admin'
 
-        #create session
-        if user:              
+            #create session
             session['loggedin'] = True
             session['userid'] = user['id']
             session['userType'] = userType
-            message = 'Logged in successfully!'
+            #message = 'Logged in successfully!'
             return redirect(url_for('main'))
+
         else:
             message = 'Please enter correct email / password !'
+            cursor.close()
 
-        cursor.close()
-    
     return render_template('login.html', message = message)
 
 @app.route('/travelerRegister', methods =['GET', 'POST'])
