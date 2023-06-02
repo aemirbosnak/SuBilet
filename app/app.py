@@ -423,12 +423,12 @@ def coupons():
                 mysql.connection.commit()
 
                 # Redirect to the same page to display the updated list of available coupons
-                return redirect(url_for('coupons', user_id=user_id))
+                return redirect(url_for('coupons'))
         else:
             # Display an error message if the coupon does not exist
             flash("Invalid coupon number.", "error")
 
-    return render_template('couponsPage.html', user_id=user_id, available_coupons=available_coupons, past_coupons=past_coupons)
+    return render_template('couponsPage.html', available_coupons=available_coupons, past_coupons=past_coupons)
 
 @app.route('/userProfile', methods=['GET', 'POST'])
 def userProfile(): 
@@ -845,7 +845,6 @@ def editUpcomingTravel(travelId):
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
-
 @app.route('/deleteATravel/<int:travelId>', methods = ['GET', 'POST'])
 def deleteATravel(travelId):
     if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
