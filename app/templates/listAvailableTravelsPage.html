@@ -122,23 +122,23 @@
             </div>
 
             <div class="col-2">
-                <!--Replace with actual data from database-->
                 From: {{ departureCity }}
             </div>
             <div class="col-2">
-                <!--Replace with actual data from database-->
                 To: {{ arrivalCity }}
             </div>
             <div class="col-3">
-                <!--Replace with actual data from database-->
-                Date: {{ departureDate }}
+                {% if extra_date=='none' %}
+                  Date: {{ departureDate }}
+                {% else %}
+                  Date Range: {{ departureDate }} - {{ extra_date }}
+                {% endif %}
             </div>
         </div>
     </div>
 
 
     <div class="container pt-5">
-        <!--This will be handled by a loop from the database of course-->
         <div>{{ departure_city }}</div>
         {% if searchedTravels %}
             {% for singleTravel in searchedTravels %}

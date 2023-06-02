@@ -249,7 +249,7 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
 
     cursor.close()
 
-    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType = vehicle_type, arrivalCity = arrival_city, departureCity = departure_city, departureDate = departure_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
+    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city, departureCity=departure_city, departureDate=departure_date, extra_date=extra_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():
@@ -374,7 +374,7 @@ def buy_travel(travel_id):
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
-    user_id = ['userid']
+    user_id = session['userid']
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Retrieve available coupons for the user
