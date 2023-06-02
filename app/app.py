@@ -2,7 +2,7 @@
 import re  
 import os
 import random, string
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
@@ -409,7 +409,6 @@ def buy_travel(travel_id):
     cursor.execute(query_journey, (user_id,))
     journeys = cursor.fetchall()
 
-
     pnr = generatePNR()
     seat_number = generateSeatNumber(travel_id)
 
@@ -423,7 +422,7 @@ def buy_travel(travel_id):
         mysql.connection.commit()
         return redirect(url_for('journeys'))
 
-
+    # apply coupon
     if request.method == 'POST':
         coupon_id = request.form.get('coupon_id')
         if coupon_id:
@@ -445,6 +444,68 @@ def buy_travel(travel_id):
             travel_details['discounted_price'] = '{0:.5}'.format(discounted_price)
         else:
             travel_details['discounted_price'] = travel_details['price']
+
+    # reserve
+    if request.method == 'POST' and "reserve" in request.form:
+        ## do not deduct from balance
+        # Generate the current timestamp
+        reserved_time = datetime.now()
+
+        # Calculate the purchase deadline (2 days before departure time)
+        depart_time = travel_details['depart_time']
+        purchase_deadline = depart_time - timedelta(days=2)
+        
+        query_insert_booking = """
+        INSERT INTO Booking(PNR, travel_id, seat_number, traveler_id)
+        VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query_insert_booking, (pnr, travel_id, seat_number, user_id))
+
+        # Insert data into Reserved table
+        query_insert_reserved = """
+        INSERT INTO Reserved(PNR, reserved_time, purchased_deadline)
+        VALUES (%s, %s, %s)
+        """
+        cursor.execute(query_insert_reserved, (pnr, reserved_time, purchase_deadline))
+        mysql.connection.commit()
+
+        return redirect(url_for('myTravels'))
+    
+    # purchase
+    if request.method == 'POST' and "purchase" in request.form:
+        # Generate the current timestamp
+        purchase_time = datetime.now()
+
+        # check if coupon used
+        coupon_id = request.form.get('coupon_id')
+        discounted_price = travel_details['discounted_price']
+        coupon_id = coupon_id if coupon_id else None
+
+        # calculate updated balance
+        ### COUPON DISCOUNT IS NOT WORKING ###
+        updated_balance = balance['balance'] - travel_details['discounted_price']
+
+        query_insert_booking = """
+        INSERT INTO Booking(PNR, travel_id, seat_number, traveler_id)
+        VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query_insert_booking, (pnr, travel_id, seat_number, user_id))
+
+        query_insert_purchased = """
+        INSERT INTO Purchased(PNR, purchased_time, payment_method, price, coupon_id)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(query_insert_purchased, (pnr, purchase_time, 'credit card', discounted_price, coupon_id))
+
+        query_update_balance = """
+        UPDATE Traveler
+        SET Balance = %s
+        WHERE id = %s
+        """
+        cursor.execute(query_update_balance, (updated_balance, user_id))
+        mysql.connection.commit()
+
+        return redirect(url_for('myTravels'))
 
     return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys)
 
