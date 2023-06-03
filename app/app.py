@@ -1749,6 +1749,212 @@ def deleteAVehicleType(vehicleTypeId):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
 
+
+@app.route('/reportPage', methods = [ 'GET', 'POST'])
+def reportPage():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # Total Number of Active Admins
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Administrator A
+        NATURAL JOIN User U
+        WHERE U.active IS TRUE
+        """
+        cursor.execute(query)
+        admin_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Active Travelers
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Traveler T
+        NATURAL JOIN User U
+        WHERE U.active IS TRUE
+        """
+        cursor.execute(query)
+        traveler_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Active and Validated Company
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Company C
+        NATURAL JOIN User U
+        WHERE U.active IS TRUE AND C.validator_id IS NOT NULL
+        """
+        cursor.execute(query)
+        company_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Unverified Company
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Company
+        WHERE validator_id IS NULL
+        """
+        cursor.execute(query)
+        pending_company_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Terminal
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Terminal
+        WHERE active_status = 'active'
+        """
+        cursor.execute(query)
+        terminal_number = (cursor.fetchone())['cnt']
+        
+        # Total Number of Vehicle Type
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Vehicle_Type
+        """
+        cursor.execute(query)
+        vehicle_type_number = (cursor.fetchone())['cnt']
+        
+        # Total Number of Purchase and Total Amount
+        query = """
+        SELECT COUNT(*) AS total_purchase_number, SUM(price) AS total_purchase_amount
+        FROM Purchased
+        """
+        cursor.execute(query)
+        purchase_info = cursor.fetchone()
+        
+        # Total Number of Past and Upcoming Travels by Vehicle Type
+        query = """
+            SELECT type, COUNT(*) AS cnt
+            FROM travel_with_vehicle_detail_view
+            WHERE depart_time < %s
+            GROUP BY type
+        """
+        cursor.execute(query, (datetime.now(),))
+        past_travels_by_type = {row['type']: row['cnt'] for row in cursor.fetchall()}
+
+        query = """
+            SELECT type, COUNT(*) AS cnt
+            FROM travel_with_vehicle_detail_view
+            WHERE depart_time > %s
+            GROUP BY type
+        """
+        cursor.execute(query, (datetime.now(),))
+        upcoming_travels_by_type = {row['type']: row['cnt'] for row in cursor.fetchall()}
+
+        # Access the counts for each vehicle type
+        past_bus_number = past_travels_by_type.get('bus', 0)
+        upcoming_bus_number = upcoming_travels_by_type.get('bus', 0)
+        past_plane_number = past_travels_by_type.get('plane', 0)
+        upcoming_plane_number = upcoming_travels_by_type.get('plane', 0)
+        past_train_number = past_travels_by_type.get('train', 0)
+        upcoming_train_number = upcoming_travels_by_type.get('train', 0)        
+
+        # Total Number of Reviews
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Review
+        """
+        cursor.execute(query)
+        total_reviews = (cursor.fetchone())['cnt']
+
+        # Coupon Usage Percentage
+        query = """
+        SELECT (COUNT(*) / (SELECT COUNT(*) FROM Purchased)) * 100 AS coupon_usage_percentage
+        FROM Purchased
+        WHERE coupon_id IS NOT NULL
+        """
+        cursor.execute(query)
+        coupon_usage_percentage = (cursor.fetchone())['coupon_usage_percentage']
+
+        # Find Company With Max Revanue
+        # Note that MySql 5.7 doesn't support with clause
+        query = """
+        SELECT T1.company_name
+        FROM (
+        SELECT C.company_name, SUM(P.price) AS revenue
+        FROM Company C
+        JOIN Travel T ON T.travel_company_id = C.id
+        JOIN Booking B ON B.travel_id = T.travel_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        GROUP BY C.company_name
+        ) T1
+        WHERE T1.revenue = (SELECT MAX(revenue) FROM (
+        SELECT C.company_name, SUM(P.price) AS revenue
+        FROM Company C
+        JOIN Travel T ON T.travel_company_id = C.id
+        JOIN Booking B ON B.travel_id = T.travel_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        GROUP BY C.company_name
+        ) T2)
+        """
+        cursor.execute(query)
+        company_with_max_revanue = (cursor.fetchone())['company_name']
+
+        # Company With Max Travel Number
+        query = """
+        SELECT C.company_name
+        FROM Company C
+        JOIN (
+            SELECT T.travel_company_id, COUNT(*) AS travel_count
+            FROM Travel T
+            GROUP BY T.travel_company_id
+        ) AS TC ON C.id = TC.travel_company_id
+        WHERE TC.travel_count = (
+            SELECT MAX(travel_count)
+            FROM (
+                SELECT T.travel_company_id, COUNT(*) AS travel_count
+                FROM Travel T
+                GROUP BY T.travel_company_id
+            ) AS counts
+        );
+        """
+        cursor.execute(query)
+        company_with_max_travel_number = (cursor.fetchone())['company_name']
+
+        # Company With Max Rating
+        query = """
+        SELECT C.company_name
+        FROM Company C
+        JOIN Travel T ON T.travel_company_id = C.id
+        JOIN Review R ON R.travel_id = T.travel_id
+        GROUP BY C.id, C.company_name
+        HAVING AVG(R.rating) = (
+            SELECT MAX(avg_rating)
+            FROM (
+                SELECT AVG(R.rating) AS avg_rating
+                FROM Travel T
+                JOIN Review R ON R.travel_id = T.travel_id
+                GROUP BY T.travel_company_id
+            ) AS avg_ratings
+        );
+        """
+        cursor.execute(query)
+        company_with_max_rating = (cursor.fetchone())['company_name']
+
+
+        return render_template('reportPage.html', message = message, 
+                               admin_number = admin_number,
+                               traveler_number = traveler_number, 
+                               company_number = company_number,
+                               pending_company_number = pending_company_number, 
+                               terminal_number = terminal_number, 
+                               vehicle_type_number = vehicle_type_number, 
+                               total_purchase_number = purchase_info[ 'total_purchase_amount' ], 
+                               total_purchase_amount = purchase_info[ 'total_purchase_amount' ], 
+                               past_bus_number = past_bus_number, 
+                               upcoming_bus_number = upcoming_bus_number,
+                               past_plane_number = past_plane_number,
+                               upcoming_plane_number = upcoming_plane_number,
+                               past_train_number = past_train_number, 
+                               upcoming_train_number = upcoming_train_number,
+                               total_reviews = total_reviews,
+                               coupon_usage_percentage = coupon_usage_percentage,
+                               company_with_max_revanue = company_with_max_revanue,
+                               company_with_max_travel_number = company_with_max_travel_number,
+                               company_with_max_rating = company_with_max_rating
+                                )
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
 ########################
 ### HELPER FUNCTIONS ###
 ########################
