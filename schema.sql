@@ -95,17 +95,31 @@ INSERT INTO Company (id, company_name, website, foundation_date, about, validato
 CREATE TABLE Report (
     report_id INT,
     report_date DATETIME,
-    total_sales DECIMAL(15,2),
+    traveler_number INT,
+    company_number INT,
+    pending_company_number INT,
+    admin_number INT,
+    terminal_number INT,
+    vehicle_type_number INT,
+    total_purchase_number INT,
+    total_purchase_amount DECIMAL(15,2),
     total_reviews INT,
-    total_company INT,
-    pending_compan INT,
-    total_travelers INT,
-    total_bus INT,
-    total_train INT,
-    total_plane INT,
+    coupon_usage_percentage INT,
+    past_bus_number INT,
+    upcoming_bus_number INT,
+    past_plane_number INT,
+    upcoming_plane_number INT,
+    past_train_number INT,
+    upcoming_train_number INT,
+    company_with_max_revanue VARCHAR(256),
+    company_with_max_travel_number VARCHAR(256),
+    company_with_max_rating VARCHAR(256),
     report_generator_id INT,
     PRIMARY KEY(report_id),
     FOREIGN KEY(report_generator_id) REFERENCES Administrator(id) ON DELETE SET NULL,
+    FOREIGN KEY(company_with_max_revanue) REFERENCES Company(company_name) ON DELETE SET NULL,
+    FOREIGN KEY(company_with_max_travel_number) REFERENCES Company(company_name) ON DELETE SET NULL,
+    FOREIGN KEY(company_with_max_rating) REFERENCES Company(company_name) ON DELETE SET NULL,
     UNIQUE (report_date)
 );
 
@@ -389,6 +403,14 @@ CREATE VIEW company_traveler_info_view AS
 SELECT TCK, name, surname, age, email, phone
 FROM User JOIN Traveler ON User.id = Traveler.id;
 
+/*
+travle_with_vehicle_detail_view is for obtaining detail
+information about both travel and vehicle
+*/ 
+CREATE VIEW travel_with_vehicle_detail_view AS
+SELECT *
+FROM Travel T
+JOIN Vehicle_Type V ON V.id = T.vehicle_type_id;
 
 /*
 travel_detail_view is for obtaining detail
