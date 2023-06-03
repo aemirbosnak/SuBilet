@@ -327,8 +327,18 @@ def myTravels():
         if request.method == 'GET' and 'rating' in request.args:
             currentRating = request.args.get('rating')
 
+        query_reserved = """
+        SELECT Reserved.PNR
+        FROM Reserved
+        JOIN Booking ON Reserved.PNR = Booking.PNR
+        WHERE Booking.traveler_id = %s
+        AND Reserved.PNR = Booking.PNR
+        """
+        cursor.execute(query_reserved, (user_id,))
+        reserved_travels = [row['PNR'] for row in cursor.fetchall()]
+
         cursor.close()
-        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating)
+        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating, reserved_travels=reserved_travels)
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)

@@ -144,6 +144,14 @@
                             </form>
                             {% endif %}
                         </div>
+                        {% elif upcomingOrPast == 'upcoming' and row['PNR'] in reserved_travels %}
+                        <div class="col-1">
+                            <button class="btn btn-danger btn-lg">Purchase</button>
+                        </div>
+                        {% else %}
+                        <div class="col-1">
+                            <button class="btn btn-danger btn-lg">Details</button>
+                        </div>
                         {% endif %}
                     </div>
 
