@@ -1393,12 +1393,14 @@ def editCompanyProfile(companyId):
 @app.route('/companies', methods=['GET', 'POST'])
 def companies():
     if 'userid' in session and 'loggedin' in session:
-        sort_type = 'C.company_name'
+        sort_type = 'C.id ASC'
         sort_in = 'sort_by_name'
+        filter_in = 'all'
+        filter_type = 'all'
+        filterClause = ''
 
-        if request.method == 'GET' and 'sort_type' in request.args:
+        if request.method == 'GET' and 'sort_type' in request.args or 'filter_type' in request.args:
             sort_in = request.args.get('sort_type')
-
             if sort_in == 'sort_by_name':
                 sort_type = 'C.company_name'
             elif sort_in == 'validation_date_earliest_to_latest':
@@ -1413,6 +1415,25 @@ def companies():
                 sort_type = 'C.id ASC'
             else:
                 sort_type = 'C.id ASC'
+
+            filter_in = request.args.get('filter_type')
+            if filter_in == 'validated':
+                filter_type = 'validated'
+                filterClause = 'WHERE C.validation_date IS NOT NULL'
+            elif filter_in == 'unvalidated':
+                filter_type = 'unvalidated'
+                filterClause = 'WHERE C.validation_date IS NULL'
+            elif filter_in == 'active':
+                filter_type = 'active'
+                filterClause = 'WHERE U.active = TRUE'
+            elif filter_in == 'inactive':
+                filter_type = 'inactive'
+                filterClause = 'WHERE U.active = FALSE'
+            else:
+                filter_type = 'all'
+                filterClause = ''
+
+        
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         queryCompanies = """
@@ -1429,13 +1450,14 @@ def companies():
         A.username as admin_username
         FROM Company C
         NATURAL JOIN User U
-        JOIN Administrator A ON A.id = C.validator_id
-        ORDER BY {}
-        """.format(sort_type)
+        LEFT JOIN Administrator A ON A.id = C.validator_id
+        {whereClause}
+        ORDER BY {sortClause}
+        """.format(whereClause = filterClause, sortClause = sort_type)
         cursor.execute(queryCompanies)
         allCompanies = cursor.fetchall()
 
-        return render_template('companies.html', allCompanies = allCompanies, sortType = sort_in)
+        return render_template('companies.html', allCompanies = allCompanies, sortType = sort_in, filterType = filter_in)
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
@@ -1498,7 +1520,35 @@ def activateCompany(companyId):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
 
+@app.route('/validateCompany/<int:companyId>', methods = ['GET', 'POST'] )
+def validateCompany(companyId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
 
+        # check the company
+        queryGetCompany = """
+        SELECT company_name
+        FROM Company
+        WHERE id = %s
+        """
+        cursor.execute(queryGetCompany, (companyId,))
+        companyInfo = cursor.fetchone()
+        
+        if companyInfo:
+            queryValidate = """
+            UPDATE Company SET validator_id = %s, validation_date = %s WHERE id = %s
+            """
+            current_date = datetime.now().strftime("%Y-%m-%d")
+            cursor.execute(queryValidate, (session['userid'], current_date,companyId))
+            cursor.connection.commit()
+            message = 'Company ' + companyInfo['company_name'] + ' is validated.'
+
+        flash(message)
+        return redirect(url_for('companies'))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
     
 ########################
 ### HELPER FUNCTIONS ###
