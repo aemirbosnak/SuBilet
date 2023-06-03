@@ -379,4 +379,59 @@ INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES
 (17, 10, "The pricing of the travel package seemed reasonable at first, but there were many hidden costs along the way. It would have been helpful to have a clearer breakdown of expenses upfront.", 3);
 
 
+/* 
+********************
+***** Views ******** 
+********************
+*/ 
+
+CREATE VIEW company_traveler_info_view AS
+SELECT TCK, name, surname, age, email, phone
+FROM User JOIN Traveler ON User.id = Traveler.id;
+
+
+/*
+travel_detail_view is for obtaining detail
+information about both travel, terminal and vehicle
+*/ 
+CREATE VIEW travel_detail_view AS
+SELECT
+T.travel_id AS travel_id,
+T.travel_company_id AS travel_company_id,
+T.depart_time AS depart_time,
+T.arrive_time AS arrival_time,
+T.price AS price,
+T.business_price AS business_price,
+Dep.name AS departure_terminal_name,
+Dep.city AS departure_city,
+Ar.name AS arrival_terminal_name,
+Ar.city AS arrival_city,
+V.model AS vehicle_model,
+V.type AS vehicle_type
+FROM Travel T
+JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+JOIN Vehicle_Type V ON V.id = T.vehicle_type_id;
+
+/*
+companies_travels_detail_view is for obtaining detail
+information about travel of a company
+*/ 
+CREATE VIEW companies_travels_detail_view AS
+SELECT
+C.id AS company_id,
+C.company_name AS company_name,
+TDW.travel_id AS travel_id,
+TDW.depart_time AS depart_time,
+TDW.arrival_time AS arrival_time,
+TDW.price AS price,
+TDW.business_price AS business_price,
+TDW.departure_terminal_name AS departure_terminal_name,
+TDW.departure_city AS departure_city,
+TDW.arrival_terminal_name AS arrival_terminal_name,
+TDW.arrival_city AS arrival_city,
+TDW.vehicle_model AS vehicle_model,
+TDW.vehicle_type AS vehicle_type
+FROM Company C 
+JOIN travel_detail_view TDW ON C.id = TDW.travel_company_id;
 
