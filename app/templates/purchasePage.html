@@ -192,29 +192,37 @@
                         <hr/>
                         <div class="row">
                             <div class="d-grid gap-2 col-6 mx-auto">
-                                <form method='POST' action="{{ url_for('buy_travel', travel_id=travel_id) }}">
-                                    <button class="btn btn-outline-success btn-lg" type="submit" name="reserve">Reserve Ticket</button>
-                                    <button class="btn btn-outline-success btn-lg" type="submit" name="purchase">Purchase Ticket</button>
-                                    {% if selected_coupon_id %}
-                                        <input type="hidden" name="coupon_id" value="{{ selected_coupon_id }}">
-                                    {% endif %}
-                                </form>
-                                <hr/>
-                                
-                                <form method="POST" action="{{ url_for('buy_travel', travel_id=travel_id) }}">
-                                    <div class="d-grid gap-2 col-12 mx-auto">
-                                        <label for="selectedJourney">Add this travel to one of your journeys</label>
-                                        <select class="form-select" id="selectedJourney" name="selectedJourney">
-                                            {% for journey in journeys %}
-                                            <option>{{ journey.journey_name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        
-                                        <select id="selectedJourney" name="selectedJourney" style="display: none;"></select> 
-                                        <button class="btn btn-outline-info btn-lg" type="submit" name="addTravelToJourney">Add to Journey</button>
-                                    </div>
-                                </form>
-
+                                {% if reserved_booking %}
+                                    <form method='POST' action="{{ url_for('buy_travel', travel_id=travel_id) }}">
+                                        <button class="btn btn-outline-success btn-lg" type="submit" name="purchase">Purchase Ticket</button>
+                                        {% if selected_coupon_id %}
+                                            <input type="hidden" name="coupon_id" value="{{ selected_coupon_id }}">
+                                        {% endif %}
+                                    </form>
+                                {% else %}
+                                    <form method='POST' action="{{ url_for('buy_travel', travel_id=travel_id) }}">
+                                        <button class="btn btn-outline-success btn-lg" type="submit" name="reserve">Reserve Ticket</button>
+                                        <button class="btn btn-outline-success btn-lg" type="submit" name="purchase">Purchase Ticket</button>
+                                        {% if selected_coupon_id %}
+                                            <input type="hidden" name="coupon_id" value="{{ selected_coupon_id }}">
+                                        {% endif %}
+                                    </form>
+                                    <hr/>
+                                    
+                                    <form method="POST" action="{{ url_for('buy_travel', travel_id=travel_id) }}">
+                                        <div class="d-grid gap-2 col-12 mx-auto">
+                                            <label for="selectedJourney">Add this travel to one of your journeys</label>
+                                            <select class="form-select" id="selectedJourney" name="selectedJourney">
+                                                {% for journey in journeys %}
+                                                <option>{{ journey.journey_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            
+                                            <select id="selectedJourney" name="selectedJourney" style="display: none;"></select> 
+                                            <button class="btn btn-outline-info btn-lg" type="submit" name="addTravelToJourney">Add to Journey</button>
+                                        </div>
+                                    </form>
+                                {% endif %}
                             </div>
                         </div>
                         
