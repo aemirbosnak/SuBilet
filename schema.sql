@@ -25,7 +25,10 @@ INSERT INTO User (id, email, password, phone, active) VALUES
 (8, 'traveler2@example.com', '123456', '555 444 33 29', TRUE),
 (9, 'traveler3@example.com', '123456', '555 444 33 30', TRUE),
 (10, 'traveler4@example.com', '123456', '555 444 33 31', TRUE),
-(11, 'traveler5@example.com', '123456', '555 444 33 32', TRUE);
+(11, 'traveler5@example.com', '123456', '555 444 33 32', TRUE),
+(12, 'company4@example.com', '123456', '555 444 33 33', TRUE),
+(13, 'company5@example.com', '123456', '555 444 33 34', TRUE),
+(14, 'company6@example.com', '123456', '555 444 33 35', FALSE);
 
 CREATE TABLE Traveler (
     id INT,
@@ -83,8 +86,11 @@ CREATE TABLE Company (
 
 INSERT INTO Company (id, company_name, website, foundation_date, about, validator_id, validation_date) VALUES
 (4, 'company1', 'https://company1.com.tr', '2000-01-01', 'about company 1', 1, '2000-01-02' ),
-(5, 'company2', 'https://company2.com.tr', '2001-02-03', 'about company 2', 1, '2001-02-05' ),
-(6, 'company3', 'https://company3.com.tr', '2002-03-04', 'about company 3', 1, '2002-03-05' );
+(5, 'company2', 'https://company2.com.tr', '2001-02-03', 'about company 2', 2, '2001-02-05' ),
+(6, 'company3', 'https://company3.com.tr', '2002-03-04', 'about company 3', 1, '2002-03-05' ),
+(12, 'company4', 'https://company4.com.tr', '2002-03-04', 'about company 4', NULL, NULL ),
+(13, 'company5', 'https://company5.com.tr', '2002-03-04', 'about company 5', NULL, NULL ),
+(14, 'company6', 'https://company6.com.tr', '2005-04-05', 'about company 6', 2, '2005-05-06' );
 
 CREATE TABLE Report (
     report_id INT,

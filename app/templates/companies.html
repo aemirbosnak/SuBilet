@@ -105,22 +105,45 @@
 {% endif %}
 
     <div class="container-fluid pt-4 pb-4 upperBar">
-      <form action="{{ request.path }}" method="GET">
-        <div class="row">
-          <div class="col-2">
-            <select class="form-select" name="sort_type" id="sort_type">
-              <option value="sort_by_name" {% if sortType == 'sort_by_name' %}selected{% endif %}>Name</option>
-              <option value="validation_date_earliest_to_latest" {% if sortType == 'validation_date_earliest_to_latest' %}selected{% endif %}>Validation date (earliest to latest)</option>
-              <option value="validation_date_latest_to_earliest" {% if sortType == 'validation_date_latest_to_earliest' %}selected{% endif %}>Validation date (latest to earliest)</option>
-              <option value="foundation_date_earliest_to_latest" {% if sortType == 'foundation_date_earliest_to_latest' %}selected{% endif %}>Foundation date (earliest to latest)</option>
-              <option value="foundation_date_latest_to_earliest" {% if sortType == 'foundation_date_latest_to_earliest' %}selected{% endif %}>Foundation date (latest to earliest)</option>
-            </select>
+      <div class="container">
+        <div class="row mx-4">
+          <div class="col-6">
+            <form class="row" action="{{ request.path }}" method="GET">
+              <input type="hidden" name="filter_type" id="filter_type" value="{{ filterType }}">
+              <div class="col-6">
+                <select class="form-select" name="sort_type" id="sort_type">
+                  <option value="sort_by_name" {% if sortType == 'sort_by_name' %}selected{% endif %}>Name</option>
+                  <option value="validation_date_earliest_to_latest" {% if sortType == 'validation_date_earliest_to_latest' %}selected{% endif %}>Validation date (earliest to latest)</option>
+                  <option value="validation_date_latest_to_earliest" {% if sortType == 'validation_date_latest_to_earliest' %}selected{% endif %}>Validation date (latest to earliest)</option>
+                  <option value="foundation_date_earliest_to_latest" {% if sortType == 'foundation_date_earliest_to_latest' %}selected{% endif %}>Foundation date (earliest to latest)</option>
+                  <option value="foundation_date_latest_to_earliest" {% if sortType == 'foundation_date_latest_to_earliest' %}selected{% endif %}>Foundation date (latest to earliest)</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <button type="submit" id="sort-button" class="btn btn-outline-danger">Sort</button>
+              </div>
+            </form>
           </div>
-          <div class="col-1">
-            <button type="submit" id="sort-button" class="btn btn-outline-danger">Sort</button>
+
+          <div class="col-6">
+            <form class="row" action="{{ request.path }}" method="GET">
+              <input type="hidden" name="sort_type" id="sort_type" value="{{ sortType }}">
+              <div class="col-6">
+                <select class="form-select" name="filter_type" id="filter_type">
+                  <option value="all" {% if filterType == 'all' %}selected{% endif %}>All</option>
+                  <option value="validated" {% if filterType == 'validated' %}selected{% endif %}>Validated</option>
+                  <option value="unvalidated" {% if filterType == 'unvalidated' %}selected{% endif %}>Unvalidated</option>
+                  <option value="active" {% if filterType == 'active' %}selected{% endif %}>Active</option>
+                  <option value="inactive" {% if filterType == 'inactive' %}selected{% endif %}>Inactive</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <button type="submit" id="filter-button" class="btn btn-outline-danger">Filter</button>
+              </div>
+            </form>
           </div>
-          </div>
-        </form>
+        </div>
+      </div>  
     </div>
 
     <div class="container pt-4 ">
@@ -192,11 +215,19 @@
                             <div class="col">
                                 <div class="row">
                                     <h6 class="blockTitle">Validator Username</h6>
+                                    {% if singleCompany['admin_username'] %}
                                     <p class="">{{ singleCompany['admin_username'] }}</p>
+                                    {% else %}
+                                    <p>-</p>
+                                    {% endif %}
                                 </div>
                                 <div class="row">
                                     <h6 class="blockTitle">Validation Date</h6>
+                                    {% if singleCompany['validation_date'] %}
                                     <p class="">{{ singleCompany['validation_date'] }}</p>
+                                    {% else %}
+                                    <p>-</p>
+                                    {% endif %}
                                 </div>
                             </div>
 
@@ -217,9 +248,15 @@
                               </a>
                               {% else %}
                               <a class="row mb-2 text-decoration-none" href="{{ url_for('activateCompany', companyId = singleCompany['id']) }}">
-                                <button class="btn btn-success">Activate Company</button>
+                                <button class="btn btn-warning">Activate Company</button>
                               </a>
                               {% endif%}
+
+                              {% if not singleCompany['validation_date'] %}
+                              <a class="row mb-2 text-decoration-none" href="{{ url_for('validateCompany', companyId = singleCompany['id']) }}">
+                                <button class="btn btn-info">Validate Company</button>
+                              </a>
+                              {% endif %}                            
                         </div>
 
                     </div>
@@ -229,7 +266,7 @@
     </div>
     {% else %}
     <div class="container ">
-        <h5> There is no purchase. </h5>
+        <h5> There is no company. </h5>
     </div>
     {% endif %}
 
