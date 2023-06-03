@@ -51,7 +51,7 @@
                         <div class="col">
                             <div class="row">
                                 <h6 class=" blockTitle">Departure Terminal</h6>
-                                <p class="">{{ theTravel['name'] }}</p>
+                                <p class="">{{ theTravel['departure_terminal_name'] }}</p>
                             </div>
                             <div class="row">
                                 <h6 class="blockTitle">Departure Time</h6>
@@ -61,21 +61,21 @@
                         <div class="col">
                             <div class="row">
                                 <h6 class="blockTitle">Arrival Terminal</h6>
-                                <p class="">{{ theTravel['Ar.name'] }}</p>
+                                <p class="">{{ theTravel['arrival_terminal_name'] }}</p>
                             </div>
                             <div class="row">
                                 <h6 class="blockTitle">Arrival Time</h6>
-                                <p class="">{{ theTravel['arrive_time'] }}</p>
+                                <p class="">{{ theTravel['arrival_time'] }}</p>
                             </div>
                         </div>
                         <div class="col">
                             <div class="row">
                                 <h6 class="blockTitle">Vehicle Type</h6>
-                                <p class="">{{ theTravel['type'] }}</p>
+                                <p class="">{{ theTravel['vehicle_type'].capitalize() }}</p>
                             </div>
                             <div class="row">
                                 <h6 class="blockTitle">Vehicle Model</h6>
-                                <p class="">{{ theTravel['model'] }}</p>
+                                <p class="">{{ theTravel['vehicle_model'] }}</p>
                             </div>
                         </div>
                         <div class="col">
@@ -159,7 +159,7 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label for="vehic_type">Vehicle Type:</label>
-                            <input type="text" class="form-control" id="vehic_type" name="vehic_type" placeholder="{{ theTravel['type'].capitalize()  }}" readonly>
+                            <input type="text" class="form-control" id="vehic_type" name="vehic_type" placeholder="{{ theTravel['vehicle_type'].capitalize()  }}" readonly>
                         </div>
                         <div class="col-md-6">
                             <label for="vehic_type_id">Vehicle Model:</label>

@@ -735,31 +735,27 @@ def companysAllTravels(upcomingOrPast):
         userid = session['userid']
        
        
-        sort_type = 'T.depart_time'
+        sort_type = 'depart_time'
         sort_in = 'earliest_to_latest'
 
         if request.method == 'GET' and 'sort_type' in request.args:
             sort_in = request.args.get('sort_type')
 
             if sort_in == 'earliest_to_latest':
-                sort_type = 'T.depart_time'
+                sort_type = 'depart_time'
             elif sort_in == 'latest_to_earliest':
-                sort_type = 'T.depart_time DESC'
+                sort_type = 'depart_time DESC'
             elif sort_in == 'low_to_high':
-                sort_type = 'T.price'
+                sort_type = 'price'
             elif sort_in == 'high_to_low':
-                sort_type = 'T.price DESC'
+                sort_type = 'price DESC'
 
         if upcomingOrPast == 'upcoming':
             #get upcoming travels belongs to this company and list
             query = """
             SELECT *
-            FROM Company C 
-            JOIN Travel T ON C.id = T.travel_company_id
-            JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-            JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-            JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-            WHERE  C.id = %s AND T.depart_time > %s
+            FROM companies_travels_detail_view
+            WHERE  company_id = %s AND depart_time > %s
             ORDER BY {}
             """.format(sort_type)
 
@@ -769,12 +765,8 @@ def companysAllTravels(upcomingOrPast):
             #get past travels belongs to the company and list
             query = """
             SELECT *
-            FROM Company C 
-            JOIN Travel T ON C.id = T.travel_company_id
-            JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-            JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-            JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-            WHERE  C.id = %s AND T.depart_time < %s
+            FROM companies_travels_detail_view
+            WHERE company_id = %s AND depart_time < %s
             ORDER BY {}
             """.format(sort_type)
             cursor.execute(query, (userid, datetime.now()))
@@ -857,11 +849,8 @@ def aTravelDetails(travelId):
             #get travel information
             queryGetTravelInfo = """
             SELECT *
-            FROM Travel T
-            JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-            JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-            JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-            WHERE T.travel_id = %s
+            FROM travel_detail_view
+            WHERE travel_id = %s
             """
             cursor.execute(queryGetTravelInfo, (travelId, ))
             theTravel = cursor.fetchone()
@@ -935,11 +924,8 @@ def commentsOnATravel(travelId):
         #get travel information
         queryGetTravelInfo = """
         SELECT *
-        FROM Travel T
-        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-        WHERE T.travel_id = %s
+        FROM travel_detail_view
+        WHERE travel_id = %s
         """
         cursor.execute(queryGetTravelInfo, (travelId, ))
         theTravel = cursor.fetchone()
@@ -975,11 +961,8 @@ def editUpcomingTravel(travelId):
 
         queryGetTravelInfo = """
         SELECT *
-        FROM Travel T
-        JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
-        JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
-        JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
-        WHERE T.travel_id = %s
+        FROM travel_detail_view
+        WHERE travel_id = %s
         """
         cursor.execute(queryGetTravelInfo, (travelId, ))
         theTravel = cursor.fetchone()
@@ -996,7 +979,7 @@ def editUpcomingTravel(travelId):
         else:
             isEditable = True
 
-            travelVehicleType = theTravel['type'] # get the vehicle type such as plane, bus or train
+            travelVehicleType = theTravel['vehicle_type'] # get the vehicle type such as plane, bus or train
             # get available terminals depending on the vehicle type
             queryAllAvailableTerminals = """
             SELECT *
