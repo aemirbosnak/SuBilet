@@ -1735,6 +1735,36 @@ def createVehicleType():
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
+    
+@app.route('/deleteAVehicleType/<int:vehicleTypeId>', methods = [ 'GET', 'POST' ])
+def deleteAVehicleType(vehicleTypeId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        queryFindVehicleType = """
+        SELECT *
+        FROM Vehicle_Type
+        WHERE id = %s
+        """
+        cursor.execute(queryFindVehicleType, (vehicleTypeId,))
+        theVehicleType = cursor.fetchone()
+
+        if theVehicleType:
+            queryDeleteVehicleType = """
+            DELETE FROM Vehicle_Type WHERE id = %s
+            """
+            cursor.execute(queryDeleteVehicleType, (vehicleTypeId,))
+            cursor.connection.commit()
+            message = "The vehicle type " + theVehicleType['model'] + " is deleted."
+        else:
+            message = "There is no such vehicle type"
+
+        flash(message)
+        return redirect(url_for('vehicleManagement'))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
 
 ########################
 ### HELPER FUNCTIONS ###
