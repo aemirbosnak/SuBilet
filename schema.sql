@@ -125,7 +125,8 @@ INSERT INTO Sale_Coupon (coupon_id, coupon_name, sale_rate, expiration_date, gen
 (3, 'indirim30', 0.30, '2023-08-31', '2023-05-01', 'public' ),
 (4, 'indirim10', 0.10, '2023-12-31', '2023-05-02', 'private' ),
 (5, 'indirim20', 0.20, '2023-12-31', '2023-05-02', 'private' ),
-(6, 'indirim30', 0.30, '2023-12-31', '2023-05-02', 'private' );
+(6, 'indirim30', 0.30, '2023-12-31', '2023-05-02', 'private' ),
+(7, 'indirim40', 0.30, '2023-04-30', '2023-01-01', 'public' );
 
 CREATE TABLE Coupon_Traveler(
     coupon_id INT,

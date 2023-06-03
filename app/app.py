@@ -1549,7 +1549,81 @@ def validateCompany(companyId):
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
-    
+
+@app.route('/couponManagement', methods = ['GET', 'POST'])
+def couponManagement():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # get all coupons
+        queryGetCoupons = """
+        SELECT *
+        FROM Sale_Coupon
+        """
+        cursor.execute(queryGetCoupons)
+        allCoupons = cursor.fetchall()
+
+        return render_template('couponManagement.html', allCoupons = allCoupons)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+@app.route('/createCoupon', methods = [ 'GET', 'POST'])
+def createCoupon():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+
+        if request.method == 'POST':
+            if 'coupon_name' in request.form and request.form['coupon_name'] and \
+            'sale_rate' in request.form and request.form['sale_rate'] and \
+            'expiration_date' in request.form and request.form['expiration_date'] and \
+            'public_status' in request.form and request.form['public_status']:
+                
+                coupon_name = request.form['coupon_name']
+                sale_rate = request.form['sale_rate']
+                expiration_date = request.form['expiration_date']
+                public_status = request.form['public_status']
+                current_date = datetime.now().strftime("%Y-%m-%d")
+
+                # check if sale rate is between 0 to 1
+                if float(sale_rate) < 0.0 or float(sale_rate) > 1.0:
+                    message = 'Sale rate must be between 0 and 1'
+                    return render_template('createCoupon.html', message = message)
+
+                #check if there is a non-expired coupon with the given name
+                queryFindCoupon = """
+                SELECT *
+                FROM Sale_Coupon
+                WHERE coupon_name = %s AND expiration_date > %s AND public_status = %s
+                """
+                cursor.execute(queryFindCoupon, (coupon_name, current_date, public_status))
+                existingCoupon = cursor.fetchone()
+                if existingCoupon:
+                    message = 'There is an available coupon with ' + coupon_name + ' name! '
+                    message = message + 'To be able to create a coupon with the same name, the expiration date of existing coupon must be passed.'
+                else:
+                    # create new coupon and insert in to Sale_Coupon table
+                    queryInsertCoupon = """
+                    INSERT INTO Sale_Coupon (coupon_id, coupon_name, sale_rate, expiration_date, generation_date, public_status)
+                    VALUES (NULL, %s, %s, %s, %s, %s)
+                    """
+                
+                    cursor.execute(queryInsertCoupon, (coupon_name, sale_rate, expiration_date, current_date, public_status))
+                    cursor.connection.commit()
+                    message = 'A coupon with ' + coupon_name + ' name, ' + sale_rate + ' sale rate, ' + expiration_date + 'expiration date and with ' + public_status + ' availability is created.'
+                    flash(message)
+                    return redirect(url_for('couponManagement'))
+            else:
+                message = 'Please fill the form!'
+
+        return render_template('createCoupon.html', message = message)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
 ########################
 ### HELPER FUNCTIONS ###
 ########################
