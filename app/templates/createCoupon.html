@@ -19,19 +19,19 @@
         <ul class="navbar-nav">
             <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
             <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+              <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('companies') }}">Companies</a>
+              <a class="nav-link" href="{{ url_for('companies') }}">Companies</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('couponManagement') }}">Coupons</a>
+              <a class="nav-link" href="{{ url_for('couponManagement') }}">Coupons</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" href="#">???</a>
+              <a class="nav-link" href="{{ url_for('vehicleManagement') }}">Vehicles</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+              <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
             </li>
         </ul>
         </div>
@@ -75,7 +75,7 @@
                       </div>
                       <div class="col-md-6">
                           <label for="sale_rate">Sale Rate:</label>
-                          <input type="number" step="0.01" class="form-control" id="sale_rate" name="sale_rate">
+                          <input type="number" step="0.01" class="form-control" id="sale_rate" name="sale_rate" placeholder="Enter number between 0,00 and 1,00">
                       </div>
                   </div>
                   <div class="row mb-4">

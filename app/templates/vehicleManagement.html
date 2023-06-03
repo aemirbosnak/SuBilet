@@ -40,12 +40,14 @@
 
     <div class="container pt-4 ">
         <div class="row">
-            <div class="col-10">
-                <h4> Coupons </h4>
+            <div class="col-10 d-flex flex-column">
+                <div class="mt-auto ">
+                    <h4> Coupons </h4>
+                </div>
             </div>
             <div class="col-2">
-                <a  href="{{ url_for( 'createCoupon' ) }}">
-                    <Button class="btn btn-lg btn-danger px-4"> Create Coupon</Button>
+                <a  href="{{ url_for( 'createVehicleType' ) }}">
+                    <Button class="btn btn-lg btn-danger px-4"> Create New Vehicle Type</Button>
                 </a>
             </div>
         </div>
@@ -67,9 +69,9 @@
     {% endwith %}
 
 
-    {% if allCoupons%}
+    {% if allVehicles%}
     <div class="container mt-2">
-        {% for singleCoupon in allCoupons %}
+        {% for singleVehicle in allVehicles %}
             <div class="card card-person bg-secondary text-white">
                 <div class="card-body">
                     <div class="container-fluid">
@@ -77,49 +79,49 @@
                             
                             <div class="col">
                                 <div class="row">
-                                    <h6 class=" blockTitle">Coupon ID</h6>
-                                    <p class="">{{ singleCoupon['coupon_id'] }}</p>
+                                    <h6 class=" blockTitle">Vehicle ID</h6>
+                                    <p class="">{{ singleVehicle['id'] }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Coupon Name</h6>
-                                    <p class="">{{ singleCoupon['coupon_name'] }}</p>
+                                    <h6 class="blockTitle">Vehicle Model</h6>
+                                    <p class="">{{ singleVehicle['model'] }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Sale Rate</h6>
-                                    <p class="">{{ singleCoupon['sale_rate'] }}</p>
+                                    <h6 class="blockTitle">Vehicle Type</h6>
+                                    <p class="">{{ singleVehicle['type'] }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Expration Date</h6>
-                                    <p class="">{{ singleCoupon['expiration_date'] }}</p>
+                                    <h6 class="blockTitle" data-bs-toggle="tooltip" data-bs-placement="top" title="Numbers represent adjacent seats. The dash represents the corridor.">Seat Formation</h6>
+                                    <p class="">{{ singleVehicle['seat_formation'] }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Generation Date</h6>
-                                    <p class="">{{ singleCoupon['generation_date'] }}</p>
+                                    <h6 class="blockTitle">Total Seat Number</h6>
+                                    <p class="">{{ singleVehicle['num_of_seats'] }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Status</h6>
-                                    <p class="">{{ singleCoupon['public_status'] }}</p>
+                                    <h6 class="blockTitle">Business Row #</h6>
+                                    <p class="">{{ singleVehicle['business_rows'] }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
-                                <a class="row text-decoration-none" href="{{ url_for('deleteACoupon', couponId = singleCoupon['coupon_id'] ) }}">
-                                    <button class="btn btn-danger">Delete Coupon</button>
+                                <a class="row text-decoration-none" href="{{ url_for('deleteAVehicleType', vehicleTypeId = singleVehicle['id'] ) }}">
+                                    <button class="btn btn-danger">Delete Vehicle Type</button>
                                 </a>                           
                             </div>
 
@@ -135,5 +137,11 @@
     </div>
     {% endif %}
 
+    <script>
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
 
 </body>
