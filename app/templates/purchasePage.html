@@ -195,7 +195,9 @@
                                 <form method='POST' action="{{ url_for('buy_travel', travel_id=travel_id) }}">
                                     <button class="btn btn-outline-success btn-lg" type="submit" name="reserve">Reserve Ticket</button>
                                     <button class="btn btn-outline-success btn-lg" type="submit" name="purchase">Purchase Ticket</button>
-                                    <input type="hidden" name="coupon_id" value="{{ selected_coupon_id }}">
+                                    {% if selected_coupon_id %}
+                                        <input type="hidden" name="coupon_id" value="{{ selected_coupon_id }}">
+                                    {% endif %}
                                 </form>
                                 <hr/>
                                 

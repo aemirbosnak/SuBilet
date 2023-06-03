@@ -434,9 +434,9 @@ def buy_travel(travel_id):
 
     # apply coupon
     if request.method == 'POST':
-        coupon_id = request.form.get('coupon_id')
+        coupon_id = request.form.get('coupon_id', type=int)
         if coupon_id:
-            selected_coupon_id = int(coupon_id)
+            selected_coupon_id = coupon_id
             # Fetch the coupon details based on the coupon ID
             query_coupon = """
             SELECT sale_rate
@@ -453,6 +453,7 @@ def buy_travel(travel_id):
             # Update the travel_details dictionary with the discounted price
             travel_details['discounted_price'] = '{0:.5}'.format(discounted_price)
         else:
+            selected_coupon_id = None
             travel_details['discounted_price'] = travel_details['price']
 
     # reserve
@@ -488,6 +489,8 @@ def buy_travel(travel_id):
 
         # Check if a coupon is used
         coupon_id = request.form.get('coupon_id')
+        if coupon_id != None:
+            return redirect(url_for('main'))
 
         # Calculate the price to be deducted from the balance
         if coupon_id:
