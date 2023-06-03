@@ -1653,6 +1653,89 @@ def deleteACoupon(couponId):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
 
+
+@app.route('/vehicleManagement', methods = ['GET', 'POST'])
+def vehicleManagement():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # get all vehicles
+        queryGetVehicles = """
+        SELECT *
+        FROM Vehicle_Type
+        """
+        cursor.execute(queryGetVehicles)
+        allVehicles = cursor.fetchall()
+
+        return render_template('vehicleManagement.html', allVehicles = allVehicles)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+
+@app.route('/createVehicleType', methods = [ 'GET', 'POST'])
+def createVehicleType():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        if request.method == 'POST':
+            if 'vehicle_type' in request.form and request.form['vehicle_type'] and \
+            'vehicle_seat_formation' in request.form and request.form['vehicle_seat_formation'] and \
+            'vehicle_num_of_seats' in request.form and request.form['vehicle_num_of_seats'] and \
+            'vehicle_business_rows' in request.form and request.form['vehicle_business_rows'] and \
+            'vehicle_model' in request.form and request.form['vehicle_model'] :
+                
+                vehicle_type = request.form['vehicle_type']
+                vehicle_seat_formation = request.form['vehicle_seat_formation']
+                vehicle_num_of_seats = request.form['vehicle_num_of_seats']
+                vehicle_business_rows = request.form['vehicle_business_rows']
+                vehicle_model = request.form['vehicle_model']
+
+                seatNumList = vehicle_seat_formation.strip().split('-')
+                numSeatsInRow = sum(int(seat) for seat in seatNumList if seat != '')
+
+                # check if the given seat formation is in the correct format
+                if not validate_seat_formation(vehicle_seat_formation):
+                    message = "Invalid format for seat formation "
+                elif int(vehicle_num_of_seats) % numSeatsInRow != 0:
+                    # check if the total seat number matches is divisable by seat number in a row
+                    message = "The total number of seats in the vehicle is not divisible by number of seats in a row!"
+                elif int(vehicle_business_rows) > (int(vehicle_num_of_seats) / numSeatsInRow):
+                    # check if the business row is equal or smaller than the total row
+                    message = "Number of rows for business class cannot be larger than the number of rows the vehicle have!"
+                else:    
+                    # check if there is such vehicle type which all properties are some with given values
+                    queryFindVehicle = """
+                    SELECT *
+                    FROM Vehicle_Type
+                    WHERE model = %s AND type = %s AND seat_formation = %s AND num_of_seats = %s AND business_rows = %s
+                    """
+                    cursor.execute(queryFindVehicle, (vehicle_model, vehicle_type, vehicle_seat_formation, vehicle_num_of_seats, vehicle_business_rows))
+                    existingVehicleType = cursor.fetchone()
+                    if existingVehicleType:
+                        message = 'There is already an existing vehicle type that has the same properties'
+                        return render_template('createVehicleType.html', message = message)
+                    else:
+                        # create the vehicle type
+                        queryInsertVehicle = """
+                        INSERT INTO Vehicle_Type (id, model, type, seat_formation, num_of_seats, business_rows)
+                        VALUES (NULL, %s, %s, %s, %s, %s)
+                        """
+                        cursor.execute(queryInsertVehicle, (vehicle_model, vehicle_type, vehicle_seat_formation, vehicle_num_of_seats, vehicle_business_rows))
+                        cursor.connection.commit()
+                        message = "New vehicle Type successfully added!"
+                        flash(message)
+                        return redirect(url_for('vehicleManagement'))
+            else:
+                message = 'Please fill the form!'
+
+        return render_template('createVehicleType.html', message = message)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
 ########################
 ### HELPER FUNCTIONS ###
 ########################
@@ -1720,6 +1803,19 @@ def generateSeatNumber(travel_id):
             break
 
     return seat_number
+
+
+def validate_seat_formation(seat_formation):
+    seat_numbers = seat_formation.split('-')
+    if len(seat_numbers) < 2 or len(seat_numbers) > 4:
+        return False
+    for seat in seat_numbers:
+        if not seat.isdigit():
+            return False
+    if seat_formation.endswith('-'):
+        return False
+    return True
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
