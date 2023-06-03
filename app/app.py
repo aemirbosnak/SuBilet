@@ -530,6 +530,11 @@ def buy_travel(travel_id):
         # Calculate the updated balance
         updated_balance = balance['balance'] - discounted_price
 
+        # Check if user has sufficient funds
+        if updated_balance < travel_details['price']:
+            flash("Insuffiecient funds!", "error")
+            return redirect(url_for('buy_travel', travel_id=travel_id))
+
         # If purchasing already booked (reserved) travel 
         if reserved_booking:
             query_insert_purchased = """
