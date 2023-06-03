@@ -1575,7 +1575,6 @@ def createCoupon():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         message = None
 
-
         if request.method == 'POST':
             if 'coupon_name' in request.form and request.form['coupon_name'] and \
             'sale_rate' in request.form and request.form['sale_rate'] and \
@@ -1620,6 +1619,36 @@ def createCoupon():
                 message = 'Please fill the form!'
 
         return render_template('createCoupon.html', message = message)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+@app.route('/deleteACoupon/<int:couponId>', methods = [ 'GET', 'POST' ])
+def deleteACoupon(couponId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+        # check if there is a coupon with that id
+        queryFindCoupon = """
+        SELECT *
+        FROM Sale_Coupon
+        WHERE coupon_id = %s
+        """
+        cursor.execute(queryFindCoupon, (couponId,))
+        theCoupon = cursor.fetchone()
+
+        if theCoupon:
+            queryDeleteCoupon = """
+            DELETE FROM Sale_Coupon WHERE coupon_id = %s
+            """
+            cursor.execute(queryDeleteCoupon, (couponId,))
+            cursor.connection.commit()
+            message = 'The ' + theCoupon['coupon_name'] + ' coupon with ' + str(theCoupon['sale_rate']) + ' sale rate, ' + theCoupon['expiration_date'].strftime("%Y-%m-%d") + 'expiration date and with ' + theCoupon['public_status']  + ' availability is deleted.'
+        else:
+            message = "There is no such coupon!"
+
+        flash(message)
+        return redirect(url_for('couponManagement'))
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)

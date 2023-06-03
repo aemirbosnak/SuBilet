@@ -143,6 +143,7 @@ INSERT INTO Coupon_Traveler (coupon_id, user_id, used_status) VALUES
 (1, 7, TRUE),
 (1, 8, FALSE),
 (1, 9, TRUE),
+(1, 10, TRUE),
 (3, 7, FALSE),
 (5, 8, FALSE),
 (5, 9, TRUE),
@@ -276,7 +277,8 @@ INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type) VALUES
 ('PLANE144', 17, 30, 11, 'regular'),
 ('BUS101', 5, 12, 9, 'regular'),
 ('BUS102', 5, 15, 8, 'regular'),
-('BUS103', 5, 20, 7, 'regular');
+('BUS103', 5, 20, 7, 'regular'),
+('BUS104', 5, 23, 10, 'regular');
 
 CREATE TABLE Reserved(
 	PNR VARCHAR(20),
@@ -323,7 +325,8 @@ INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) VA
 ('PLANE143', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
 ('PLANE144', '2023-05-01 20:00:00', 'creadit card', 800.00, NULL),
 ('BUS102', '2023-05-10 08:00:00', 'creadit card', 299.00, NULL),
-('BUS103', '2023-05-10 23:30:00', 'creadit card', 299.00, NULL);
+('BUS103', '2023-05-10 23:30:00', 'creadit card', 299.00, NULL),
+('BUS104', '2023-05-10 21:30:00', 'creadit card', 270.00, 1);
 
 
 CREATE TABLE Journey(
