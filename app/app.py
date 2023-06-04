@@ -334,7 +334,7 @@ def findTravel():
 
         #perform checks
         if not departure_city or not arrival_city or not departure_date:
-            error_message = "Please select fill in the form."
+            error_message = "Please fill in the form."
             return render_template('main.html', cities=cities, is_logged_in=is_logged_in, user_id =user_id, error_message=error_message)
 
         #redirect to listAvailableTravelsPage.html with relevant information
@@ -724,6 +724,7 @@ def buy_travel(travel_id):
             mysql.connection.commit()
 
         return redirect(url_for('myTravels'))
+    
     return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, seat_chosen=seat_chosen, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys, journey_count=journey_count, journey_name=journey_name)
 
 @app.route('/coupons', methods=['GET', 'POST'])
@@ -925,7 +926,7 @@ def journeys():
 
         # Get list of all travels that are inside journeys
         query_travelInJourney = """
-        SELECT *, T1.city as dep_city, T2.city as arr_city
+        SELECT *, T1.name as dep_name, T2.name as arr_name
         FROM Travels_In_Journey natural join Travel join Company on travel_company_id = id join Terminal T1 on departure_terminal_id = T1.terminal_id join Terminal T2 on arrival_terminal_id = T2.terminal_id
         WHERE traveler_id = %s
         """
@@ -946,7 +947,16 @@ def journeys():
 
         booked_journey_ids = [journey['travel_id'] for journey in booked_journeys]
 
-        if request.method == 'POST':
+        if request.method == 'POST' and "delete" in request.form:
+            travel_id = request.form.get('travel_id')
+            query_delete_travel = """
+            DELETE FROM Travels_In_Journey
+            WHERE travel_id = %s AND traveler_id = %s
+            """
+            cursor.execute(query_delete_travel, (travel_id, user_id))
+            mysql.connection.commit()
+
+        if request.method == 'POST' and "create" in request.form:
             newJourneyName = request.form.get('journeyForm')
             createdTime = datetime.now()
 
