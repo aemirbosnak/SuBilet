@@ -109,13 +109,22 @@
                                         <div class="text-lightRed">Departure Time:</div>
                                         <div> {{ travel_details['depart_time'] }} </div>        
                                     </div>
-                                    {% if journey_count != 0 %}
-                                        <div class="col">
-                                            <div class="text-lightRed">Journey:</div>
-                                            <div> {{ journey_name }} </div>        
-                                        </div>
+
+                                    {% if seat_chosen %}
+                                    <div class="col">
+                                        <div class="text-lightRed">Seat number:</div>
+                                        <div> {{ seat_number }} </div>
+                                    </div>
                                     {% endif %}
                                 </div>
+                            {% if journey_count != 0 %}
+                            <div class="row">
+                                <div class="col">
+                                    <div class="text-lightRed">Journey:</div>
+                                    <div> {{ journey_name }} </div>
+                                </div>
+                            </div>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -231,7 +240,6 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
                     </div>
                 </div>
             </div>
@@ -249,6 +257,5 @@
 
         </div>
     </div>
-
 </body>
 </html>

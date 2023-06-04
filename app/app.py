@@ -308,11 +308,9 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
                 SELECT seat_number 
                 FROM Booking 
                 WHERE travel_id = %s
-                    AND PNR IN (SELECT PNR
-                                FROM Purchased)
                 """
         cursor.execute(query, (travel_seat, ))
-        occupied = cursor.fetchall()
+        occupied = [x['seat_number'] for x in cursor.fetchall()]
 
         formation = [int(x) for x in seating_info['seat_formation'].split("-")]
         col = sum(formation)
@@ -461,6 +459,11 @@ def buy_travel(travel_id):
 
     pnr = generatePNR()
     seat_number = generateSeatNumber(travel_id)
+    seat_chosen = False
+
+    if request.method == "POST" and 'seat_number' in request.form:
+        seat_number = request.form['seat_number']
+        seat_chosen = True
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
@@ -677,8 +680,7 @@ def buy_travel(travel_id):
             mysql.connection.commit()
 
         return redirect(url_for('myTravels'))
-
-    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys, journey_count=journey_count, journey_name=journey_name)
+    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, seat_chosen=seat_chosen, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys, journey_count=journey_count, journey_name=journey_name)
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():

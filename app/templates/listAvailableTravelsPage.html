@@ -16,6 +16,7 @@
         function selectBox(boxNumber) {
             const selectedBox = document.getElementById('box' + boxNumber);
             const boxes = document.querySelectorAll('.box');
+            document.getElementById('seat_number').value = boxNumber;
 
             boxes.forEach(otherBox => {
                 otherBox.classList.remove('selected');
@@ -219,6 +220,12 @@
                         {% endfor %}
                     </div>
 
+                    <div class="col-2 col-right">
+                        <form action="{{ url_for('buy_travel', travel_id=singleTravel['travel_id']) }}" method="POST">
+                            <input type="hidden" name="seat_number" id="seat_number">
+                            <button type="submit" id="seat_purchase" class="btn btn-outline-danger">Purchase seat</button>
+                        </form>
+                    </div>
                     {% endif %}
                 </div>
             </div>
