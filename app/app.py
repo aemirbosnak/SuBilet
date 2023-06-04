@@ -1741,6 +1741,106 @@ def editCompanyProfile(companyId):
 ### ADMIN RELATED ROUTES ###
 ###############################
 
+@app.route('/makePurchaseOnBehalfOfTraveler/<int:travelId>', methods = ['GET', 'POST'])
+def makePurchaseOnBehalfOfTraveler(travelId):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
+        message = None
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        #get travel information
+        queryGetTravelInfo = """
+        SELECT *
+        FROM travel_detail_view
+        WHERE travel_id = %s
+        """
+        cursor.execute(queryGetTravelInfo, (travelId, ))
+        theTravel = cursor.fetchone()
+
+        if request.method == 'POST':
+            if 'traveler_TCK' in request.form and request.form['traveler_TCK'] and \
+            'deduction_amount' in request.form and request.form['deduction_amount'] and \
+            'seat_number' in request.form and request.form['seat_number'] and \
+            'seat_type' in request.form and request.form['seat_type']:
+                traveler_TCK = request.form['traveler_TCK']
+                deduction_amount = request.form['deduction_amount']
+                seat_number = request.form['seat_number']
+                seat_type = request.form['seat_type']
+
+                # find traveler id
+                queryFindTravelerId = """
+                SELECT *
+                FROM Traveler
+                WHERE TCK = %s
+                """
+                cursor.execute(queryFindTravelerId, (traveler_TCK,))
+                theTraveler = cursor.fetchone()
+                
+
+                if theTraveler:
+                    travelerId = theTraveler['id']
+                    # check if given seat number is occupied already
+                    query_check_seat = """
+                    SELECT COUNT(*) AS occupied
+                    FROM Booking 
+                    WHERE travel_id = %s AND seat_number = %s
+                    """
+                    cursor.execute(query_check_seat, (travelId, seat_number))
+                    result = cursor.fetchone()
+                    seat = result['occupied']
+
+                    if seat != 0:
+                        message = "This seat is already occupied!"
+                    else:
+                        # check if the traveler has enough balance
+                        queryIsEnoughBalance = """
+                        SELECT * 
+                        FROM Traveler
+                        WHERE TCK = %s AND balance >= %s
+                        """
+                        cursor.execute(queryIsEnoughBalance, (traveler_TCK, deduction_amount ))
+                        enoughBalance = cursor.fetchone()
+                        
+                        if enoughBalance:
+                            # Now purchase can be made
+                            queryDeductBalance = """
+                            UPDATE Traveler SET balance = balance - %s WHERE id = %s
+                            """
+                            cursor.execute(queryDeductBalance, (deduction_amount, travelerId))
+                            cursor.connection.commit()
+
+                            newPNR = generatePNR()
+                            # insert booking
+                            queryInsertBooking = """
+                            INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type)
+                            VALUES (%s, %s, %s, %s, %s)
+                            """
+                            cursor.execute(queryInsertBooking, (newPNR, travelId, seat_number, travelerId, seat_type ))
+                            cursor.connection.commit()
+
+                            # insert purchase
+                            queryInsertPurchase = """
+                            INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id)
+                            VALUES (%s, %s, 'creadit card', %s, NULL)
+                            """
+                            cursor.execute(queryInsertPurchase, (newPNR, datetime.now(), deduction_amount))
+                            cursor.connection.commit()
+            
+                            message = "Purchase is made for " + theTraveler['name'] + ". The PNR is " + str(newPNR)
+
+                            flash(message)
+                            return redirect(url_for('aTravelDetails', travelId = travelId, company_id = theTravel['travel_company_id'] ))
+                        else:
+                            message = "Traveler doesn't have enough balance!"
+                else:
+                    message = "There is no traveler with that TCK!"
+            else:
+                message = 'Please fill the form!'
+            
+        
+        return render_template('makePurchaseOnBehalfOfTraveler.html', message = message, theTravel = theTravel)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
 @app.route('/companies', methods=['GET', 'POST'])
 def companies():
     if 'userid' in session and 'loggedin' in session:
