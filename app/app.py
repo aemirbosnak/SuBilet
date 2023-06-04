@@ -680,6 +680,7 @@ def buy_travel(travel_id):
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
     user_id = session['userid']
+    time_now = datetime.now().date()
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Retrieve available coupons for the user
@@ -705,30 +706,55 @@ def coupons():
     # Insert new coupon for the user
     if request.method == 'POST':
         # Get the coupon number entered by the user
-        coupon_number = request.form['coupon_number']
+        coupon_name = request.form['coupon_name']
 
         # Check if the coupon exists in the Sale_Coupon table
-        query_check_coupon = "SELECT coupon_id FROM Sale_Coupon WHERE coupon_id = %s"
-        cursor.execute(query_check_coupon, (coupon_number,))
+        query_check_coupon = """
+        SELECT coupon_id, expiration_date, public_status 
+        FROM Sale_Coupon 
+        WHERE coupon_name = %s
+        """
+        cursor.execute(query_check_coupon, (coupon_name,))
         coupon = cursor.fetchone()
 
         if coupon:
+            coupon_id = coupon['coupon_id']
+            expiration_date = coupon['expiration_date']
+            public_status = coupon['public_status']
+
             # Check if the coupon is already associated with the user
-            query_check_exists = "SELECT coupon_id FROM Coupon_Traveler WHERE coupon_id = %s AND user_id = %s"
-            cursor.execute(query_check_exists, (coupon_number, user_id))
+            query_check_exists = """
+            SELECT coupon_id 
+            FROM Coupon_Traveler 
+            WHERE coupon_id = %s 
+            AND user_id = %s
+            """
+            cursor.execute(query_check_exists, (coupon_id, user_id))
             existing_coupon = cursor.fetchone()
 
-            if existing_coupon:
-                # Display an error message if the coupon is already associated with the user
-                flash("Coupon already associated with your account.", "error")
-            else:
+            if public_status == 'public' and not existing_coupon:
                 # Insert the coupon into the Coupon_Traveler table for the user
                 query_insert_coupon = "INSERT INTO Coupon_Traveler (coupon_id, user_id) VALUES (%s, %s)"
-                cursor.execute(query_insert_coupon, (coupon_number, user_id))
+                cursor.execute(query_insert_coupon, (coupon_id, user_id))
                 mysql.connection.commit()
 
                 # Redirect to the same page to display the updated list of available coupons
                 return redirect(url_for('coupons'))
+            elif public_status == 'private':
+                if existing_coupon:
+                    # Display an error message if the coupon is already associated with the user
+                    flash("Coupon already associated with your account.", "error")
+                else:
+                    # Insert the coupon into the Coupon_Traveler table for the user
+                    query_insert_coupon = "INSERT INTO Coupon_Traveler (coupon_id, user_id) VALUES (%s, %s)"
+                    cursor.execute(query_insert_coupon, (coupon_id, user_id))
+                    mysql.connection.commit()
+
+                    # Redirect to the same page to display the updated list of available coupons
+                    return redirect(url_for('coupons'))
+            else:
+                # Display error message if the coupon is public and already associated with the user
+                flash("Coupon is not available.", "error")
         else:
             # Display an error message if the coupon does not exist
             flash("Invalid coupon number.", "error")
