@@ -134,7 +134,7 @@
                                         <form method="post" action="{{ url_for('buy_travel', travel_id=travel_id) }}" class="couponForm">
                                             <div class="card couponCard p-2 mb-2">
                                                 <button class="btn btn-outline-success btn-lg {% if coupon.coupon_id == selected_coupon_id %}clickedCoupon{% endif %}" type="submit">
-                                                    {{ coupon.coupon_id }} ({{ coupon.sale_rate * 100 }}%)
+                                                    {{ coupon.coupon_name }} ({{ coupon.sale_rate * 100 }}%)
                                                 </button>
                                                 <input type="hidden" name="coupon_id" value="{{ coupon.coupon_id }}">
                                             </div>

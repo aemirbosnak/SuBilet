@@ -652,6 +652,16 @@ def buy_travel(travel_id):
             coupon = cursor.fetchone()
             sale_rate = coupon['sale_rate']
 
+            # Update the coupon to be used
+            query_update_coupon = """
+            UPDATE Coupon_Traveler
+            SET used_status = %s
+            WHERE coupon_id = %s 
+            AND user_id = %s
+            """
+            cursor.execute(query_update_coupon, (True, coupon_id, user_id))
+            mysql.connection.commit()
+
             # Calculate the discounted price
             discounted_price = travel_details['price'] * (1 - sale_rate)
         else:
