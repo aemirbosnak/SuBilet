@@ -1958,6 +1958,114 @@ def deleteAVehicleType(vehicleTypeId):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
     
+@app.route('/terminalManagement', methods = ['GET', 'POST'])
+def terminalManagement():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # get all terminals
+        queryGetVehicles = """
+        SELECT *
+        FROM Terminal
+        """
+        cursor.execute(queryGetVehicles)
+        allTerminals = cursor.fetchall()
+
+        return render_template('terminalManagement.html', allTerminals = allTerminals)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+@app.route('/deleteTerminal/<int:terminalId>', methods = [ 'GET', 'POST' ])
+def deleteTerminal(terminalId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        queryFindVehicleType = """
+        SELECT *
+        FROM Terminal
+        WHERE terminal_id = %s
+        """
+        cursor.execute(queryFindVehicleType, (terminalId,))
+        theTerminal = cursor.fetchone()
+
+        # Find if the terminal used in one of travels
+        queryTerminlaUsedInTravel = """
+        SELECT *
+        FROM Travel
+        WHERE departure_terminal_id = %s OR arrival_terminal_id = %s
+        """
+        cursor.execute(queryTerminlaUsedInTravel, (terminalId, terminalId))
+        isUsedInTravels = cursor.fetchall()
+        
+        if theTerminal:
+            queryDeleteTerminal = """
+            DELETE FROM Terminal WHERE terminal_id = %s
+            """
+            cursor.execute(queryDeleteTerminal, (terminalId,))
+            cursor.connection.commit()
+            message = "The terminal " + theTerminal['name'] + " is deleted."
+            if isUsedInTravels:
+                message = message + " Terminal was used by travels! You need to set new terminal for these travels!"
+        else:
+            message = "There is no such terminal."
+
+        flash(message)
+        return redirect(url_for('terminalManagement'))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+@app.route('/createTerminal', methods = [ 'GET', 'POST'])
+def createTerminal():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        if request.method == 'POST':
+            if 'terminal_type' in request.form and request.form['terminal_type'] and \
+            'terminal_city' in request.form and request.form['terminal_city'] and \
+            'terminal_name' in request.form and request.form['terminal_name']:
+                
+                terminal_type = request.form['terminal_type']
+                terminal_city = request.form['terminal_city']
+                terminal_name = request.form['terminal_name']
+
+                # check if there is an existing terminal with the same name
+                queryFindExistingTerminal = """
+                SELECT *
+                FROM Terminal
+                WHERE name = %s
+                """
+                cursor.execute(queryFindExistingTerminal, (terminal_name,))
+                isExist = cursor.fetchone()
+
+                if isExist:
+                    message = "There is an existing terminal with the same name: " + terminal_name
+                else:    
+                    # make the insertion
+                    # create the vehicle type
+                    queryInsertTerminal = """
+                    INSERT INTO Terminal (terminal_id, name, city, type)
+                    VALUES (NULL, %s, %s, %s)
+                    """
+                    cursor.execute(queryInsertTerminal, (terminal_name, terminal_city, terminal_type))
+                    cursor.connection.commit()
+                    message = "New terminal is successfully added!"
+                    flash(message)
+                    return redirect(url_for('terminalManagement'))
+            else:
+                message = 'Please fill the form!'
+
+        return render_template('createTerminal.html', message = message)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+
+
 @app.route('/reportManagement', methods = ['GET', 'POST'])
 def reportManagement():
     if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
