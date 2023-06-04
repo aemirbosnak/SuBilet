@@ -45,7 +45,7 @@
             <div class="d-grid gap-2 col-4 mx-auto">
               <h3>Create a new journey </h3>
               <input placeholder="Enter a name for your journey" class="form-control" name="journeyForm" id="journeyForm" aria-describedby="journeyForm">
-              <button type = "submit" class="btn btn-danger">Create</button>
+              <button type = "submit" class="btn btn-danger" name="create">Create</button>
             </div>
           </form>
         </div>
@@ -80,11 +80,11 @@
                         </div>
                         <div class="col">
                           <div class="row text-secondary">Departure:</div>
-                          <div class="row">{{ travel.dep_city }}</div>
+                          <div class="row">{{ travel.dep_name }}</div>
                         </div>
                         <div class="col">
                           <div class="row text-secondary">Destination:</div>
-                          <div class="row">{{ travel.arr_city }}</div>
+                          <div class="row">{{ travel.arr_name }}</div>
                         </div>
                         <div class="col">
                           <div class="row text-secondary">Price:</div>
@@ -100,6 +100,12 @@
                               <button class="btn btn-success btn-lg mb-2" type="submit" name="journey">Purchase/Reserve</button>
                             </form>
                           {% endif %}
+                        </div>
+                        <div class="col-2">
+                          <form method='POST' action="{{ url_for('journeys') }}">
+                            <button class="btn btn-danger btn-lg mb-2" type="submit" name="delete">Delete</button>
+                            <input type="hidden" name="travel_id" id="travel_id" value="{{ travel.travel_id }}">
+                          </form>
                         </div>
                       </div>
                     </div>

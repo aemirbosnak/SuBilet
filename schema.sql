@@ -43,7 +43,7 @@ CREATE TABLE Traveler (
 
 INSERT INTO Traveler (id, TCK, name, surname, age, balance) VALUES
 (7, '11111111111', 'traveler1Name', 'traveler1Surname', 18, 10000 ),
-(8, '11111111112', 'traveler2Name', 'traveler2Surname', 18,  50000),
+(8, '11111111112', 'traveler2Name', 'traveler2Surname', 18,  100),
 (9, '11111111113', 'traveler3Name', 'traveler3Surname', 18, 8000 ),
 (10, '11111111114', 'traveler4Name', 'traveler4Surname', 21, 8000 ),
 (11, '11111111115', 'traveler5Name', 'traveler4Surname', 23, 800);
