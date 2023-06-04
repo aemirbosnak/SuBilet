@@ -30,9 +30,9 @@
       <div class="row justify-content-center">
         <div class="col-md-6">
           <div class="login-box mt-5 rounded">
-            {% if message is defined and message %}""""""r"r""
+            {% if message is defined and message %}
               <div class="alert alert-warning"
-                style="text-align=center; font-family: calibri; color: #A32C2C; background-color: #EF9F9F; margin-bottom: 20px">{{ message }}</div>
+                style="text-align:center; font-family: calibri; color: #A32C2C; background-color: #EF9F9F; margin-bottom: 20px">{{ message }}</div>
             {% endif %}
 
             <form action="{{ url_for('login') }}" method="POST"> 
