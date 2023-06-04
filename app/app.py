@@ -1755,8 +1755,6 @@ def companies():
                 filter_type = 'all'
                 filterClause = ''
 
-        
-
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         queryCompanies = """
         SELECT
@@ -1787,71 +1785,15 @@ def companies():
 @app.route('/deactivateCompany/<int:companyId>', methods = ['GET', 'POST'] )
 def deactivateCompany(companyId):
     if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        message = None
-
-        # check the company
-        queryGetCompany = """
-        SELECT company_name
-        FROM Company
-        WHERE id = %s
-        """
-        cursor.execute(queryGetCompany, (companyId,))
-        companyInfo = cursor.fetchone()
-        
-        if companyInfo:
-            # Before deactivation, travelers who purchased an upcoming travel which is registered by the deactivated company, will be refunded
-            # find traveler ids who will be paid and amount of money to be paid
-            queryTravelerAndRefundAmount = """
-            SELECT B.traveler_id, P.price, B.PNR, T.travel_id
-            FROM Company C
-            JOIN Travel T ON T.travel_company_id = C.id
-            JOIN Booking B ON B.travel_id = T.travel_id
-            JOIN Purchased P ON P.PNR = B.PNR
-            WHERE T.depart_time > %s AND C.id = %s
-            """
-            cursor.execute(queryTravelerAndRefundAmount, (datetime.now(), companyId))
-            travelerAndRefundAmount = cursor.fetchall()
-
-            queryRefund = """
-            UPDATE Traveler
-            SET balance = balance + %s
-            WHERE id = %s
-            """
-            for dict in travelerAndRefundAmount:
-                cursor.execute(queryRefund, (dict['price'], dict['traveler_id']) )
-                cursor.connection.commit()
-
-            # delete all the upcoming travels belonging to the company
-            # deleting travel result in deletion in Booking, Purchased and Reserved tables
-            queryFindUpcomingTravels = """
-            SELECT T.travel_id
-            FROM Company C
-            JOIN Travel T ON T.travel_company_id = C.id
-            WHERE T.depart_time > %s AND C.id = %s
-            """
-            cursor.execute(queryFindUpcomingTravels, (datetime.now(), companyId))
-            bookingsToBeDeleted = cursor.fetchall()
-            
-            queryDeleteTravel = """
-            DELETE FROM Travel WHERE travel_id = %s
-            """
-            for dict in bookingsToBeDeleted:
-                cursor.execute(queryDeleteTravel, (dict['travel_id'], ))
-                cursor.connection.commit()
-
-            # deactivate company
-            queryDeactivate = """
-            UPDATE User SET active = FALSE WHERE id = %s
-            """
-            cursor.execute(queryDeactivate, (companyId,))
-            cursor.connection.commit()
-            message = 'Company ' + companyInfo['company_name'] + ' is succesfully deactivated.'
-        else:
-            message = "There is no such company"
-
-        flash(message)
-        return redirect(url_for('companies'))
+        return handleCompanyAction(companyId, "deactivate")
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/deleteCompany/<int:companyId>', methods = ['GET', 'POST'] )
+def deleteCompany(companyId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        return handleCompanyAction(companyId, "delete")
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
@@ -2911,6 +2853,100 @@ def validate_seat_formation(seat_formation):
     if seat_formation.endswith('-'):
         return False
     return True
+
+def handleCompanyAction(companyId, action):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # Check the company
+        queryGetCompany = """
+        SELECT company_name
+        FROM Company
+        WHERE id = %s
+        """
+        cursor.execute(queryGetCompany, (companyId,))
+        companyInfo = cursor.fetchone()
+
+        if companyInfo:
+            # Before action, travelers who purchased an upcoming travel registered by the company will be refunded
+            queryTravelerAndRefundAmount = """
+            SELECT B.traveler_id, P.price, B.PNR, T.travel_id
+            FROM Company C
+            JOIN Travel T ON T.travel_company_id = C.id
+            JOIN Booking B ON B.travel_id = T.travel_id
+            JOIN Purchased P ON P.PNR = B.PNR
+            WHERE T.depart_time > %s AND C.id = %s
+            """
+            cursor.execute(queryTravelerAndRefundAmount, (datetime.now(), companyId))
+            travelerAndRefundAmount = cursor.fetchall()
+
+            queryRefund = """
+            UPDATE Traveler
+            SET balance = balance + %s
+            WHERE id = %s
+            """
+            for data in travelerAndRefundAmount:
+                cursor.execute(queryRefund, (data['price'], data['traveler_id']))
+                cursor.connection.commit()
+
+
+            if action == "deactivate":
+                # delete the upcoming travels
+                queryFindUpcomingTravels = """
+                SELECT T.travel_id
+                FROM Company C
+                JOIN Travel T ON T.travel_company_id = C.id
+                WHERE T.depart_time > %s AND C.id = %s
+                """
+                cursor.execute(queryFindUpcomingTravels, (datetime.now(), companyId))
+                travelsToBeDeleted = cursor.fetchall()
+            elif action == "delete":
+                # delete all past and upcoming travels belonging to the company
+                # deleting travel result in deletion in Booking, Purchased and Reserved tables
+                queryFindCompanyTravels = """
+                SELECT T.travel_id
+                FROM Company C
+                JOIN Travel T ON T.travel_company_id = C.id
+                WHERE C.id = %s
+                """
+                cursor.execute(queryFindCompanyTravels, (companyId, ))
+                travelsToBeDeleted = cursor.fetchall()
+
+            # delete travels
+            queryDeleteTravel = """
+            DELETE FROM Travel WHERE travel_id = %s
+            """
+            for dict in travelsToBeDeleted:
+                cursor.execute(queryDeleteTravel, (dict['travel_id'], ))
+                cursor.connection.commit()
+
+            if action == "deactivate":
+                # deactivate company
+                queryDeactivate = """
+                UPDATE User SET active = FALSE WHERE id = %s
+                """
+                cursor.execute(queryDeactivate, (companyId,))
+                cursor.connection.commit()
+                message = 'Company ' + companyInfo['company_name'] + ' is succesfully deactivated.'
+            elif action == "delete":
+                # delete company
+                queryDeactivate = """
+                DELETE FROM User WHERE id = %s
+                """
+                cursor.execute(queryDeactivate, (companyId,))
+                cursor.connection.commit()
+                message = 'Company ' + companyInfo['company_name'] + ' is succesfully deleted. For upcoming travels of the company, paid amounts are refunded to travelers.'
+                
+        else:
+            message = "There is no such company"
+
+        flash(message)
+        return redirect(url_for('companies'))
+    else:
+        message = "Session was not valid, please log in!"
+        return render_template('login.html', message=message)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
