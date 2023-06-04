@@ -25,6 +25,18 @@ PNR_LENGTH = 8
 def home():
     return main()
 
+@app.route('/test', methods=['GET', 'POST'])
+def test():
+    if request.method == 'GET' and 'id' in request.args:
+        id = request.args.get('id')
+        occupied = [1, 6, 11, 7]
+        formation = [3, 3, 3]
+        row = 5
+        col = 9
+        return render_template('test.html', formation=formation, row=row, tot_col=col, occupied=occupied)
+
+    return render_template('test.html', formation=0, row=0, tot_col=0, occupied=0)
+
 @app.route('/login', methods =['GET', 'POST'])
 def login():
     message = ''
@@ -211,7 +223,7 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
 
     if extra_date == 'none':
         query = """
-        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.vehicle_type_id, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
         FROM Travel T
         JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
         JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
@@ -227,7 +239,7 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
         searchedTravels = cursor.fetchall()
     else:
         query = """
-        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.vehicle_type_id, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
         FROM Travel T
         JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
         JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
@@ -243,13 +255,75 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
         cursor.execute(query, (departure_city, arrival_city, extra_date, departure_date, vehicle_type))
         searchedTravels = cursor.fetchall()
 
+    updatedTravels = []  # Updated list of travels with available seats
+
+    for travel in searchedTravels:
+        travel_id = travel['travel_id']
+        vehicle_type = travel['vehicle_type_id']
+
+        # Count the number of booked seats for the travel
+        booking_query = """
+        SELECT COUNT(*) AS booked_seats 
+        FROM Booking 
+        WHERE travel_id = %s
+        """
+        cursor.execute(booking_query, (travel_id,))
+        booked_seats = cursor.fetchone()['booked_seats']
+
+        # Get the total number of seats available for the vehicle type
+        seats_query = """
+        SELECT num_of_seats 
+        FROM Vehicle_Type 
+        WHERE id = %s
+        """
+        cursor.execute(seats_query, (vehicle_type,))
+        total_seats = cursor.fetchone()['num_of_seats']
+
+        # Check if there are available seats
+        if booked_seats < total_seats:
+            updatedTravels.append(travel)
+
+    searchedTravels = updatedTravels
 
     is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
     user_id = session.get('userid')
 
+    travel_seat = None
+    if request.method == 'GET' and 'travel_seat' in request.args:
+        travel_seat = int(request.args.get('travel_seat'))
+
+        query = """
+                SELECT seat_formation, num_of_seats 
+                FROM Travel T
+                JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+                WHERE T.travel_id = %s
+                """
+        cursor.execute(query, (travel_seat, ))
+        seating_info = cursor.fetchone()
+
+        query = """
+                SELECT seat_number 
+                FROM Booking 
+                WHERE travel_id = %s
+                    AND PNR IN (SELECT PNR
+                                FROM Purchased)
+                """
+        cursor.execute(query, (travel_seat, ))
+        occupied = cursor.fetchall()
+
+        formation = [int(x) for x in seating_info['seat_formation'].split("-")]
+        col = sum(formation)
+        row = int(seating_info['num_of_seats']/col)
+
+        return render_template('listAvailableTravelsPage.html', travel_seat=travel_seat,
+                               searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city,
+                               departureCity=departure_city, departureDate=departure_date, extra_date=extra_date,
+                               sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id, formation=formation, row=row, tot_col=col, occupied=occupied)
+
     cursor.close()
 
-    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city, departureCity=departure_city, departureDate=departure_date, extra_date=extra_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
+
+    return render_template('listAvailableTravelsPage.html', travel_seat=travel_seat, searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city, departureCity=departure_city, departureDate=departure_date, extra_date=extra_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():
@@ -327,8 +401,23 @@ def myTravels():
         if request.method == 'GET' and 'rating' in request.args:
             currentRating = request.args.get('rating')
 
+        query_reserved = """
+        SELECT Reserved.PNR
+        FROM Reserved
+        JOIN Booking ON Reserved.PNR = Booking.PNR
+        WHERE Booking.traveler_id = %s
+        AND Reserved.PNR = Booking.PNR
+        """
+        cursor.execute(query_reserved, (user_id,))
+        reserved_travels = [row['PNR'] for row in cursor.fetchall()]
+
+        for row in user_travels:
+            if row['PNR'] in reserved_travels:
+                row['reserved'] = True
+
         cursor.close()
-        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating)
+
+        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating, reserved_travels=reserved_travels)
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
@@ -367,7 +456,24 @@ def buy_travel(travel_id):
     is_logged_in = session.get('loggedin', False)
     selected_coupon_id = None
 
+    pnr = generatePNR()
+    seat_number = generateSeatNumber(travel_id)
+
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    # Check if the travel_id is associated with a reserved booking
+    query_check_reserved_booking = """
+    SELECT *
+    FROM Booking
+    JOIN Reserved ON Booking.PNR = Reserved.PNR
+    WHERE travel_id = %s AND traveler_id = %s
+    """
+    cursor.execute(query_check_reserved_booking, (travel_id, user_id))
+    reserved_booking = cursor.fetchone()
+
+    if reserved_booking:
+        pnr = reserved_booking['PNR']
+        seat_number = reserved_booking['seat_number']
 
     # Get travel details
     query_travel = """
@@ -409,8 +515,26 @@ def buy_travel(travel_id):
     cursor.execute(query_journey, (user_id,))
     journeys = cursor.fetchall()
 
-    pnr = generatePNR()
-    seat_number = generateSeatNumber(travel_id)
+    # Check if travel is associated with a journey
+    query_check_journey = """
+    SELECT COUNT(*) AS cnt
+    FROM Travels_In_Journey 
+    WHERE travel_id = %s;
+    """
+    cursor.execute(query_check_journey, (travel_id,))
+    journey_count = cursor.fetchone()['cnt']
+
+    query_journey_name = """
+    SELECT journey_name
+    FROM Travels_In_Journey 
+    WHERE travel_id = %s;
+    """
+    cursor.execute(query_journey_name, (travel_id,))
+    journey = cursor.fetchone()
+
+    journey_name = None
+    if journey:
+        journey_name = journey['journey_name']
 
     if request.method == 'POST' and "addTravelToJourney" in request.form:
         selected_journey = request.form['selectedJourney']
@@ -424,9 +548,9 @@ def buy_travel(travel_id):
 
     # apply coupon
     if request.method == 'POST':
-        coupon_id = request.form.get('coupon_id')
+        coupon_id = request.form.get('coupon_id', type=int)
         if coupon_id:
-            selected_coupon_id = int(coupon_id)
+            selected_coupon_id = coupon_id
             # Fetch the coupon details based on the coupon ID
             query_coupon = """
             SELECT sale_rate
@@ -443,6 +567,7 @@ def buy_travel(travel_id):
             # Update the travel_details dictionary with the discounted price
             travel_details['discounted_price'] = '{0:.5}'.format(discounted_price)
         else:
+            selected_coupon_id = None
             travel_details['discounted_price'] = travel_details['price']
 
     # reserve
@@ -500,29 +625,57 @@ def buy_travel(travel_id):
         # Calculate the updated balance
         updated_balance = balance['balance'] - discounted_price
 
-        query_insert_booking = """
-        INSERT INTO Booking(PNR, travel_id, seat_number, traveler_id)
-        VALUES (%s, %s, %s, %s)
-        """
-        cursor.execute(query_insert_booking, (pnr, travel_id, seat_number, user_id))
+        # Check if user has sufficient funds
+        if updated_balance < travel_details['price']:
+            flash("Insuffiecient funds!", "error")
+            return redirect(url_for('buy_travel', travel_id=travel_id))
 
-        query_insert_purchased = """
-        INSERT INTO Purchased(PNR, purchased_time, payment_method, price, coupon_id)
-        VALUES (%s, %s, %s, %s, %s)
-        """
-        cursor.execute(query_insert_purchased, (pnr, purchase_time, 'credit card', discounted_price, coupon_id))
+        # If purchasing already booked (reserved) travel 
+        if reserved_booking:
+            query_insert_purchased = """
+            INSERT INTO Purchased(PNR, purchased_time, payment_method, price, coupon_id)
+            VALUES (%s, %s, %s, %s, %s) 
+            """
+            cursor.execute(query_insert_purchased, (pnr, purchase_time, 'credit card', discounted_price, coupon_id))
 
-        query_update_balance = """
-        UPDATE Traveler
-        SET Balance = %s
-        WHERE id = %s
-        """
-        cursor.execute(query_update_balance, (updated_balance, user_id))
-        mysql.connection.commit()
+            query_delete_reserved = """
+            DELETE FROM Reserved
+            WHERE PNR = %s
+            """
+            cursor.execute(query_delete_reserved, (pnr,))
+
+            query_update_balance = """
+            UPDATE Traveler
+            SET Balance = %s
+            WHERE id = %s
+            """
+            cursor.execute(query_update_balance, (updated_balance, user_id))
+            mysql.connection.commit()
+
+        else:
+            query_insert_booking = """
+            INSERT INTO Booking(PNR, travel_id, seat_number, traveler_id)
+            VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query_insert_booking, (pnr, travel_id, seat_number, user_id))
+
+            query_insert_purchased = """
+            INSERT INTO Purchased(PNR, purchased_time, payment_method, price, coupon_id)
+            VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(query_insert_purchased, (pnr, purchase_time, 'credit card', discounted_price, coupon_id))
+
+            query_update_balance = """
+            UPDATE Traveler
+            SET Balance = %s
+            WHERE id = %s
+            """
+            cursor.execute(query_update_balance, (updated_balance, user_id))
+            mysql.connection.commit()
 
         return redirect(url_for('myTravels'))
 
-    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys)
+    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys, journey_count=journey_count, journey_name=journey_name)
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
@@ -704,6 +857,19 @@ def journeys():
         cursor.execute(query_travelInJourney, (user_id,))
         travelsInJourneys = cursor.fetchall()
 
+        # Get journeys that are booked
+        query_booked_journeys = """
+        SELECT T.travel_id
+        FROM Journey J
+        INNER JOIN Travels_In_Journey T ON J.journey_name = T.journey_name
+        INNER JOIN Booking B ON T.travel_id = B.travel_id
+        WHERE J.traveler_id = %s
+        """
+        cursor.execute(query_booked_journeys, (user_id,))
+        booked_journeys = cursor.fetchall()
+
+        booked_journey_ids = [journey['travel_id'] for journey in booked_journeys]
+
         if request.method == 'POST':
             newJourneyName = request.form.get('journeyForm')
             createdTime = datetime.now()
@@ -717,12 +883,49 @@ def journeys():
 
             return redirect(url_for('journeys'))
         
-        return render_template("journeysPage.html", journeys = journeys, travelsInJourneys = travelsInJourneys)
+        return render_template("journeysPage.html", journeys = journeys, travelsInJourneys = travelsInJourneys, booked_journey_ids=booked_journey_ids)
     else:
         message = "Session is not valid, please log in!"
         return render_template("login.html", message = message)
 
+@app.route('/buy_all', methods=['POST'])
+def buy_all():
+    user_id = session.get('userid')
+    action = request.form.get('action')
 
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    if action == 'buy':
+        # Get all travel IDs associated with the user's journeys
+        query_travel_ids = """
+        SELECT T.travel_id
+        FROM Travels_In_Journey TIJ
+        JOIN Travel T ON TIJ.travel_id = T.travel_id
+        WHERE TIJ.traveler_id = %s
+        """
+        cursor.execute(query_travel_ids, (user_id,))
+        travel_ids = [row['travel_id'] for row in cursor.fetchall()]
+
+        # Buy each travel
+        for travel_id in travel_ids:
+            buy_one(travel_id)
+
+    elif action == 'reserve':
+        # Get all travel IDs associated with the user's journeys
+        query_travel_ids = """
+        SELECT T.travel_id
+        FROM Travels_In_Journey TIJ
+        JOIN Travel T ON TIJ.travel_id = T.travel_id
+        WHERE TIJ.traveler_id = %s
+        """
+        cursor.execute(query_travel_ids, (user_id,))
+        travel_ids = [row['travel_id'] for row in cursor.fetchall()]
+
+        # Reserve each travel
+        for travel_id in travel_ids:
+            reserve_one(travel_id)
+
+    return redirect(url_for('journeys'))
 
 ##############################
 ### COMPANY RELATED ROUTES ###
@@ -1368,7 +1571,6 @@ def editCompanyProfile(companyId):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
     
-
 ###############################
 ### ADMIN RELATED ROUTES ###
 ###############################
@@ -1636,7 +1838,6 @@ def deleteACoupon(couponId):
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
 
-
 @app.route('/vehicleManagement', methods = ['GET', 'POST'])
 def vehicleManagement():
     if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
@@ -1655,7 +1856,6 @@ def vehicleManagement():
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
-
 
 @app.route('/createVehicleType', methods = [ 'GET', 'POST'])
 def createVehicleType():
@@ -2023,6 +2223,180 @@ def generateSeatNumber(travel_id):
 
     return seat_number
 
+def buy_one(travel_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    user_id = session.get('userid')
+
+    pnr = generatePNR()
+    seat_number = generateSeatNumber(travel_id)
+
+    # Check if the travel_id is associated with a reserved booking
+    query_check_reserved_booking = """
+    SELECT *
+    FROM Booking
+    JOIN Reserved ON Booking.PNR = Reserved.PNR
+    WHERE travel_id = %s AND traveler_id = %s
+    """
+    cursor.execute(query_check_reserved_booking, (travel_id, user_id))
+    reserved_booking = cursor.fetchone()
+
+    if reserved_booking:
+        pnr = reserved_booking['PNR']
+        seat_number = reserved_booking['seat_number']
+
+    # Get travel details
+    query_travel = """
+    SELECT c.company_name, dep.name AS departure_terminal, arr.name AS arrival_terminal, t.depart_time, t.price
+    FROM Travel t
+    JOIN Company c ON t.travel_company_id = c.id
+    JOIN Terminal dep ON t.departure_terminal_id = dep.terminal_id
+    JOIN Terminal arr ON t.arrival_terminal_id = arr.terminal_id
+    WHERE t.travel_id = %s;
+    """
+    cursor.execute(query_travel, (travel_id,))
+    travel_details = cursor.fetchone()
+
+    # Get balance
+    query_balance = """
+    SELECT balance
+    FROM Traveler
+    WHERE Traveler.id = %s
+    """
+    cursor.execute(query_balance, (user_id,))
+    balance = cursor.fetchone()
+
+    # Generate the current timestamp
+    purchase_time = datetime.now()
+
+    # Check if a coupon is used
+    coupon_id = request.form.get('coupon_id')
+
+    # Calculate the price to be deducted from the balance
+    if coupon_id:
+        # Fetch the coupon details based on the coupon ID
+        query_coupon = """
+        SELECT sale_rate
+        FROM Sale_Coupon
+        WHERE coupon_id = %s
+        """
+        cursor.execute(query_coupon, (coupon_id,))
+        coupon = cursor.fetchone()
+        sale_rate = coupon['sale_rate']
+
+        # Calculate the discounted price
+        discounted_price = travel_details['price'] * (1 - sale_rate)
+    else:
+        # No coupon applied, use the original price
+        discounted_price = travel_details['price']
+
+    # Calculate the updated balance
+    updated_balance = balance['balance'] - discounted_price
+
+    # Check if user has sufficient funds
+    if updated_balance < travel_details['price']:
+        flash("Insuffiecient funds!", "error")
+        return redirect(url_for('buy_travel', travel_id=travel_id))
+
+    # If purchasing already booked (reserved) travel 
+    if reserved_booking:
+        query_insert_purchased = """
+        INSERT INTO Purchased(PNR, purchased_time, payment_method, price, coupon_id)
+        VALUES (%s, %s, %s, %s, %s) 
+        """
+        cursor.execute(query_insert_purchased, (pnr, purchase_time, 'credit card', discounted_price, coupon_id))
+
+        query_delete_reserved = """
+        DELETE FROM Reserved
+        WHERE PNR = %s
+        """
+        cursor.execute(query_delete_reserved, (pnr,))
+
+        query_update_balance = """
+        UPDATE Traveler
+        SET Balance = %s
+        WHERE id = %s
+        """
+        cursor.execute(query_update_balance, (updated_balance, user_id))
+        mysql.connection.commit()
+
+    else:
+        query_insert_booking = """
+        INSERT INTO Booking(PNR, travel_id, seat_number, traveler_id)
+        VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query_insert_booking, (pnr, travel_id, seat_number, user_id))
+
+        query_insert_purchased = """
+        INSERT INTO Purchased(PNR, purchased_time, payment_method, price, coupon_id)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(query_insert_purchased, (pnr, purchase_time, 'credit card', discounted_price, coupon_id))
+
+        query_update_balance = """
+        UPDATE Traveler
+        SET Balance = %s
+        WHERE id = %s
+        """
+        cursor.execute(query_update_balance, (updated_balance, user_id))
+        mysql.connection.commit()
+
+    return
+
+def reserve_one(travel_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+    user_id = session.get('userid')
+
+    pnr = generatePNR()
+    seat_number = generateSeatNumber(travel_id)
+
+    # Check if the travel_id is associated with a reserved booking
+    query_check_reserved_booking = """
+    SELECT *
+    FROM Booking
+    JOIN Reserved ON Booking.PNR = Reserved.PNR
+    WHERE travel_id = %s AND traveler_id = %s
+    """
+    cursor.execute(query_check_reserved_booking, (travel_id, user_id))
+    reserved_booking = cursor.fetchone()
+
+    if reserved_booking:
+        pnr = reserved_booking['PNR']
+        seat_number = reserved_booking['seat_number']
+
+    # Get travel details
+    query_travel = """
+    SELECT c.company_name, dep.name AS departure_terminal, arr.name AS arrival_terminal, t.depart_time, t.price
+    FROM Travel t
+    JOIN Company c ON t.travel_company_id = c.id
+    JOIN Terminal dep ON t.departure_terminal_id = dep.terminal_id
+    JOIN Terminal arr ON t.arrival_terminal_id = arr.terminal_id
+    WHERE t.travel_id = %s;
+    """
+    cursor.execute(query_travel, (travel_id,))
+    travel_details = cursor.fetchone()
+
+    # Generate the current timestamp
+    reserved_time = datetime.now()
+
+    # Calculate the purchase deadline (2 days before departure time)
+    depart_time = travel_details['depart_time']
+    purchase_deadline = depart_time - timedelta(days=2)
+    
+    query_insert_booking = """
+    INSERT INTO Booking(PNR, travel_id, seat_number, traveler_id)
+    VALUES (%s, %s, %s, %s)
+    """
+    cursor.execute(query_insert_booking, (pnr, travel_id, seat_number, user_id))
+
+    # Insert data into Reserved table
+    query_insert_reserved = """
+    INSERT INTO Reserved(PNR, reserved_time, purchased_deadline)
+    VALUES (%s, %s, %s)
+    """
+    cursor.execute(query_insert_reserved, (pnr, reserved_time, purchase_deadline))
+    mysql.connection.commit()
 
 def validate_seat_formation(seat_formation):
     seat_numbers = seat_formation.split('-')
@@ -2034,7 +2408,6 @@ def validate_seat_formation(seat_formation):
     if seat_formation.endswith('-'):
         return False
     return True
-
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
