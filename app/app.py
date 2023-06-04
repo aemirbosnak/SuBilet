@@ -859,7 +859,7 @@ def journeys():
 
         # Get journeys that are booked
         query_booked_journeys = """
-        SELECT J.*, T.travel_id
+        SELECT T.travel_id
         FROM Journey J
         INNER JOIN Travels_In_Journey T ON J.journey_name = T.journey_name
         INNER JOIN Booking B ON T.travel_id = B.travel_id
