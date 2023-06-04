@@ -25,6 +25,21 @@ PNR_LENGTH = 8
 def home():
     return main()
 
+@app.route('/test', methods=['GET', 'POST'])
+def test():
+    if request.method == 'GET' and 'id' in request.args:
+        id = request.args.get('id')
+        occupied = [1, 6, 11, 7]
+        formation = [3, 3, 3]
+        row = 5
+        col = 9
+        return render_template('test.html', formation=formation, row=row, tot_col=col, occupied=occupied)
+
+
+
+    return render_template('test.html', formation=0, row=0, tot_col=0, occupied=0)
+
+
 @app.route('/login', methods =['GET', 'POST'])
 def login():
     message = ''
@@ -247,9 +262,42 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
     is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
     user_id = session.get('userid')
 
+    travel_seat = None
+    if request.method == 'GET' and 'travel_seat' in request.args:
+        travel_seat = int(request.args.get('travel_seat'))
+
+        query = """
+                SELECT seat_formation, num_of_seats 
+                FROM Travel T
+                JOIN Vehicle_Type V ON V.id = T.vehicle_type_id
+                WHERE T.travel_id = %s
+                """
+        cursor.execute(query, (travel_seat, ))
+        seating_info = cursor.fetchone()
+
+        query = """
+                SELECT seat_number 
+                FROM Booking 
+                WHERE travel_id = %s
+                    AND PNR IN (SELECT PNR
+                                FROM Purchased)
+                """
+        cursor.execute(query, (travel_seat, ))
+        occupied = cursor.fetchall()
+
+        formation = [int(x) for x in seating_info['seat_formation'].split("-")]
+        col = sum(formation)
+        row = int(seating_info['num_of_seats']/col)
+
+        return render_template('listAvailableTravelsPage.html', travel_seat=travel_seat,
+                               searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city,
+                               departureCity=departure_city, departureDate=departure_date, extra_date=extra_date,
+                               sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id, formation=formation, row=row, tot_col=col, occupied=occupied)
+
     cursor.close()
 
-    return render_template('listAvailableTravelsPage.html', searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city, departureCity=departure_city, departureDate=departure_date, extra_date=extra_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
+
+    return render_template('listAvailableTravelsPage.html', travel_seat=travel_seat, searchedTravels=searchedTravels, vehicleType=vehicle_type, arrivalCity=arrival_city, departureCity=departure_city, departureDate=departure_date, extra_date=extra_date, sortType=sort_in, is_logged_in=is_logged_in, user_id=user_id)
 
 @app.route('/findTravel', methods=['GET', 'POST'])
 def findTravel():

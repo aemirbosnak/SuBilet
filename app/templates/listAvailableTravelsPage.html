@@ -11,6 +11,19 @@
     <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet'>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script> 
     <title>ŞuBilet</title>
+
+    <script>
+        function selectBox(boxNumber) {
+            const selectedBox = document.getElementById('box' + boxNumber);
+            const boxes = document.querySelectorAll('.box');
+
+            boxes.forEach(otherBox => {
+                otherBox.classList.remove('selected');
+            });
+
+            selectedBox.classList.add('selected');
+        }
+    </script>
 </head>
 <body>
   {% if is_logged_in and session['userType'] == 'traveler' %} 
@@ -167,6 +180,43 @@
                             </div>
                         </div>
                     </div>
+
+                    {% if travel_seat != singleTravel['travel_id'] %}
+                    <form action="{{ request.path }}" method="get" >
+                        <input type="hidden" name="travel_seat" value={{singleTravel['travel_id']}}>
+                        <button type="submit" id="seat_button" class="btn btn-outline-danger">Choose seat</button>
+                    </form>
+                    {% endif %}
+
+                    {% if travel_seat == singleTravel['travel_id'] %}
+                    <form action="{{ request.path }}" method="get" >
+                        <button type="submit" id="close_button" class="btn btn-outline-danger">Close</button>
+                    </form>
+
+                    <div class="container-sm">
+                        {% for row in range(row) %}
+                            <div class="row">
+                            {% set i = {'offset': 0} %}
+                            {% for col in formation %}
+                                {% for j in range(col) %}
+                                    <div class="col col-md-offset-1">
+                                    {% set box_number = row * tot_col + i.offset + j + 1 %}
+                                    {% if box_number in occupied %}
+                                        <div class="box" style="background-color: gray;">{{box_number}}</div>
+                                    {% else %}
+                                        <div class="box" id="box{{box_number}}" onclick="selectBox({{ box_number }})">{{ box_number }}</div>
+                                    {% endif %}
+                                    </div>
+                                {% endfor %}
+                                <div class="empty-box"></div>
+                                <br>
+                                {% set _ = i.update({'offset': i.offset + col}) %}
+                            {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
