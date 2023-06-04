@@ -87,19 +87,33 @@ INSERT INTO Company (id, company_name, website, foundation_date, about, validato
 (6, 'company3', 'https://company3.com.tr', '2000-01-01', 'about company 3', 1, '2000-01-02' );
 
 CREATE TABLE Report (
-    report_id INT,
+    report_id INT AUTO_INCREMENT,
     report_date DATETIME,
-    total_sales DECIMAL(15,2),
+    admin_number INT,
+    traveler_number INT,
+    company_number INT,
+    pending_company_number INT,
+    terminal_number INT,
+    vehicle_type_number INT,
+    total_purchase_number INT,
+    total_purchase_amount DECIMAL(15,2),
     total_reviews INT,
-    total_company INT,
-    pending_compan INT,
-    total_travelers INT,
-    total_bus INT,
-    total_train INT,
-    total_plane INT,
+    coupon_usage_percentage INT,
+    past_bus_number INT,
+    upcoming_bus_number INT,
+    past_plane_number INT,
+    upcoming_plane_number INT,
+    past_train_number INT,
+    upcoming_train_number INT,
+    company_with_max_revenue VARCHAR(256),
+    company_with_max_travel_number VARCHAR(256),
+    company_with_max_rating VARCHAR(256),
     report_generator_id INT,
     PRIMARY KEY(report_id),
     FOREIGN KEY(report_generator_id) REFERENCES Administrator(id) ON DELETE SET NULL,
+    FOREIGN KEY(company_with_max_revenue) REFERENCES Company(company_name) ON DELETE SET NULL,
+    FOREIGN KEY(company_with_max_travel_number) REFERENCES Company(company_name) ON DELETE SET NULL,
+    FOREIGN KEY(company_with_max_rating) REFERENCES Company(company_name) ON DELETE SET NULL,
     UNIQUE (report_date)
 );
 
@@ -165,7 +179,7 @@ CREATE TABLE Terminal(
     name VARCHAR(256) NOT NULL,
     city VARCHAR(256) NOT NULL,
     type ENUM( 'plane', 'train', 'bus' ) NOT NULL,
-    active_status ENUM( 'active', 'inactive'),
+    active_status ENUM( 'active', 'inactive') DEFAULT 'active',
     PRIMARY KEY (terminal_id),
     UNIQUE (name)
 );
@@ -194,8 +208,8 @@ INSERT INTO Terminal (terminal_id, name, city, type, active_status) VALUES
 CREATE TABLE Travel(
 	travel_id INT AUTO_INCREMENT,
 	travel_company_id INT NOT NULL,
-	departure_terminal_id INT NOT NULL,
-	arrival_terminal_id INT NOT NULL,
+	departure_terminal_id INT,
+	arrival_terminal_id INT,
 	depart_time DATETIME NOT NULL,
 	arrive_time DATETIME NOT NULL,
 	price	 DECIMAL(10,2) NOT NULL,
@@ -205,9 +219,9 @@ CREATE TABLE Travel(
 	FOREIGN KEY(travel_company_id) REFERENCES Company(id)
         ON DELETE CASCADE,
 	FOREIGN KEY(departure_terminal_id) REFERENCES Terminal(terminal_id)
-		ON DELETE NO ACTION,
+		ON DELETE SET NULL,
 	FOREIGN KEY(arrival_terminal_id) REFERENCES Terminal(terminal_id)
-		ON DELETE NO ACTION,
+		ON DELETE SET NULL,
 	FOREIGN KEY(vehicle_type_id) REFERENCES Vehicle_Type(id)
 		ON DELETE SET NULL,
 	CHECK (arrive_time > depart_time)
@@ -251,6 +265,7 @@ CREATE TABLE Booking(
 
 INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type) VALUES
 ('PLANE111', 1, 43, 7, 'regular'),
+('PLANE112', 1, 44, 8, 'regular'),
 ('PLANE113', 1, 1, 9, 'business'),
 ('PLANE120', 4, 53, 7, 'regular'),
 ('PLANE121', 4, 36, 8, 'regular'),
@@ -348,6 +363,7 @@ CREATE TABLE Purchased(
 );
 
 INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) VALUES
+('PLANE112', '2023-04-01 19:00:00', 'creadit card', 999.00, NULL),
 ('PLANE113', '2023-05-01 21:00:00', 'creadit card', 1399.00, NULL),
 ('PLANE120', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
 ('PLANE121', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
@@ -415,7 +431,66 @@ INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES
 (17, 9, "I had an incredible travel experience with your company. The accommodations were top-notch, with comfortable rooms and friendly staff. The itinerary was well-planned, and we got to visit breathtaking destinations.", 4),
 (17, 10, "The pricing of the travel package seemed reasonable at first, but there were many hidden costs along the way. It would have been helpful to have a clearer breakdown of expenses upfront.", 3);
 
-CREATE VIEW future_travels AS
+/* 
+********************
+***** Views ******** 
+********************
+*/ 
+
+CREATE VIEW company_traveler_info_view AS
+SELECT TCK, name, surname, age, email, phone
+FROM User JOIN Traveler ON User.id = Traveler.id;
+
+/*
+travle_with_vehicle_detail_view is for obtaining detail
+information about both travel and vehicle
+*/ 
+CREATE VIEW travel_with_vehicle_detail_view AS
 SELECT *
-FROM Travel
-WHERE depart_time < NOW();
+FROM Travel T
+JOIN Vehicle_Type V ON V.id = T.vehicle_type_id;
+
+/*
+travel_detail_view is for obtaining detail
+information about both travel, terminal and vehicle
+*/ 
+CREATE VIEW travel_detail_view AS
+SELECT
+T.travel_id AS travel_id,
+T.travel_company_id AS travel_company_id,
+T.depart_time AS depart_time,
+T.arrive_time AS arrival_time,
+T.price AS price,
+T.business_price AS business_price,
+Dep.name AS departure_terminal_name,
+Dep.city AS departure_city,
+Ar.name AS arrival_terminal_name,
+Ar.city AS arrival_city,
+V.model AS vehicle_model,
+V.type AS vehicle_type
+FROM Travel T
+JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
+JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
+JOIN Vehicle_Type V ON V.id = T.vehicle_type_id;
+
+/*
+companies_travels_detail_view is for obtaining detail
+information about travel of a company
+*/ 
+CREATE VIEW companies_travels_detail_view AS
+SELECT
+C.id AS company_id,
+C.company_name AS company_name,
+TDW.travel_id AS travel_id,
+TDW.depart_time AS depart_time,
+TDW.arrival_time AS arrival_time,
+TDW.price AS price,
+TDW.business_price AS business_price,
+TDW.departure_terminal_name AS departure_terminal_name,
+TDW.departure_city AS departure_city,
+TDW.arrival_terminal_name AS arrival_terminal_name,
+TDW.arrival_city AS arrival_city,
+TDW.vehicle_model AS vehicle_model,
+TDW.vehicle_type AS vehicle_type
+FROM Company C 
+JOIN travel_detail_view TDW ON C.id = TDW.travel_company_id;

@@ -80,6 +80,12 @@
           <a class="nav-link" href="{{ url_for('vehicleManagement') }}">Vehicles</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('terminalManagement') }}">Terminals</a>
+      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('reportManagement') }}">Application Report</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
         </li>
       </ul>
@@ -239,6 +245,10 @@
                         </div>
 
                         <div class="row align-items-start mt-4">
+                              <form class="row mb-2" action="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming' ) }}" method="GET">
+                                <input type="hidden" name="company_id" id="company_id" value="{{ singleCompany['id'] }}">
+                                <button type="submit" class="btn btn-danger" >See Company's All Travels</button>
+                              </form>
                               <a class="row mb-2 text-decoration-none" href="{{ url_for('companyProfile', companyId = singleCompany['id']) }}">
                                   <button class="btn btn-danger">Edit Company</button>
                               </a>
@@ -256,7 +266,10 @@
                               <a class="row mb-2 text-decoration-none" href="{{ url_for('validateCompany', companyId = singleCompany['id']) }}">
                                 <button class="btn btn-info">Validate Company</button>
                               </a>
-                              {% endif %}                            
+                              {% endif %}  
+                              <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteCompany', companyId = singleCompany['id']) }}">
+                                <button class="btn btn-danger">Delete Company</button>
+                            </a>                          
                         </div>
 
                     </div>

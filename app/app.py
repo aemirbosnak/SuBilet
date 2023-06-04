@@ -6,6 +6,15 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageTemplate, Frame, Paragraph, Spacer
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib import colors
+from reportlab.graphics.shapes import Drawing, Line
+from reportlab.lib.units import inch
+from flask import make_response
+
 
 app = Flask(__name__, static_folder='static') 
 
@@ -1034,9 +1043,12 @@ def buy_all():
 
 @app.route('/companysAllTravels/<string:upcomingOrPast>', methods = ['GET', 'POST'])
 def companysAllTravels(upcomingOrPast):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        userid = session['userid']
+        companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
        
        
         sort_type = 'depart_time'
@@ -1063,7 +1075,7 @@ def companysAllTravels(upcomingOrPast):
             ORDER BY {}
             """.format(sort_type)
 
-            cursor.execute(query, (userid, datetime.now()))
+            cursor.execute(query, (companyId, datetime.now()))
             travelDetailList = cursor.fetchall()
         elif upcomingOrPast == 'past':
             #get past travels belongs to the company and list
@@ -1073,11 +1085,11 @@ def companysAllTravels(upcomingOrPast):
             WHERE company_id = %s AND depart_time < %s
             ORDER BY {}
             """.format(sort_type)
-            cursor.execute(query, (userid, datetime.now()))
+            cursor.execute(query, (companyId, datetime.now()))
             travelDetailList = cursor.fetchall()
         
         cursor.close()
-        return render_template('companysAllTravels.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast, sort_type = sort_in )
+        return render_template('companysAllTravels.html', companyId = companyId, travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast, sort_type = sort_in )
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
@@ -1145,10 +1157,15 @@ def addCompanyTravel(travelVehicleType):
 
 @app.route('/aTravelDetails/<int:travelId>', methods = [ 'GET', 'POST'])
 def aTravelDetails(travelId):
-        if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             companyId = session['userid']
-            aTravelReservationDetails = None   
+
+            if request.method == "GET" and session['userType'] =='admin':
+                companyId = int(request.args.get('company_id'))
+    
+            aTravelReservationDetails = None  
+            aTravelPurchaseDetails = None 
 
             #get travel information
             queryGetTravelInfo = """
@@ -1214,7 +1231,7 @@ def aTravelDetails(travelId):
 
             cursor.close()
             current_time = datetime.now()
-            return render_template('aTravelDetails.html', theTravel = theTravel, current_time = current_time, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
+            return render_template('aTravelDetails.html', companyId = companyId, theTravel = theTravel, current_time = current_time, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
         else:
             message = 'Session is not valid, please log in!'
             return render_template('login.html', message = message)
@@ -1401,9 +1418,12 @@ def deleteATravel(travelId):
     
 @app.route('/deleteAndRefundAPurchase/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
 def deleteAndRefundAPurchase(PNRToBeDeleted):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
 
         # Get user id, travel id and paid amount for the purchase
         queryGetInfo = """
@@ -1446,16 +1466,55 @@ def deleteAndRefundAPurchase(PNRToBeDeleted):
             message = "This PNR doesn't belong to one of your travels, so you cannot delete corresponding booking!"
         
         flash(message)
-        return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
+        return redirect(url_for('aTravelDetails', travelId = info['travel_id'], company_id=companyId ))
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/deleteWORefundAPurchase/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
+def deleteWORefundAPurchase(PNRToBeDeleted):
+    # Only admin can delete without refund of without making any gift 
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
+
+        # Get user id, travel id and paid amount for the purchase 
+        queryGetInfo = """
+        SELECT T.id AS traveler_id, B.travel_id AS travel_id, P.price AS paid_amount
+        FROM Traveler T
+        JOIN Booking B ON T.id = B.traveler_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        WHERE B.PNR = %s
+        """
+        cursor.execute(queryGetInfo, (PNRToBeDeleted,))
+        info = cursor.fetchone()
+
+        if info:
+            queryDeletePNRFromBooking = """
+            DELETE FROM Booking WHERE PNR = %s
+            """
+            cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
+            cursor.connection.commit()
+            message = "The booking wiht " + PNRToBeDeleted + " is deleted without refund!"
+        else:
+            message = "There is no such purchase!"
+
+        flash(message)
+        return redirect(url_for('aTravelDetails', travelId = info['travel_id'], company_id=companyId ))
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
 @app.route('/deleteAndGiveFreeTravel/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
 def deleteAndGiveFreeTravel(PNRToBeDeleted):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
 
         # Get user TCK, name, surname, travel_id which PNR belongs to, seat number, seat type, arrival and departure informations
         queryGetCurrentInfo = """
@@ -1527,10 +1586,10 @@ def deleteAndGiveFreeTravel(PNRToBeDeleted):
         else:
             message = "This PNR doesn't belong to one of your travels, so you cannot delete corresponding booking!"
             flash(message)
-            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'] ))
+            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'], company_id=companyId ))
         
-        if request.method == 'POST' and 'freeTravelId' in request.form:
-            freeTravelId = request.form['freeTravelId']
+        if request.method == 'GET' and 'freeTravelId' in request.args:
+            freeTravelId = request.args.get('freeTravelId')
             newPNR = generatePNR()
             newSeat = generateSeatNumber(freeTravelId)
             paymentMethod = 'gift'
@@ -1563,19 +1622,22 @@ def deleteAndGiveFreeTravel(PNRToBeDeleted):
             cursor.connection.commit()
             message = "The current booking is deleted." + message1
             flash(message)
-            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'] ))
+            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'],  company_id=companyId))
        
         # flash(message)
-        return render_template('deleteAndGiveFreeTravel.html', PNRToBeDeleted = PNRToBeDeleted, currrentInfo = currrentInfo, travelDetailList = travelDetailList, sort_type = sort_in )
+        return render_template('deleteAndGiveFreeTravel.html',companyId = companyId, PNRToBeDeleted = PNRToBeDeleted, currrentInfo = currrentInfo, travelDetailList = travelDetailList, sort_type = sort_in )
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
 
 @app.route('/deleteAReservation/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
 def deleteAReservation(PNRToBeDeleted):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin' :
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
 
         # Get user id, travel id and paid amount for the purchase
         queryGetInfo = """
@@ -1609,7 +1671,10 @@ def deleteAReservation(PNRToBeDeleted):
             message = "This PNR doesn't belongs to one of your travels, so you cannot delete corresponding reservation!"
         
         flash(message)
-        return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
+        if session['userType'] =='admin':
+            return redirect(url_for('aTravelDetails', travelId = info['travel_id'], company_id=companyId ))
+        else:
+            return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
@@ -1719,8 +1784,6 @@ def companies():
                 filter_type = 'all'
                 filterClause = ''
 
-        
-
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         queryCompanies = """
         SELECT
@@ -1751,28 +1814,15 @@ def companies():
 @app.route('/deactivateCompany/<int:companyId>', methods = ['GET', 'POST'] )
 def deactivateCompany(companyId):
     if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        message = None
-
-        # check the company
-        queryGetCompany = """
-        SELECT company_name
-        FROM Company
-        WHERE id = %s
-        """
-        cursor.execute(queryGetCompany, (companyId,))
-        companyInfo = cursor.fetchone()
-        
-        if companyInfo:
-            queryDeactivate = """
-            UPDATE User SET active = FALSE WHERE id = %s
-            """
-            cursor.execute(queryDeactivate, (companyId,))
-            cursor.connection.commit()
-            message = 'Company ' + companyInfo['company_name'] + ' is succesfully deactivated.'
-
-        flash(message)
-        return redirect(url_for('companies'))
+        return handleCompanyAction(companyId, "deactivate")
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/deleteCompany/<int:companyId>', methods = ['GET', 'POST'] )
+def deleteCompany(companyId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        return handleCompanyAction(companyId, "delete")
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
@@ -2049,6 +2099,535 @@ def deleteAVehicleType(vehicleTypeId):
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
+    
+@app.route('/terminalManagement', methods = ['GET', 'POST'])
+def terminalManagement():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # get all terminals
+        queryGetVehicles = """
+        SELECT *
+        FROM Terminal
+        """
+        cursor.execute(queryGetVehicles)
+        allTerminals = cursor.fetchall()
+
+        return render_template('terminalManagement.html', allTerminals = allTerminals)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+@app.route('/deleteTerminal/<int:terminalId>', methods = [ 'GET', 'POST' ])
+def deleteTerminal(terminalId):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        queryFindVehicleType = """
+        SELECT *
+        FROM Terminal
+        WHERE terminal_id = %s
+        """
+        cursor.execute(queryFindVehicleType, (terminalId,))
+        theTerminal = cursor.fetchone()
+
+        # Find if the terminal used in one of travels
+        queryTerminlaUsedInTravel = """
+        SELECT *
+        FROM Travel
+        WHERE departure_terminal_id = %s OR arrival_terminal_id = %s
+        """
+        cursor.execute(queryTerminlaUsedInTravel, (terminalId, terminalId))
+        isUsedInTravels = cursor.fetchall()
+        
+        if theTerminal:
+            queryDeleteTerminal = """
+            DELETE FROM Terminal WHERE terminal_id = %s
+            """
+            cursor.execute(queryDeleteTerminal, (terminalId,))
+            cursor.connection.commit()
+            message = "The terminal " + theTerminal['name'] + " is deleted."
+            if isUsedInTravels:
+                message = message + " Terminal was used by travels! You need to set new terminal for these travels!"
+        else:
+            message = "There is no such terminal."
+
+        flash(message)
+        return redirect(url_for('terminalManagement'))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+@app.route('/createTerminal', methods = [ 'GET', 'POST'])
+def createTerminal():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        if request.method == 'POST':
+            if 'terminal_type' in request.form and request.form['terminal_type'] and \
+            'terminal_city' in request.form and request.form['terminal_city'] and \
+            'terminal_name' in request.form and request.form['terminal_name']:
+                
+                terminal_type = request.form['terminal_type']
+                terminal_city = request.form['terminal_city']
+                terminal_name = request.form['terminal_name']
+
+                # check if there is an existing terminal with the same name
+                queryFindExistingTerminal = """
+                SELECT *
+                FROM Terminal
+                WHERE name = %s
+                """
+                cursor.execute(queryFindExistingTerminal, (terminal_name,))
+                isExist = cursor.fetchone()
+
+                if isExist:
+                    message = "There is an existing terminal with the same name: " + terminal_name
+                else:    
+                    # make the insertion
+                    # create the vehicle type
+                    queryInsertTerminal = """
+                    INSERT INTO Terminal (terminal_id, name, city, type)
+                    VALUES (NULL, %s, %s, %s)
+                    """
+                    cursor.execute(queryInsertTerminal, (terminal_name, terminal_city, terminal_type))
+                    cursor.connection.commit()
+                    message = "New terminal is successfully added!"
+                    flash(message)
+                    return redirect(url_for('terminalManagement'))
+            else:
+                message = 'Please fill the form!'
+
+        return render_template('createTerminal.html', message = message)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+
+
+@app.route('/reportManagement', methods = ['GET', 'POST'])
+def reportManagement():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+        sort_type = 'report_date DESC'
+        sort_in = 'latest_to_earliest'
+
+        if request.method == 'GET' and 'sort_type' in request.args :
+            sort_in = request.args.get('sort_type')
+            if sort_in == 'latest_to_earliest':
+                sort_type = 'report_date DESC'
+            elif sort_in == 'earliest_to_latest':
+                sort_type = ' report_date ASC'
+            else:
+                sort_type = 'report_date DESC'
+
+        # get all reports
+        query = """
+        SELECT *
+        FROM Report R
+        JOIN Administrator A ON A.id = R.report_generator_id
+        ORDER BY {}
+        """.format(sort_type)
+        
+        cursor.execute(query)
+        allReports = cursor.fetchall()
+
+        return render_template('reportManagement.html', message = message, sortType = sort_type, allReports = allReports)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/reportDetails/<int:report_id>', methods = ['GET', 'POST'])
+def reportDetails(report_id):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+    
+        # get the report
+        query = """
+        SELECT *
+        FROM Report R
+        JOIN Administrator A ON A.id = R.report_generator_id
+        WHERE R.report_id = %s
+        """
+        cursor.execute(query, (report_id,))
+        theReport = cursor.fetchone()
+
+        return render_template('reportPage.html', theReport = theReport)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/printReportDetails/<int:report_id>', methods=['GET', 'POST'])
+def printReportDetails(report_id):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # Get the report
+        query = """
+        SELECT *
+        FROM Report R
+        JOIN Administrator A ON A.id = R.report_generator_id
+        WHERE R.report_id = %s
+        """
+        cursor.execute(query, (report_id,))
+        theReport = cursor.fetchone()
+
+        # Generate the PDF file
+        response = make_response(generate_pdf(theReport))
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=report_{report_id}.pdf'
+        return response
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message=message)
+
+def generate_pdf(report_data):
+    # Create a new PDF document
+    doc = SimpleDocTemplate('temp_report.pdf', pagesize=letter)
+    elements = []
+ # Define header content
+    header_content = "Application Report"
+
+    # Define header style
+    header_style = ParagraphStyle(
+        name='HeaderStyle',
+        fontSize=14,
+        textColor=colors.black,
+        spaceAfter=12
+    )
+
+    # Create header paragraph
+    header_paragraph = Paragraph(header_content, style=header_style)
+
+    # Add header paragraph to the elements list
+    elements.append(header_paragraph)
+
+    # Create a drawing object for the line separator
+    line_separator = Drawing(400, 1)
+    line_separator.add(Line(0, 0, 400, 0))
+
+    # Add line separator to the elements list
+    elements.append(line_separator)
+
+    # Add spacing after the line separator
+    elements.append(Spacer(1, 12))  # Adjust the spacing as needed
+    # Create table data
+    table_data = [
+        ['Indicators', 'Value'],
+        ['Report ID', str(report_data['report_id'])],
+        ['Report Date', str(report_data['report_date'])],
+        ['Total Number of Admin', str(report_data['admin_number'])],
+        ['Total Number of Traveler', str(report_data['traveler_number'])],
+        ['Total Number of Active and Validated Company', str(report_data['company_number'])],
+        ['Total Number of Unverified Company', str(report_data['pending_company_number'])],
+        ['Total Number of Active Terminal', str(report_data['terminal_number'])],
+        ['Total Number of Vehicle Type', str(report_data['vehicle_type_number'])],
+        ['Total Number of Purchase', str(report_data['total_purchase_number'])],
+        ['Total Purchase Amount', str(report_data['total_purchase_amount'])],
+        ['Total Number of Reviews', str(report_data['total_reviews'])],
+        ['Coupon Usage Percentage', str(report_data['coupon_usage_percentage'])],
+        ['Total Number of Past Bus Travel ', str(report_data['past_bus_number'])],
+        ['Total Number of Upcoming Bus Travel', str(report_data['upcoming_bus_number'])],
+        ['Total Number of Past Plane Travel', str(report_data['past_plane_number'])],
+        ['Total Number of Upcoming Plane Travel', str(report_data['upcoming_plane_number'])],
+        ['Total Number of Past Train Travel', str(report_data['past_train_number'])],
+        ['Total Number of Upcoming Train Travel', str(report_data['upcoming_train_number'])],
+        ['Company With Max Revanue', str(report_data['company_with_max_revenue'].capitalize())],
+        ['Company With Max Travel Number', str(report_data['company_with_max_travel_number'].capitalize())],
+        ['Company With Max Rating', str(report_data['company_with_max_rating'].capitalize())],
+        # Add more rows for other attributes
+    ]
+
+    # Define table style
+    table_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ])
+
+    # Create table object and apply style
+    table = Table(table_data)
+    table.setStyle(table_style)
+
+    # Add table to the elements list
+    elements.append(table)
+
+    # Build the PDF document
+    doc.build(elements)
+
+    # Read the generated PDF file and return it as bytes
+    with open('temp_report.pdf', 'rb') as file:
+        pdf_bytes = file.read()
+
+    return pdf_bytes
+
+
+
+
+@app.route('/createReport', methods = [ 'GET', 'POST'])
+def createReport():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+        report_generator_id = session['userid']
+
+        # Total Number of Active Admins
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Administrator A
+        NATURAL JOIN User U
+        WHERE U.active IS TRUE
+        """
+        cursor.execute(query)
+        admin_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Active Travelers
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Traveler T
+        NATURAL JOIN User U
+        WHERE U.active IS TRUE
+        """
+        cursor.execute(query)
+        traveler_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Active and Validated Company
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Company C
+        NATURAL JOIN User U
+        WHERE U.active IS TRUE AND C.validator_id IS NOT NULL
+        """
+        cursor.execute(query)
+        company_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Unverified Company
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Company
+        WHERE validator_id IS NULL
+        """
+        cursor.execute(query)
+        pending_company_number = (cursor.fetchone())['cnt']
+
+        # Total Number of Terminal
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Terminal
+        WHERE active_status = 'active'
+        """
+        cursor.execute(query)
+        terminal_number = (cursor.fetchone())['cnt']
+        
+        # Total Number of Vehicle Type
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Vehicle_Type
+        """
+        cursor.execute(query)
+        vehicle_type_number = (cursor.fetchone())['cnt']
+        
+        # Total Number of Purchase and Total Amount
+        query = """
+        SELECT COUNT(*) AS total_purchase_number, SUM(price) AS total_purchase_amount
+        FROM Purchased
+        """
+        cursor.execute(query)
+        purchase_info = cursor.fetchone()
+        total_purchase_number = purchase_info[ 'total_purchase_amount' ] 
+        total_purchase_amount = purchase_info[ 'total_purchase_amount' ]
+        
+        # Total Number of Past and Upcoming Travels by Vehicle Type
+        query = """
+            SELECT type, COUNT(*) AS cnt
+            FROM travel_with_vehicle_detail_view
+            WHERE depart_time < %s
+            GROUP BY type
+        """
+        cursor.execute(query, (datetime.now(),))
+        past_travels_by_type = {row['type']: row['cnt'] for row in cursor.fetchall()}
+
+        query = """
+            SELECT type, COUNT(*) AS cnt
+            FROM travel_with_vehicle_detail_view
+            WHERE depart_time > %s
+            GROUP BY type
+        """
+        cursor.execute(query, (datetime.now(),))
+        upcoming_travels_by_type = {row['type']: row['cnt'] for row in cursor.fetchall()}
+
+        # Access the counts for each vehicle type
+        past_bus_number = past_travels_by_type.get('bus', 0)
+        upcoming_bus_number = upcoming_travels_by_type.get('bus', 0)
+        past_plane_number = past_travels_by_type.get('plane', 0)
+        upcoming_plane_number = upcoming_travels_by_type.get('plane', 0)
+        past_train_number = past_travels_by_type.get('train', 0)
+        upcoming_train_number = upcoming_travels_by_type.get('train', 0)        
+
+        # Total Number of Reviews
+        query = """
+        SELECT COUNT(*) AS cnt
+        FROM Review
+        """
+        cursor.execute(query)
+        total_reviews = (cursor.fetchone())['cnt']
+
+        # Coupon Usage Percentage
+        query = """
+        SELECT (COUNT(*) / (SELECT COUNT(*) FROM Purchased)) * 100 AS coupon_usage_percentage
+        FROM Purchased
+        WHERE coupon_id IS NOT NULL
+        """
+        cursor.execute(query)
+        coupon_usage_percentage = (cursor.fetchone())['coupon_usage_percentage']
+
+        # Find Company With Max revenue
+        # Note that MySql 5.7 doesn't support with clause
+        query = """
+        SELECT T1.company_name
+        FROM (
+        SELECT C.company_name, SUM(P.price) AS revenue
+        FROM Company C
+        JOIN Travel T ON T.travel_company_id = C.id
+        JOIN Booking B ON B.travel_id = T.travel_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        GROUP BY C.company_name
+        ) T1
+        WHERE T1.revenue = (SELECT MAX(revenue) FROM (
+        SELECT C.company_name, SUM(P.price) AS revenue
+        FROM Company C
+        JOIN Travel T ON T.travel_company_id = C.id
+        JOIN Booking B ON B.travel_id = T.travel_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        GROUP BY C.company_name
+        ) T2)
+        """
+        cursor.execute(query)
+        company_with_max_revenue = (cursor.fetchone())['company_name']
+
+        # Company With Max Travel Number
+        query = """
+        SELECT C.company_name
+        FROM Company C
+        JOIN (
+            SELECT T.travel_company_id, COUNT(*) AS travel_count
+            FROM Travel T
+            GROUP BY T.travel_company_id
+        ) AS TC ON C.id = TC.travel_company_id
+        WHERE TC.travel_count = (
+            SELECT MAX(travel_count)
+            FROM (
+                SELECT T.travel_company_id, COUNT(*) AS travel_count
+                FROM Travel T
+                GROUP BY T.travel_company_id
+            ) AS counts
+        );
+        """
+        cursor.execute(query)
+        company_with_max_travel_number = (cursor.fetchone())['company_name']
+
+        # Company With Max Rating
+        query = """
+        SELECT C.company_name
+        FROM Company C
+        JOIN Travel T ON T.travel_company_id = C.id
+        JOIN Review R ON R.travel_id = T.travel_id
+        GROUP BY C.id, C.company_name
+        HAVING AVG(R.rating) = (
+            SELECT MAX(avg_rating)
+            FROM (
+                SELECT AVG(R.rating) AS avg_rating
+                FROM Travel T
+                JOIN Review R ON R.travel_id = T.travel_id
+                GROUP BY T.travel_company_id
+            ) AS avg_ratings
+        );
+        """
+        cursor.execute(query)
+        company_with_max_rating = (cursor.fetchone())['company_name']
+
+        # Insert all these informations into report table
+        queryInsertReport = """
+        INSERT INTO Report 
+        (report_id, report_date, admin_number, traveler_number, company_number, pending_company_number, 
+        terminal_number, vehicle_type_number, total_purchase_number, total_purchase_amount, total_reviews, coupon_usage_percentage, 
+        past_bus_number, upcoming_bus_number, past_plane_number, upcoming_plane_number, past_train_number, upcoming_train_number,
+        company_with_max_revenue, company_with_max_travel_number, company_with_max_rating, report_generator_id  )
+        VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        cursor.execute(queryInsertReport,(datetime.now(), admin_number, traveler_number, company_number, pending_company_number, 
+                                          terminal_number, vehicle_type_number,total_purchase_number, total_purchase_amount,
+                                            total_reviews, coupon_usage_percentage, past_bus_number, upcoming_bus_number,
+                                              past_plane_number, upcoming_plane_number, past_train_number, upcoming_train_number,
+                                               company_with_max_revenue , company_with_max_travel_number, company_with_max_rating,
+                                                 report_generator_id))
+        cursor.connection.commit()
+        message = "New report is generated. You can see details."
+
+        flash(message)
+        return redirect(url_for('reportManagement'))
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/companysAllTravelsByAdmin/<int:companyId>/<string:upcomingOrPast>', methods = ['GET', 'POST'])
+def companysAllTravelsByAdmin(upcomingOrPast, companyId):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+       
+        sort_type = 'depart_time'
+        sort_in = 'earliest_to_latest'
+
+        if request.method == 'GET' and 'sort_type' in request.args:
+            sort_in = request.args.get('sort_type')
+
+            if sort_in == 'earliest_to_latest':
+                sort_type = 'depart_time'
+            elif sort_in == 'latest_to_earliest':
+                sort_type = 'depart_time DESC'
+            elif sort_in == 'low_to_high':
+                sort_type = 'price'
+            elif sort_in == 'high_to_low':
+                sort_type = 'price DESC'
+
+        if upcomingOrPast == 'upcoming':
+            #get upcoming travels belongs to this company and list
+            query = """
+            SELECT *
+            FROM companies_travels_detail_view
+            WHERE  company_id = %s AND depart_time > %s
+            ORDER BY {}
+            """.format(sort_type)
+
+            cursor.execute(query, (companyId, datetime.now()))
+            travelDetailList = cursor.fetchall()
+        elif upcomingOrPast == 'past':
+            #get past travels belongs to the company and list
+            query = """
+            SELECT *
+            FROM companies_travels_detail_view
+            WHERE company_id = %s AND depart_time < %s
+            ORDER BY {}
+            """.format(sort_type)
+            cursor.execute(query, (companyId, datetime.now()))
+            travelDetailList = cursor.fetchall()
+        
+        cursor.close()
+        return render_template('companysAllTravelsByAdmin.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast, sort_type = sort_in )
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
 
 ########################
 ### HELPER FUNCTIONS ###
@@ -2303,6 +2882,100 @@ def validate_seat_formation(seat_formation):
     if seat_formation.endswith('-'):
         return False
     return True
+
+def handleCompanyAction(companyId, action):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # Check the company
+        queryGetCompany = """
+        SELECT company_name
+        FROM Company
+        WHERE id = %s
+        """
+        cursor.execute(queryGetCompany, (companyId,))
+        companyInfo = cursor.fetchone()
+
+        if companyInfo:
+            # Before action, travelers who purchased an upcoming travel registered by the company will be refunded
+            queryTravelerAndRefundAmount = """
+            SELECT B.traveler_id, P.price, B.PNR, T.travel_id
+            FROM Company C
+            JOIN Travel T ON T.travel_company_id = C.id
+            JOIN Booking B ON B.travel_id = T.travel_id
+            JOIN Purchased P ON P.PNR = B.PNR
+            WHERE T.depart_time > %s AND C.id = %s
+            """
+            cursor.execute(queryTravelerAndRefundAmount, (datetime.now(), companyId))
+            travelerAndRefundAmount = cursor.fetchall()
+
+            queryRefund = """
+            UPDATE Traveler
+            SET balance = balance + %s
+            WHERE id = %s
+            """
+            for data in travelerAndRefundAmount:
+                cursor.execute(queryRefund, (data['price'], data['traveler_id']))
+                cursor.connection.commit()
+
+
+            if action == "deactivate":
+                # delete the upcoming travels
+                queryFindUpcomingTravels = """
+                SELECT T.travel_id
+                FROM Company C
+                JOIN Travel T ON T.travel_company_id = C.id
+                WHERE T.depart_time > %s AND C.id = %s
+                """
+                cursor.execute(queryFindUpcomingTravels, (datetime.now(), companyId))
+                travelsToBeDeleted = cursor.fetchall()
+            elif action == "delete":
+                # delete all past and upcoming travels belonging to the company
+                # deleting travel result in deletion in Booking, Purchased and Reserved tables
+                queryFindCompanyTravels = """
+                SELECT T.travel_id
+                FROM Company C
+                JOIN Travel T ON T.travel_company_id = C.id
+                WHERE C.id = %s
+                """
+                cursor.execute(queryFindCompanyTravels, (companyId, ))
+                travelsToBeDeleted = cursor.fetchall()
+
+            # delete travels
+            queryDeleteTravel = """
+            DELETE FROM Travel WHERE travel_id = %s
+            """
+            for dict in travelsToBeDeleted:
+                cursor.execute(queryDeleteTravel, (dict['travel_id'], ))
+                cursor.connection.commit()
+
+            if action == "deactivate":
+                # deactivate company
+                queryDeactivate = """
+                UPDATE User SET active = FALSE WHERE id = %s
+                """
+                cursor.execute(queryDeactivate, (companyId,))
+                cursor.connection.commit()
+                message = 'Company ' + companyInfo['company_name'] + ' is succesfully deactivated.'
+            elif action == "delete":
+                # delete company
+                queryDeactivate = """
+                DELETE FROM User WHERE id = %s
+                """
+                cursor.execute(queryDeactivate, (companyId,))
+                cursor.connection.commit()
+                message = 'Company ' + companyInfo['company_name'] + ' is succesfully deleted. For upcoming travels of the company, paid amounts are refunded to travelers.'
+                
+        else:
+            message = "There is no such company"
+
+        flash(message)
+        return redirect(url_for('companies'))
+    else:
+        message = "Session was not valid, please log in!"
+        return render_template('login.html', message=message)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
