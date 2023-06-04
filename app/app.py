@@ -935,13 +935,14 @@ def journeys():
 
         # Get journeys that are booked
         query_booked_journeys = """
-        SELECT T.travel_id
-        FROM Journey J
-        INNER JOIN Travels_In_Journey T ON J.journey_name = T.journey_name
-        INNER JOIN Booking B ON T.travel_id = B.travel_id
-        WHERE J.traveler_id = %s
+        SELECT travel_id
+        FROM Travels_In_Journey
+        WHERE traveler_id = %s
+        AND travel_id IN (SELECT travel_id
+                FROM Booking
+                WHERE traveler_id = %s) 
         """
-        cursor.execute(query_booked_journeys, (user_id,))
+        cursor.execute(query_booked_journeys, (user_id, user_id))
         booked_journeys = cursor.fetchall()
 
         booked_journey_ids = [journey['travel_id'] for journey in booked_journeys]
