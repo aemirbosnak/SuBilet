@@ -1948,13 +1948,91 @@ def deleteAVehicleType(vehicleTypeId):
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
-
-
-@app.route('/reportPage', methods = [ 'GET', 'POST'])
-def reportPage():
+    
+@app.route('/reportManagement', methods = ['GET', 'POST'])
+def reportManagement():
     if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         message = None
+        sort_type = 'report_date DESC'
+        sort_in = 'latest_to_earliest'
+
+        if request.method == 'GET' and 'sort_type' in request.args :
+            sort_in = request.args.get('sort_type')
+            if sort_in == 'latest_to_earliest':
+                sort_type = 'report_date DESC'
+            elif sort_in == 'earliest_to_latest':
+                sort_type = ' report_date ASC'
+            else:
+                sort_type = 'report_date DESC'
+
+        # get all reports
+        query = """
+        SELECT *
+        FROM Report R
+        JOIN Administrator A ON A.id = R.report_generator_id
+        ORDER BY {}
+        """.format(sort_type)
+        
+        cursor.execute(query)
+        allReports = cursor.fetchall()
+
+        return render_template('reportManagement.html', message = message, sortType = sort_type, allReports = allReports)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/reportDetails/<int:report_id>', methods = ['GET', 'POST'])
+def reportDetails(report_id):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+    
+        # get the report
+        query = """
+        SELECT *
+        FROM Report R
+        JOIN Administrator A ON A.id = R.report_generator_id
+        WHERE R.report_id = %s
+        """
+        cursor.execute(query, (report_id,))
+        theReport = cursor.fetchone()
+
+        return render_template('reportPage.html', theReport = theReport)
+
+        # return render_template('reportPage.html', message = message, 
+        #                        admin_number = admin_number,
+        #                        traveler_number = traveler_number, 
+        #                        company_number = company_number,
+        #                        pending_company_number = pending_company_number, 
+        #                        terminal_number = terminal_number, 
+        #                        vehicle_type_number = vehicle_type_number, 
+        #                        total_purchase_number = total_purchase_number, 
+        #                        total_purchase_amount = total_purchase_amount, 
+        #                        past_bus_number = past_bus_number, 
+        #                        upcoming_bus_number = upcoming_bus_number,
+        #                        past_plane_number = past_plane_number,
+        #                        upcoming_plane_number = upcoming_plane_number,
+        #                        past_train_number = past_train_number, 
+        #                        upcoming_train_number = upcoming_train_number,
+        #                        total_reviews = total_reviews,
+        #                        coupon_usage_percentage = coupon_usage_percentage,
+        #                        company_with_max_revenue = company_with_max_revenue,
+        #                        company_with_max_travel_number = company_with_max_travel_number,
+        #                        company_with_max_rating = company_with_max_rating
+        #                         )
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
+
+
+@app.route('/createReport', methods = [ 'GET', 'POST'])
+def createReport():
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+        report_generator_id = session['userid']
 
         # Total Number of Active Admins
         query = """
@@ -2019,6 +2097,8 @@ def reportPage():
         """
         cursor.execute(query)
         purchase_info = cursor.fetchone()
+        total_purchase_number = purchase_info[ 'total_purchase_amount' ] 
+        total_purchase_amount = purchase_info[ 'total_purchase_amount' ]
         
         # Total Number of Past and Upcoming Travels by Vehicle Type
         query = """
@@ -2064,7 +2144,7 @@ def reportPage():
         cursor.execute(query)
         coupon_usage_percentage = (cursor.fetchone())['coupon_usage_percentage']
 
-        # Find Company With Max Revanue
+        # Find Company With Max revenue
         # Note that MySql 5.7 doesn't support with clause
         query = """
         SELECT T1.company_name
@@ -2086,7 +2166,7 @@ def reportPage():
         ) T2)
         """
         cursor.execute(query)
-        company_with_max_revanue = (cursor.fetchone())['company_name']
+        company_with_max_revenue = (cursor.fetchone())['company_name']
 
         # Company With Max Travel Number
         query = """
@@ -2129,28 +2209,26 @@ def reportPage():
         cursor.execute(query)
         company_with_max_rating = (cursor.fetchone())['company_name']
 
+        # Insert all these informations into report table
+        queryInsertReport = """
+        INSERT INTO Report 
+        (report_id, report_date, admin_number, traveler_number, company_number, pending_company_number, 
+        terminal_number, vehicle_type_number, total_purchase_number, total_purchase_amount, total_reviews, coupon_usage_percentage, 
+        past_bus_number, upcoming_bus_number, past_plane_number, upcoming_plane_number, past_train_number, upcoming_train_number,
+        company_with_max_revenue, company_with_max_travel_number, company_with_max_rating, report_generator_id  )
+        VALUES (NULL, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        cursor.execute(queryInsertReport,(datetime.now(), admin_number, traveler_number, company_number, pending_company_number, 
+                                          terminal_number, vehicle_type_number,total_purchase_number, total_purchase_amount,
+                                            total_reviews, coupon_usage_percentage, past_bus_number, upcoming_bus_number,
+                                              past_plane_number, upcoming_plane_number, past_train_number, upcoming_train_number,
+                                               company_with_max_revenue , company_with_max_travel_number, company_with_max_rating,
+                                                 report_generator_id))
+        cursor.connection.commit()
+        message = "New report is generated. You can see details."
 
-        return render_template('reportPage.html', message = message, 
-                               admin_number = admin_number,
-                               traveler_number = traveler_number, 
-                               company_number = company_number,
-                               pending_company_number = pending_company_number, 
-                               terminal_number = terminal_number, 
-                               vehicle_type_number = vehicle_type_number, 
-                               total_purchase_number = purchase_info[ 'total_purchase_amount' ], 
-                               total_purchase_amount = purchase_info[ 'total_purchase_amount' ], 
-                               past_bus_number = past_bus_number, 
-                               upcoming_bus_number = upcoming_bus_number,
-                               past_plane_number = past_plane_number,
-                               upcoming_plane_number = upcoming_plane_number,
-                               past_train_number = past_train_number, 
-                               upcoming_train_number = upcoming_train_number,
-                               total_reviews = total_reviews,
-                               coupon_usage_percentage = coupon_usage_percentage,
-                               company_with_max_revanue = company_with_max_revanue,
-                               company_with_max_travel_number = company_with_max_travel_number,
-                               company_with_max_rating = company_with_max_rating
-                                )
+        flash(message)
+        return redirect(url_for('reportManagement'))
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)

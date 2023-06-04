@@ -93,12 +93,12 @@ INSERT INTO Company (id, company_name, website, foundation_date, about, validato
 (14, 'company6', 'https://company6.com.tr', '2005-04-05', 'about company 6', 2, '2005-05-06' );
 
 CREATE TABLE Report (
-    report_id INT,
+    report_id INT AUTO_INCREMENT,
     report_date DATETIME,
+    admin_number INT,
     traveler_number INT,
     company_number INT,
     pending_company_number INT,
-    admin_number INT,
     terminal_number INT,
     vehicle_type_number INT,
     total_purchase_number INT,
@@ -111,13 +111,13 @@ CREATE TABLE Report (
     upcoming_plane_number INT,
     past_train_number INT,
     upcoming_train_number INT,
-    company_with_max_revanue VARCHAR(256),
+    company_with_max_revenue VARCHAR(256),
     company_with_max_travel_number VARCHAR(256),
     company_with_max_rating VARCHAR(256),
     report_generator_id INT,
     PRIMARY KEY(report_id),
     FOREIGN KEY(report_generator_id) REFERENCES Administrator(id) ON DELETE SET NULL,
-    FOREIGN KEY(company_with_max_revanue) REFERENCES Company(company_name) ON DELETE SET NULL,
+    FOREIGN KEY(company_with_max_revenue) REFERENCES Company(company_name) ON DELETE SET NULL,
     FOREIGN KEY(company_with_max_travel_number) REFERENCES Company(company_name) ON DELETE SET NULL,
     FOREIGN KEY(company_with_max_rating) REFERENCES Company(company_name) ON DELETE SET NULL,
     UNIQUE (report_date)
