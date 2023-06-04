@@ -35,10 +35,7 @@ def test():
         col = 9
         return render_template('test.html', formation=formation, row=row, tot_col=col, occupied=occupied)
 
-
-
     return render_template('test.html', formation=0, row=0, tot_col=0, occupied=0)
-
 
 @app.route('/login', methods =['GET', 'POST'])
 def login():
@@ -862,17 +859,16 @@ def journeys():
 
         # Get journeys that are booked
         query_booked_journeys = """
-        SELECT *
-        FROM Journey
-        WHERE traveler_id = %s 
-        AND journey_name IN (
-            SELECT journey_name
-            FROM Travels_In_Journey
-            INNER JOIN Booking ON Travels_In_Journey.travel_id = Booking.travel_id
-        )
+        SELECT J.*, T.travel_id
+        FROM Journey J
+        INNER JOIN Travels_In_Journey T ON J.journey_name = T.journey_name
+        INNER JOIN Booking B ON T.travel_id = B.travel_id
+        WHERE J.traveler_id = %s
         """
         cursor.execute(query_booked_journeys, (user_id,))
         booked_journeys = cursor.fetchall()
+
+        booked_journey_ids = [journey['travel_id'] for journey in booked_journeys]
 
         if request.method == 'POST':
             newJourneyName = request.form.get('journeyForm')
@@ -887,7 +883,7 @@ def journeys():
 
             return redirect(url_for('journeys'))
         
-        return render_template("journeysPage.html", journeys = journeys, travelsInJourneys = travelsInJourneys, booked_journeys=booked_journeys)
+        return render_template("journeysPage.html", journeys = journeys, travelsInJourneys = travelsInJourneys, booked_journey_ids=booked_journey_ids)
     else:
         message = "Session is not valid, please log in!"
         return render_template("login.html", message = message)
