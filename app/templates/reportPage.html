@@ -32,7 +32,7 @@
                 <a class="nav-link" href="{{ url_for('vehicleManagement') }}">Vehicles</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('reportPage') }}">Application Report</a>
+                <a class="nav-link" href="{{ url_for('reportManagement') }}">Application Report</a>
               </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
@@ -50,23 +50,24 @@
                 </div>
             </div>
         </div>
+        <hr>
         <div class="row mt-1">
-            <div class="col-3 d-flex flex-column">
+            <div class="col-4 d-flex flex-column">
                 <div class="d-flex mt-auto ">
                     <h6> Report ID: &nbsp </h6>
-                    <h6> 1 </h6>
+                    <h6> {{ theReport['report_id'] }} </h6>
                 </div>
             </div>
-            <div class="col-3 d-flex flex-column">
+            <div class="col-4 d-flex flex-column">
                 <div class="d-flex mt-auto ">
-                    <h6> Report Date: &nbsp </h6>
-                    <h6> 2023-06-03 </h6>
+                    <h6> Report Time: &nbsp </h6>
+                    <h6> {{ theReport['report_date'] }} </h6>
                 </div>
             </div>
-            <div class="col-3 d-flex flex-column">
+            <div class="col-4 d-flex flex-column ">
                 <div class="d-flex mt-auto ">
-                    <h6> Report Generator: &nbsp </h6>
-                    <h6> Alp Caferoglu </h6>
+                    <h6 > Report Generator: &nbsp </h6>
+                    <h6> {{ theReport['username'].capitalize() }} </h6>
                 </div>
             </div>
         </div>
@@ -93,14 +94,14 @@
                 <div class="block ">
                   <h5 class="block-name">Total Number of Admin</h5>
                   <hr>
-                  <p class="block-number"> {{ admin_number }} </p>
+                  <p class="block-number"> {{ theReport['admin_number'] }} </p>
                 </div>
             </div>
             <div class="col-6">
                 <div class="block ">
                   <h5 class="block-name">Total Number of Traveler</h5>
                   <hr>
-                  <p class="block-number">{{ traveler_number }}</p>
+                  <p class="block-number">{{ theReport['traveler_number'] }}</p>
                 </div>
             </div>          
         </div>
@@ -110,14 +111,14 @@
                 <div class="block">
                   <h5 class="block-name">Total Number of Active and Validated Company</h5>
                   <hr>
-                  <p class="block-number">{{ company_number }}</p>
+                  <p class="block-number">{{ theReport['company_number'] }}</p>
                 </div>
             </div>
             <div class="col-6">
                 <div class="block">
                 <h5 class="block-name">Total Number of Unverified Company</h5>
                 <hr>
-                <p class="block-number">{{ pending_company_number }}</p>
+                <p class="block-number">{{ theReport['pending_company_number'] }}</p>
                 </div>
             </div>
         </div>
@@ -127,14 +128,14 @@
             <div class="block ">
               <h5 class="block-name">Total Number of Active Terminal</h5>
               <hr>
-              <p class="block-number">{{ terminal_number }}</p>
+              <p class="block-number">{{ theReport['terminal_number'] }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="block">
               <h5 class="block-name">Total Number of Vehicle Type</h5>
               <hr>
-              <p class="block-number">{{ vehicle_type_number }}</p>
+              <p class="block-number">{{ theReport['vehicle_type_number'] }}</p>
             </div>
           </div>
         </div>
@@ -144,14 +145,14 @@
             <div class="block ">
               <h5 class="block-name">Total Number of Purchase</h5>
               <hr>
-              <p class="block-number">{{ total_purchase_number }}</p>
+              <p class="block-number">{{ theReport['total_purchase_number'] }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="block">
               <h5 class="block-name">Total Purchase Amount</h5>
               <hr>
-              <p class="block-number">{{ total_purchase_amount }} &nbsp ₺</p>
+              <p class="block-number">{{ theReport['total_purchase_amount'] }} &nbsp ₺</p>
             </div>
           </div>
         </div>
@@ -161,14 +162,14 @@
             <div class="block ">
               <h5 class="block-name">Total Number of Past Bus Travel </h5>
               <hr>
-              <p class="block-number"> {{ past_bus_number }}</p>
+              <p class="block-number"> {{ theReport['past_bus_number'] }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="block">
               <h5 class="block-name">Total Number of Upcoming Bus Travel</h5>
               <hr>
-              <p class="block-number">{{ upcoming_bus_number }}</p>
+              <p class="block-number">{{ theReport['upcoming_bus_number'] }}</p>
             </div>
           </div>
         </div>
@@ -178,14 +179,14 @@
             <div class="block ">
               <h5 class="block-name">Total Number of Past Plane Travel </h5>
               <hr>
-              <p class="block-number">{{ past_plane_number }}</p>
+              <p class="block-number">{{ theReport['past_plane_number'] }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="block">
               <h5 class="block-name">Total Number of Upcoming Plane Travel</h5>
               <hr>
-              <p class="block-number">{{ upcoming_plane_number }}</p>
+              <p class="block-number">{{ theReport['upcoming_plane_number'] }}</p>
             </div>
           </div>
         </div>
@@ -195,14 +196,14 @@
             <div class="block ">
               <h5 class="block-name">Total Number of Past Train Travel </h5>
               <hr>
-              <p class="block-number">{{ past_train_number }}</p>
+              <p class="block-number">{{ theReport['past_train_number'] }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="block">
               <h5 class="block-name">Total Number of Upcoming Train Travel</h5>
               <hr>
-              <p class="block-number">{{ upcoming_train_number }}</p>
+              <p class="block-number">{{ theReport['upcoming_train_number'] }}</p>
             </div>
           </div>
         </div>
@@ -212,14 +213,14 @@
             <div class="block ">
               <h5 class="block-name">Total Number of Reviews</h5>
               <hr>
-              <p class="block-number">{{ total_reviews }}</p>
+              <p class="block-number">{{ theReport['total_reviews'] }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="block">
               <h5 class="block-name">Coupon Usage Percentage</h5>
               <hr>
-              <p class="block-number">{{ coupon_usage_percentage }}</p>
+              <p class="block-number">{{ theReport['coupon_usage_percentage'] }}</p>
             </div>
           </div>
         </div>
@@ -229,14 +230,14 @@
             <div class="block ">
               <h5 class="block-name">Company With Max Revanue</h5>
               <hr>
-              <p class="block-number">{{ company_with_max_revanue.capitalize() }}</p>
+              <p class="block-number">{{ theReport['company_with_max_revenue'].capitalize() }}</p>
             </div>
           </div>
           <div class="col-6">
             <div class="block">
               <h5 class="block-name">Company With Max Travel Number</h5>
               <hr>
-              <p class="block-number">{{ company_with_max_travel_number.capitalize() }}</p>
+              <p class="block-number">{{ theReport['company_with_max_travel_number'].capitalize() }}</p>
             </div>
           </div>
         </div>
@@ -246,14 +247,10 @@
             <div class="block ">
               <h5 class="block-name">Company With Max Rating</h5>
               <hr>
-              <p class="block-number">{{ company_with_max_rating.capitalize() }}</p>
+              <p class="block-number">{{ theReport['company_with_max_rating'].capitalize() }}</p>
             </div>
           </div>
         </div>
-        
-        
-        
-
 
     </div>
       
