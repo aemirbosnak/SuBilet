@@ -173,9 +173,11 @@
                                       <button class="btn btn-danger">Comments</button>
                                     </a>
                                   {% endif %}
-                                    <a class="row text-decoration-none" href="{{ url_for('aTravelDetails', travelId = singleTravel['travel_id']) }}">
-                                      <button class="btn btn-danger" >Details</button>
-                                    </a>
+                                      <form action="{{ url_for('aTravelDetails', travelId = singleTravel['travel_id']) }}" method="POST">
+                                        <input type="hidden" name="company_id" id="company_id" value="{{ request.path.split('/')[2] }}">
+                                        <button type="submit" class="btn btn-danger" >Details</button>
+                                      </form>
+                                    
                                 </div>
                             </div>
                         </div>

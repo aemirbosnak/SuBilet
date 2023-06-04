@@ -273,6 +273,7 @@ CREATE TABLE Booking(
 
 INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type) VALUES
 ('PLANE111', 1, 43, 7, 'regular'),
+('PLANE112', 1, 44, 8, 'regular'),
 ('PLANE113', 1, 1, 9, 'business'),
 ('PLANE120', 4, 53, 7, 'regular'),
 ('PLANE122', 4, 17, 9, 'regular'),
@@ -367,6 +368,7 @@ CREATE TABLE Purchased(
 );
 
 INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) VALUES
+('PLANE112', '2023-04-01 19:00:00', 'creadit card', 999.00, NULL),
 ('PLANE113', '2023-05-01 21:00:00', 'creadit card', 1399.00, NULL),
 ('PLANE120', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
 ('PLANE122', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),

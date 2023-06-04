@@ -245,9 +245,10 @@
                         </div>
 
                         <div class="row align-items-start mt-4">
-                              <a class="row mb-2 text-decoration-none" href="{{ url_for('companysAllTravelsByAdmin', companyId =  singleCompany['id'],  upcomingOrPast = 'upcoming' ) }}">
-                                  <button class="btn btn-danger">See Company's All Travels</button>
-                              </a>
+                              <form class="row mb-2" action="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming' ) }}" method="GET">
+                                <input type="hidden" name="company_id" id="company_id" value="{{ singleCompany['id'] }}">
+                                <button type="submit" class="btn btn-danger" >See Company's All Travels</button>
+                              </form>
                               <a class="row mb-2 text-decoration-none" href="{{ url_for('companyProfile', companyId = singleCompany['id']) }}">
                                   <button class="btn btn-danger">Edit Company</button>
                               </a>
