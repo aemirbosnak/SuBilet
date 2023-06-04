@@ -52,51 +52,61 @@
       </div>
       <hr/>
 
-      <h3>Your journeys </h3>
+      <h3>Your journeys</h3>
       {% if journeys %}
       {% for journey in journeys %}
-        <div class = "accordion mb-4" id="accordion{{loop.index}}">
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="flush-heading{{ loop.index }}">
-                <button class="accordion-button bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ loop.index }}" aria-expanded="true" aria-controls="flush-collapse{{ loop.index }}">
-                  {{ journey.journey_name }}
-                </button>
-              </h2>
-              <div id="flush-collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="flush-heading{{ loop.index }}" data-bs-parent="#accordion">
-                <div class="accordion-body" id = "accordionBody{{loop.index}}">
-                    {% for travel in travelsInJourneys %}
-                      {% if travel.journey_name == journey.journey_name %}
-                        <div class="row mb-2">
-                          <div class="card text-white">
-                            <div class="card-body">
-                              <div class="container-fluid">
-                                <div class="row">
-                                  <div class="col-3">
-                                    <h3 class="companyTitle">{{ travel.company_name }}</h3>
-                                  </div>
-                                  <div class="col">
-                                    <div class="row text-secondary">Travel Date:</div>
-                                    <div class="row">{{ travel.depart_time }}</div>
-                                  </div>
-                                  <div class="col">
-                                    <div class="row text-secondary">Departure:</div>
-                                    <div class="row">{{ travel.dep_city }}</div>
-                                  </div>
-                                  <div class="col">
-                                    <div class="row text-secondary">Destination:</div>
-                                    <div class="row">{{ travel.arr_city }}</div>
-                                  </div>
-                                  <div class="col-1">
-                                    <button class="btn btn-danger btn-lg">Details</button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+      <div class="accordion mb-4" id="accordion{{ loop.index }}">
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="flush-heading{{ loop.index }}">
+            <button class="accordion-button bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ loop.index }}" aria-expanded="true" aria-controls="flush-collapse{{ loop.index }}">
+              {{ journey.journey_name }}
+            </button>
+          </h2>
+          <div id="flush-collapse{{ loop.index }}" class="accordion-collapse collapse" aria-labelledby="flush-heading{{ loop.index }}" data-bs-parent="#accordion">
+            <div class="accordion-body" id="accordionBody{{ loop.index }}">
+              {% for travel in travelsInJourneys %}
+              {% if travel.journey_name == journey.journey_name %}
+              <div class="row mb-2">
+                <div class="card text-white">
+                  <div class="card-body">
+                    <div class="container-fluid">
+                      <div class="row">
+                        <div class="col-3">
+                          <h3 class="companyTitle">{{ travel.company_name }}</h3>
                         </div>
-                        {% set match_found = true %}
-                      {% endif %}
-                    {% endfor %}
+                        <div class="col">
+                          <div class="row text-secondary">Travel Date:</div>
+                          <div class="row">{{ travel.depart_time }}</div>
+                        </div>
+                        <div class="col">
+                          <div class="row text-secondary">Departure:</div>
+                          <div class="row">{{ travel.dep_city }}</div>
+                        </div>
+                        <div class="col">
+                          <div class="row text-secondary">Destination:</div>
+                          <div class="row">{{ travel.arr_city }}</div>
+                        </div>
+                        <div class="col-2">
+                          <form method='POST' action="{{ url_for('buy_travel', travel_id=travel.travel_id) }}">
+                            <button class="btn btn-success btn-lg mb-2" type="submit" name="journey">Purchase/Reserve</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% set match_found = true %}
+              {% endif %}
+              {% endfor %}
+              <div class="row">
+                <div class="col">
+                  <button class="btn btn-danger btn-lg">Buy All</button>
+                </div>
+                <div class="col">
+                  <button class="btn btn-warning btn-lg">Reserve All</button>
+                </div>
+              </div>
                 </div>
               </div>
             </div>

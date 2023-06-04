@@ -109,6 +109,12 @@
                                         <div class="text-lightRed">Departure Time:</div>
                                         <div> {{ travel_details['depart_time'] }} </div>        
                                     </div>
+                                    {% if journey_count != 0 %}
+                                        <div class="col">
+                                            <div class="text-lightRed">Journey:</div>
+                                            <div> {{ journey_name }} </div>        
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -208,20 +214,20 @@
                                         {% endif %}
                                     </form>
                                     <hr/>
-                                    
-                                    <form method="POST" action="{{ url_for('buy_travel', travel_id=travel_id) }}">
-                                        <div class="d-grid gap-2 col-12 mx-auto">
-                                            <label for="selectedJourney">Add this travel to one of your journeys</label>
-                                            <select class="form-select" id="selectedJourney" name="selectedJourney">
-                                                {% for journey in journeys %}
-                                                <option>{{ journey.journey_name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                            
-                                            <select id="selectedJourney" name="selectedJourney" style="display: none;"></select> 
-                                            <button class="btn btn-outline-info btn-lg" type="submit" name="addTravelToJourney">Add to Journey</button>
-                                        </div>
-                                    </form>
+                                    {% if journey_count == 0 %}
+                                        <form method="POST" action="{{ url_for('buy_travel', travel_id=travel_id) }}">
+                                            <div class="d-grid gap-2 col-12 mx-auto">
+                                                <label for="selectedJourney">Add this travel to one of your journeys</label>
+                                                <select class="form-select" id="selectedJourney" name="selectedJourney">
+                                                    {% for journey in journeys %}
+                                                    <option>{{ journey.journey_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <select id="selectedJourney" name="selectedJourney" style="display: none;"></select> 
+                                                <button class="btn btn-outline-info btn-lg" type="submit" name="addTravelToJourney">Add to Journey</button>
+                                            </div>
+                                        </form>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </div>

@@ -470,6 +470,23 @@ def buy_travel(travel_id):
     cursor.execute(query_journey, (user_id,))
     journeys = cursor.fetchall()
 
+    # Check if travel is associated with a journey
+    query_check_journey = """
+    SELECT COUNT(*) AS cnt
+    FROM Travels_In_Journey 
+    WHERE travel_id = %s;
+    """
+    cursor.execute(query_check_journey, (travel_id,))
+    journey_count = cursor.fetchone()['cnt']
+
+    query_journey_name = """
+    SELECT journey_name
+    FROM Travels_In_Journey 
+    WHERE travel_id = %s;
+    """
+    cursor.execute(query_journey_name, (travel_id,))
+    journey_name = cursor.fetchone()['journey_name']
+
     if request.method == 'POST' and "addTravelToJourney" in request.form:
         selected_journey = request.form['selectedJourney']
         query_addTravelToJourney = """
@@ -609,7 +626,7 @@ def buy_travel(travel_id):
 
         return redirect(url_for('myTravels'))
 
-    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys)
+    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys, journey_count=journey_count, journey_name=journey_name)
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
@@ -808,8 +825,6 @@ def journeys():
     else:
         message = "Session is not valid, please log in!"
         return render_template("login.html", message = message)
-
-
 
 ##############################
 ### COMPANY RELATED ROUTES ###
