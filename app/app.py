@@ -211,7 +211,7 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
 
     if extra_date == 'none':
         query = """
-        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.vehicle_type_id, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
         FROM Travel T
         JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
         JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
@@ -227,7 +227,7 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
         searchedTravels = cursor.fetchall()
     else:
         query = """
-        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
+        SELECT C.id AS company_id, C.company_name, T.travel_id, T.depart_time, T.arrive_time, T.vehicle_type_id, T.price, T.business_price, Dep.name AS dep_terminal_name, Dep.city AS dep_city, Ar.name AS ar_terminal_name, Ar.city AS ar_city
         FROM Travel T
         JOIN Terminal Dep ON T.departure_terminal_id = Dep.terminal_id
         JOIN Terminal Ar ON T.arrival_terminal_id = Ar.terminal_id
@@ -243,6 +243,35 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
         cursor.execute(query, (departure_city, arrival_city, extra_date, departure_date, vehicle_type))
         searchedTravels = cursor.fetchall()
 
+    updatedTravels = []  # Updated list of travels with available seats
+
+    for travel in searchedTravels:
+        travel_id = travel['travel_id']
+        vehicle_type = travel['vehicle_type_id']
+
+        # Count the number of booked seats for the travel
+        booking_query = """
+        SELECT COUNT(*) AS booked_seats 
+        FROM Booking 
+        WHERE travel_id = %s
+        """
+        cursor.execute(booking_query, (travel_id,))
+        booked_seats = cursor.fetchone()['booked_seats']
+
+        # Get the total number of seats available for the vehicle type
+        seats_query = """
+        SELECT num_of_seats 
+        FROM Vehicle_Type 
+        WHERE id = %s
+        """
+        cursor.execute(seats_query, (vehicle_type,))
+        total_seats = cursor.fetchone()['num_of_seats']
+
+        # Check if there are available seats
+        if booked_seats < total_seats:
+            updatedTravels.append(travel)
+
+    searchedTravels = updatedTravels
 
     is_logged_in = session.get('loggedin', False)       #retrieves the value of is_logged_in from the session, if it's not present in the session, the default value False is used.
     user_id = session.get('userid')
