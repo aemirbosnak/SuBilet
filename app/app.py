@@ -942,9 +942,12 @@ def buy_all():
 
 @app.route('/companysAllTravels/<string:upcomingOrPast>', methods = ['GET', 'POST'])
 def companysAllTravels(upcomingOrPast):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        userid = session['userid']
+        companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
        
        
         sort_type = 'depart_time'
@@ -971,7 +974,7 @@ def companysAllTravels(upcomingOrPast):
             ORDER BY {}
             """.format(sort_type)
 
-            cursor.execute(query, (userid, datetime.now()))
+            cursor.execute(query, (companyId, datetime.now()))
             travelDetailList = cursor.fetchall()
         elif upcomingOrPast == 'past':
             #get past travels belongs to the company and list
@@ -981,11 +984,11 @@ def companysAllTravels(upcomingOrPast):
             WHERE company_id = %s AND depart_time < %s
             ORDER BY {}
             """.format(sort_type)
-            cursor.execute(query, (userid, datetime.now()))
+            cursor.execute(query, (companyId, datetime.now()))
             travelDetailList = cursor.fetchall()
         
         cursor.close()
-        return render_template('companysAllTravels.html', travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast, sort_type = sort_in )
+        return render_template('companysAllTravels.html', companyId = companyId, travelDetailList = travelDetailList, upcomingOrPast = upcomingOrPast, sort_type = sort_in )
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
@@ -1053,10 +1056,15 @@ def addCompanyTravel(travelVehicleType):
 
 @app.route('/aTravelDetails/<int:travelId>', methods = [ 'GET', 'POST'])
 def aTravelDetails(travelId):
-        if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+        if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             companyId = session['userid']
-            aTravelReservationDetails = None   
+
+            if request.method == "GET" and session['userType'] =='admin':
+                companyId = int(request.args.get('company_id'))
+    
+            aTravelReservationDetails = None  
+            aTravelPurchaseDetails = None 
 
             #get travel information
             queryGetTravelInfo = """
@@ -1122,7 +1130,7 @@ def aTravelDetails(travelId):
 
             cursor.close()
             current_time = datetime.now()
-            return render_template('aTravelDetails.html', theTravel = theTravel, current_time = current_time, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
+            return render_template('aTravelDetails.html', companyId = companyId, theTravel = theTravel, current_time = current_time, aTravelPurchaseDetails = aTravelPurchaseDetails, aTravelReservationDetails = aTravelReservationDetails) 
         else:
             message = 'Session is not valid, please log in!'
             return render_template('login.html', message = message)
@@ -1309,9 +1317,12 @@ def deleteATravel(travelId):
     
 @app.route('/deleteAndRefundAPurchase/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
 def deleteAndRefundAPurchase(PNRToBeDeleted):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
 
         # Get user id, travel id and paid amount for the purchase
         queryGetInfo = """
@@ -1354,16 +1365,55 @@ def deleteAndRefundAPurchase(PNRToBeDeleted):
             message = "This PNR doesn't belong to one of your travels, so you cannot delete corresponding booking!"
         
         flash(message)
-        return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
+        return redirect(url_for('aTravelDetails', travelId = info['travel_id'], company_id=companyId ))
+    else:
+        message = 'Session is not valid, please log in!'
+        return render_template('login.html', message = message)
+    
+@app.route('/deleteWORefundAPurchase/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
+def deleteWORefundAPurchase(PNRToBeDeleted):
+    # Only admin can delete without refund of without making any gift 
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
+
+        # Get user id, travel id and paid amount for the purchase 
+        queryGetInfo = """
+        SELECT T.id AS traveler_id, B.travel_id AS travel_id, P.price AS paid_amount
+        FROM Traveler T
+        JOIN Booking B ON T.id = B.traveler_id
+        JOIN Purchased P ON P.PNR = B.PNR
+        WHERE B.PNR = %s
+        """
+        cursor.execute(queryGetInfo, (PNRToBeDeleted,))
+        info = cursor.fetchone()
+
+        if info:
+            queryDeletePNRFromBooking = """
+            DELETE FROM Booking WHERE PNR = %s
+            """
+            cursor.execute(queryDeletePNRFromBooking, (PNRToBeDeleted,))
+            cursor.connection.commit()
+            message = "The booking wiht " + PNRToBeDeleted + " is deleted without refund!"
+        else:
+            message = "There is no such purchase!"
+
+        flash(message)
+        return redirect(url_for('aTravelDetails', travelId = info['travel_id'], company_id=companyId ))
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
     
 @app.route('/deleteAndGiveFreeTravel/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
 def deleteAndGiveFreeTravel(PNRToBeDeleted):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
 
         # Get user TCK, name, surname, travel_id which PNR belongs to, seat number, seat type, arrival and departure informations
         queryGetCurrentInfo = """
@@ -1435,10 +1485,10 @@ def deleteAndGiveFreeTravel(PNRToBeDeleted):
         else:
             message = "This PNR doesn't belong to one of your travels, so you cannot delete corresponding booking!"
             flash(message)
-            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'] ))
+            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'], company_id=companyId ))
         
-        if request.method == 'POST' and 'freeTravelId' in request.form:
-            freeTravelId = request.form['freeTravelId']
+        if request.method == 'GET' and 'freeTravelId' in request.args:
+            freeTravelId = request.args.get('freeTravelId')
             newPNR = generatePNR()
             newSeat = generateSeatNumber(freeTravelId)
             paymentMethod = 'gift'
@@ -1471,19 +1521,22 @@ def deleteAndGiveFreeTravel(PNRToBeDeleted):
             cursor.connection.commit()
             message = "The current booking is deleted." + message1
             flash(message)
-            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'] ))
+            return redirect(url_for('aTravelDetails', travelId = currrentInfo['travel_id'],  company_id=companyId))
        
         # flash(message)
-        return render_template('deleteAndGiveFreeTravel.html', PNRToBeDeleted = PNRToBeDeleted, currrentInfo = currrentInfo, travelDetailList = travelDetailList, sort_type = sort_in )
+        return render_template('deleteAndGiveFreeTravel.html',companyId = companyId, PNRToBeDeleted = PNRToBeDeleted, currrentInfo = currrentInfo, travelDetailList = travelDetailList, sort_type = sort_in )
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)
 
 @app.route('/deleteAReservation/<string:PNRToBeDeleted>', methods=['GET', 'POST'])
 def deleteAReservation(PNRToBeDeleted):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin' :
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
 
         # Get user id, travel id and paid amount for the purchase
         queryGetInfo = """
@@ -1517,7 +1570,10 @@ def deleteAReservation(PNRToBeDeleted):
             message = "This PNR doesn't belongs to one of your travels, so you cannot delete corresponding reservation!"
         
         flash(message)
-        return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
+        if session['userType'] =='admin':
+            return redirect(url_for('aTravelDetails', travelId = info['travel_id'], company_id=companyId ))
+        else:
+            return redirect(url_for('aTravelDetails', travelId = info['travel_id'] ))
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)

@@ -13,6 +13,31 @@
     <title>ŞuBilet</title>
 </head>
 <body>
+
+  {% if session['loggedin']  and session['userType'] == 'company' %}
+    <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+      <div class="container-fluid">
+        <ul class="navbar-nav">
+          <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('companyProfile', companyId = session['userid']) }}">Company Profile</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+{% elif session['loggedin'] and session['userType'] == 'admin' %}
   <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
     <div class="container-fluid">
       <ul class="navbar-nav">
@@ -21,13 +46,19 @@
           <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
+          <a class="nav-link" href="{{ url_for('companies')}}">Companies</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
+          <a class="nav-link" href="{{ url_for('couponManagement') }}">Coupons</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{ url_for('companyProfile', companyId = session['userid']) }}">Company Profile</a>
+          <a class="nav-link" href="{{ url_for('vehicleManagement') }}">Vehicles</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('terminalManagement') }}">Terminals</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('reportManagement') }}">Application Report</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
@@ -35,6 +66,7 @@
       </ul>
     </div>
   </nav>
+  {% endif %}
 
 
     <div class="container-fluid pt-4 pb-4 upperBar">
@@ -63,25 +95,27 @@
     <div class="container ">
         <div class="d-flex justify-content-around mt-4 mb-3 ">
           <div class="flex-fill justify-content-center text-center">
-            <a href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}" class="justify-content-center">
+            <form action="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}" class="justify-content-center" method="get">
+              <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
               <button
-                type="button"
+                type="submit"
                 class="btn btn-lg w-50 {% if request.path == '/companysAllTravels/upcoming' %} btn-secondary {% else %} btn-danger {% endif %}"
               >
                 Upcoming Travels
               </button>
-            </a>
+            </form>
           </div>
       
           <div class=" flex-fill justify-content-center text-center">
-            <a href="{{ url_for('companysAllTravels', upcomingOrPast = 'past') }}" class="justify-content-center">
+            <form action="{{ url_for('companysAllTravels', upcomingOrPast = 'past',) }}" class="justify-content-center" method="get">
+              <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
               <button
-                type="button"
+                type="submit"
                 class="btn btn-lg w-50 {% if request.path == '/companysAllTravels/past' %}btn-secondary {% else %} btn-danger {% endif %}"
               >
                 Past Travels
               </button>
-            </a>
+            </form>
           </div>
         </div>
     </div>
@@ -156,20 +190,23 @@
                                 </div>
                                 <div class="col d-flex flex-column justify-content-around">
                                   {% if upcomingOrPast == 'upcoming' %}
-                                    <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteATravel', travelId = singleTravel['travel_id']) }}">
+                                    <form class="row mb-2 text-decoration-none" href="{{ url_for('deleteATravel', travelId = singleTravel['travel_id']) }}" method="get">
+                                      <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
                                       <button class="btn btn-danger">Delete</button>
-                                    </a>
-                                    <a class="row mb-2 text-decoration-none" href="{{ url_for('editUpcomingTravel', travelId = singleTravel['travel_id']) }}">
+                                    </form>
+                                    <form class="row mb-2 text-decoration-none" action="{{ url_for('editUpcomingTravel', travelId = singleTravel['travel_id']) }}" method="get">
+                                      <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
                                       <button class="btn btn-danger">Edit</button>
-                                    </a>
+                                    </form>
                                   {% else %}
                                     <a class="row mb-2 text-decoration-none" href="{{ url_for('commentsOnATravel', travelId = singleTravel['travel_id']) }}">
                                       <button class="btn btn-danger">Comments</button>
                                     </a>
                                   {% endif %}
-                                    <a class="row text-decoration-none" href="{{ url_for('aTravelDetails', travelId = singleTravel['travel_id']) }}">
+                                    <form class="row text-decoration-none" action="{{ url_for('aTravelDetails', travelId = singleTravel['travel_id']) }}" method="get">
+                                      <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
                                       <button class="btn btn-danger" >Details</button>
-                                    </a>
+                                    </form>
                                 </div>
                             </div>
                         </div>

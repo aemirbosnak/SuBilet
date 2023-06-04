@@ -14,28 +14,59 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
-        <div class="container-fluid">
-        <ul class="navbar-nav">
-            <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
-            <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('companyProfile', companyId = session['userid']) }}">Company Profile</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
-            </li>
-        </ul>
-        </div>
-    </nav> 
+    {% if session['loggedin']  and session['userType'] == 'company' %}
+        <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('companysAllTravels', upcomingOrPast = 'upcoming') }}">Company's All Travels</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('addCompanyTravel', travelVehicleType = 'plane') }}">Register A Travel</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('companyProfile', companyId = session['userid']) }}">Company Profile</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+                </li>
+                </ul>
+            </div>
+        </nav>
+    {% elif session['loggedin'] and session['userType'] == 'admin' %}
+        <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <a class="navbar-brand" href="{{ url_for('main') }}"><strong>şu</strong>bilet.com</a>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main') }}">Search Travels</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('companies')}}">Companies</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('couponManagement') }}">Coupons</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('vehicleManagement') }}">Vehicles</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('terminalManagement') }}">Terminals</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('reportManagement') }}">Application Report</a>
+                    </li>
+                    <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">Log Out</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    {% endif %}
     
     {% if theTravel %}
         <div class="container pt-5 ">
@@ -197,12 +228,20 @@
                             <!-- If the travel is past travel then company cannot delete or do anything about the purchase -->
                             {% if theTravel['depart_time'] > current_time %}
                             <div class="col align-items-center">
-                                <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteAndRefundAPurchase', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}">
+                                {% if session['userType'] == 'admin' %}
+                                    <form class="row mb-2 text-decoration-none" action="{{ url_for('deleteWORefundAPurchase', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}" method="get">
+                                        <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
+                                        <button class="btn btn-danger">Delete w/o Refund</button>
+                                    </form>
+                                {% endif %}
+                                <form class="row mb-2 text-decoration-none" action="{{ url_for('deleteAndRefundAPurchase', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}" method="get">
+                                    <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
                                     <button class="btn btn-danger">Delete & Refund</button>
-                                </a>
-                                <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteAndGiveFreeTravel', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}">
+                                </form>
+                                <form class="row mb-2 text-decoration-none" action="{{ url_for('deleteAndGiveFreeTravel', PNRToBeDeleted = singlePurchaseDetail['PNR'] ) }}" method="get">
+                                    <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
                                     <button class="btn btn-danger">Delete & Give Free Travel </button>
-                                </a>
+                                </form>
                             </div>
                             {% endif %}
                         </div>
@@ -276,9 +315,10 @@
                             </div>
 
                             <div class="col align-items-center">
-                                <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteAReservation', PNRToBeDeleted = singleReservationDetail['PNR'] ) }}">
+                                <form class="row mb-2 text-decoration-none" action="{{ url_for('deleteAReservation', PNRToBeDeleted = singleReservationDetail['PNR'] ) }}" method="get">
+                                    <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
                                     <button class="btn btn-danger">Delete Reservation</button>
-                                </a>
+                                </form>
                             </div>
                             
                         </div>
