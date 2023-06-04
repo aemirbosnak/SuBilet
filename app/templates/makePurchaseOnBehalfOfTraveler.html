@@ -134,26 +134,15 @@
         </div>
   {% endif %}
 
-
-
-  {% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <div class=flashes>
-    {% for message in messages %}
-      {% if message != 'Session was not valid, please log in!' %}
-        <div class="container mt-2">
-          <h4 class="text-danger">{{ message }}</h4>
-        </div>
-      {% endif %}
-    {% endfor %}
-    </div>
-  {% endif %}
-  {% endwith %}
+ 
 
   <div class="container ">
+    {% if message %}
+      <h4 class="text-danger">{{ message }}</h4>
+    {% endif %}
       <div class="row justify-content-center mt-4">
           <div class="col-md-9 p-5 rounded-4 profileCard">
-              <form action="{{ url_for('makePurchaseOnBehalfOfTraveler',  travelId = theTravel['travel_id'] )}}" method="POST">
+              <form action="{{ url_for('makePurchaseOnBehalfOfTraveler',  travelId = theTravel['travel_id'] )}}" method="post">
                   <div class="row mb-4">
                       <div class="col-md-6">
                           <label for="traveler_TCK">TCK:</label>

@@ -1738,23 +1738,74 @@ def makePurchaseOnBehalfOfTraveler(travelId):
 
                 # find traveler id
                 queryFindTravelerId = """
-                SELECT id
+                SELECT *
                 FROM Traveler
                 WHERE TCK = %s
                 """
                 cursor.execute(queryFindTravelerId, (traveler_TCK,))
-                travelerId = cursor.fetchone()
+                theTraveler = cursor.fetchone()
+                
 
-                if travelerId:
-                    a = 1
+                if theTraveler:
+                    travelerId = theTraveler['id']
+                    # check if given seat number is occupied already
+                    query_check_seat = """
+                    SELECT COUNT(*) AS occupied
+                    FROM Booking 
+                    WHERE travel_id = %s AND seat_number = %s
+                    """
+                    cursor.execute(query_check_seat, (travelId, seat_number))
+                    result = cursor.fetchone()
+                    seat = result['occupied']
+
+                    if seat != 0:
+                        message = "This seat is already occupied!"
+                    else:
+                        # check if the traveler has enough balance
+                        queryIsEnoughBalance = """
+                        SELECT * 
+                        FROM Traveler
+                        WHERE TCK = %s AND balance >= %s
+                        """
+                        cursor.execute(queryIsEnoughBalance, (traveler_TCK, deduction_amount ))
+                        enoughBalance = cursor.fetchone()
+                        
+                        if enoughBalance:
+                            # Now purchase can be made
+                            queryDeductBalance = """
+                            UPDATE Traveler SET balance = balance - %s WHERE id = %s
+                            """
+                            cursor.execute(queryDeductBalance, (deduction_amount, travelerId))
+                            cursor.connection.commit()
+
+                            newPNR = generatePNR()
+                            # insert booking
+                            queryInsertBooking = """
+                            INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type)
+                            VALUES (%s, %s, %s, %s, %s)
+                            """
+                            cursor.execute(queryInsertBooking, (newPNR, travelId, seat_number, travelerId, seat_type ))
+                            cursor.connection.commit()
+
+                            # insert purchase
+                            queryInsertPurchase = """
+                            INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id)
+                            VALUES (%s, %s, 'creadit card', %s, NULL)
+                            """
+                            cursor.execute(queryInsertPurchase, (newPNR, datetime.now(), deduction_amount))
+                            cursor.connection.commit()
+            
+                            message = "Purchase is made for " + theTraveler['name'] + ". The PNR is " + str(newPNR)
+
+                            flash(message)
+                            return redirect(url_for('aTravelDetails', travelId = travelId, company_id = theTravel['travel_company_id'] ))
+                        else:
+                            message = "Traveler doesn't have enough balance!"
                 else:
                     message = "There is no traveler with that TCK!"
-
-
-        else:
-            message = 'Please fill the form!'
-
-
+            else:
+                message = 'Please fill the form!'
+            
         
         return render_template('makePurchaseOnBehalfOfTraveler.html', message = message, theTravel = theTravel)
     else:
