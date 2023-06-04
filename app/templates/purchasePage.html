@@ -223,7 +223,7 @@
                                         {% if seat_chosen %}
                                             <input type="hidden" id="seat_number" name="seat_number" value="{{ seat_number }}">
                                         {% endif %}
-                                        <input type="hidden" id="reserve_PNR" name="reserved_PNR" value="{{ pnr }}">
+                                        <input type="hidden" id="reserve_PNR" name="reserve_PNR" value="{{ pnr }}">
                                     </form>
                                 {% else %}
                                     <form method='POST' action="{{ url_for('buy_travel', travel_id=travel_id) }}">
