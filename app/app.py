@@ -360,6 +360,54 @@ def myTravels():
         if request.method == 'GET' and 'upcomingOrPast' in request.args:
             upcomingOrPast = request.args.get('upcomingOrPast')
 
+        # Fetch all terminals
+        cursor.execute("SELECT terminal_id, city FROM Terminal")
+        terminals = cursor.fetchall()
+
+        # Fetch the list of vehicle types
+        cursor.execute("SELECT id, type FROM Vehicle_Type")
+        vehicles = cursor.fetchall()
+
+        # Filter and remove duplicates from terminals
+        departure_terminals = []
+        arrival_terminals = []
+        for terminal in terminals:
+            if terminal['city'] not in [t['city'] for t in departure_terminals]:
+                departure_terminals.append(terminal)
+            if terminal['city'] not in [t['city'] for t in arrival_terminals]:
+                arrival_terminals.append(terminal)
+
+        # Filter and remove duplicates from vehicle types
+        vehicle_types = []
+        for vehicle_type in vehicles:
+            if vehicle_type['type'] not in [v['type'] for v in vehicle_types]:
+                vehicle_types.append(vehicle_type)
+
+        # Retrieve filter values from the request arguments
+        if request.method == 'GET':
+            travel_date = request.args.get('travelDate')
+            departure_terminal = request.args.get('departureTerminal')
+            arrival_terminal = request.args.get('arrivalTerminal')
+            travel_type = request.args.get('travelType')
+
+        # Initialize the WHERE clause of the query
+        where_clause = 'WHERE Booking.traveler_id = %s'
+        query_params = [user_id]
+
+        # Add conditions to the WHERE clause based on the filter values
+        if travel_date:
+            where_clause += ' AND DATE(Travel.depart_time) = %s'
+            query_params.append(travel_date)
+        if departure_terminal:
+            where_clause += ' AND Travel.departure_terminal_id = %s'
+            query_params.append(departure_terminal)
+        if arrival_terminal:
+            where_clause += ' AND Travel.arrival_terminal_id = %s'
+            query_params.append(arrival_terminal)
+        if travel_type:
+            where_clause += ' AND Travel.vehicle_type_id = %s'
+            query_params.append(travel_type)
+
         query = """
         SELECT Travel.travel_id, Booking.PNR, Booking.seat_number, Travel.depart_time, Terminal.name AS departure_terminal_name, Terminal2.name AS arrival_terminal_name, Company.company_name
         FROM Booking
@@ -367,7 +415,7 @@ def myTravels():
         JOIN Terminal ON Travel.departure_terminal_id = Terminal.terminal_id
         JOIN Terminal AS Terminal2 ON Travel.arrival_terminal_id = Terminal2.terminal_id
         JOIN Company ON Travel.travel_company_id = Company.id
-        WHERE Booking.traveler_id = %s
+        {}
         AND Travel.depart_time {} %s
         ORDER BY Travel.depart_time {}
         """
@@ -379,8 +427,8 @@ def myTravels():
             comparison_operator = '>'
             order_by = 'ASC'
 
-        formatted_query = query.format(comparison_operator, order_by)
-        cursor.execute(formatted_query, (user_id, datetime.now()))
+        formatted_query = query.format(where_clause, comparison_operator, order_by)
+        cursor.execute(formatted_query, tuple(query_params + [datetime.now()]))
         user_travels = cursor.fetchall()
 
         currentRating = '1'
@@ -403,7 +451,7 @@ def myTravels():
 
         cursor.close()
 
-        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating, reserved_travels=reserved_travels)
+        return render_template('myTravelsPage.html', user_travels=user_travels, user_id=user_id, upcomingOrPast = upcomingOrPast, commentAreaOnAPNR = commentAreaOnAPNR, currentRating = currentRating, reserved_travels=reserved_travels, departure_terminals=departure_terminals, arrival_terminals=arrival_terminals, vehicle_types=vehicle_types)
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
@@ -609,6 +657,16 @@ def buy_travel(travel_id):
             coupon = cursor.fetchone()
             sale_rate = coupon['sale_rate']
 
+            # Update the coupon to be used
+            query_update_coupon = """
+            UPDATE Coupon_Traveler
+            SET used_status = %s
+            WHERE coupon_id = %s 
+            AND user_id = %s
+            """
+            cursor.execute(query_update_coupon, (True, coupon_id, user_id))
+            mysql.connection.commit()
+
             # Calculate the discounted price
             discounted_price = travel_details['price'] * (1 - sale_rate)
         else:
@@ -672,6 +730,7 @@ def buy_travel(travel_id):
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
     user_id = session['userid']
+    time_now = datetime.now().date()
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     # Retrieve available coupons for the user
@@ -697,30 +756,55 @@ def coupons():
     # Insert new coupon for the user
     if request.method == 'POST':
         # Get the coupon number entered by the user
-        coupon_number = request.form['coupon_number']
+        coupon_name = request.form['coupon_name']
 
         # Check if the coupon exists in the Sale_Coupon table
-        query_check_coupon = "SELECT coupon_id FROM Sale_Coupon WHERE coupon_id = %s"
-        cursor.execute(query_check_coupon, (coupon_number,))
+        query_check_coupon = """
+        SELECT coupon_id, expiration_date, public_status 
+        FROM Sale_Coupon 
+        WHERE coupon_name = %s
+        """
+        cursor.execute(query_check_coupon, (coupon_name,))
         coupon = cursor.fetchone()
 
         if coupon:
+            coupon_id = coupon['coupon_id']
+            expiration_date = coupon['expiration_date']
+            public_status = coupon['public_status']
+
             # Check if the coupon is already associated with the user
-            query_check_exists = "SELECT coupon_id FROM Coupon_Traveler WHERE coupon_id = %s AND user_id = %s"
-            cursor.execute(query_check_exists, (coupon_number, user_id))
+            query_check_exists = """
+            SELECT coupon_id 
+            FROM Coupon_Traveler 
+            WHERE coupon_id = %s 
+            AND user_id = %s
+            """
+            cursor.execute(query_check_exists, (coupon_id, user_id))
             existing_coupon = cursor.fetchone()
 
-            if existing_coupon:
-                # Display an error message if the coupon is already associated with the user
-                flash("Coupon already associated with your account.", "error")
-            else:
+            if public_status == 'public' and not existing_coupon:
                 # Insert the coupon into the Coupon_Traveler table for the user
                 query_insert_coupon = "INSERT INTO Coupon_Traveler (coupon_id, user_id) VALUES (%s, %s)"
-                cursor.execute(query_insert_coupon, (coupon_number, user_id))
+                cursor.execute(query_insert_coupon, (coupon_id, user_id))
                 mysql.connection.commit()
 
                 # Redirect to the same page to display the updated list of available coupons
                 return redirect(url_for('coupons'))
+            elif public_status == 'private':
+                if existing_coupon:
+                    # Display an error message if the coupon is already associated with the user
+                    flash("Coupon already associated with your account.", "error")
+                else:
+                    # Insert the coupon into the Coupon_Traveler table for the user
+                    query_insert_coupon = "INSERT INTO Coupon_Traveler (coupon_id, user_id) VALUES (%s, %s)"
+                    cursor.execute(query_insert_coupon, (coupon_id, user_id))
+                    mysql.connection.commit()
+
+                    # Redirect to the same page to display the updated list of available coupons
+                    return redirect(url_for('coupons'))
+            else:
+                # Display error message if the coupon is public and already associated with the user
+                flash("Coupon is not available.", "error")
         else:
             # Display an error message if the coupon does not exist
             flash("Invalid coupon number.", "error")
@@ -851,17 +935,16 @@ def journeys():
 
         # Get journeys that are booked
         query_booked_journeys = """
-        SELECT *
-        FROM Journey
-        WHERE traveler_id = %s 
-        AND journey_name IN (
-            SELECT journey_name
-            FROM Travels_In_Journey
-            INNER JOIN Booking ON Travels_In_Journey.travel_id = Booking.travel_id
-        )
+        SELECT T.travel_id
+        FROM Journey J
+        INNER JOIN Travels_In_Journey T ON J.journey_name = T.journey_name
+        INNER JOIN Booking B ON T.travel_id = B.travel_id
+        WHERE J.traveler_id = %s
         """
         cursor.execute(query_booked_journeys, (user_id,))
         booked_journeys = cursor.fetchall()
+
+        booked_journey_ids = [journey['travel_id'] for journey in booked_journeys]
 
         if request.method == 'POST':
             newJourneyName = request.form.get('journeyForm')
@@ -876,7 +959,7 @@ def journeys():
 
             return redirect(url_for('journeys'))
         
-        return render_template("journeysPage.html", journeys = journeys, travelsInJourneys = travelsInJourneys, booked_journeys=booked_journeys)
+        return render_template("journeysPage.html", journeys = journeys, travelsInJourneys = travelsInJourneys, booked_journey_ids=booked_journey_ids)
     else:
         message = "Session is not valid, please log in!"
         return render_template("login.html", message = message)

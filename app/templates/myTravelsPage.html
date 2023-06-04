@@ -39,6 +39,56 @@
           </div>
     </nav>
 
+    <div class="container-fluid pt-4 pb-4 upperBar">
+        <form action="{{ url_for('myTravels') }}" method="GET">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="travelDate">Travel Date</label>
+                <input type="date" class="form-control" id="travelDate" name="travelDate" value="{{ travelDate }}">
+              </div>
+            </div>
+            <!-- Departure Terminal filter -->
+            <div class="col-md-3">
+                <label for="departureTerminal">Departure Terminal</label>
+                <select class="form-control" id="departureTerminal" name="departureTerminal">
+                <option value="">All</option>
+                {% for terminal in departure_terminals %}
+                    <option value="{{ terminal['terminal_id'] }}">{{ terminal['city'] }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Arrival Terminal filter -->
+            <div class="col-md-3">
+                <label for="arrivalTerminal">Arrival Terminal</label>
+                <select class="form-control" id="arrivalTerminal" name="arrivalTerminal">
+                <option value="">All</option>
+                {% for terminal in arrival_terminals %}
+                    <option value="{{ terminal['terminal_id'] }}">{{ terminal['city'] }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Travel Type filter -->
+            <div class="col-md-3">
+                <label for="travelType">Travel Type</label>
+                <select class="form-control" id="travelType" name="travelType">
+                <option value="">All</option>
+                {% for travelType in vehicle_types %}
+                    <option value="{{ travelType['id'] }}">{{ travelType['type'] }}</option>
+                {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary">Filter</button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>      
 
     <div class="container">
         <div class="d-flex justify-content-around mt-4 mb-3">
