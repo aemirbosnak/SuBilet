@@ -272,7 +272,6 @@ INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type) VALUES
 ('PLANE143', 17, 30, 10, 'regular'),
 ('PLANE144', 17, 30, 11, 'regular'),
 ('BUS101', 5, 12, 9, 'regular'),
-('BUS102', 5, 15, 8, 'regular'),
 ('BUS103', 5, 20, 7, 'regular'),
 ('BUS104', 5, 23, 10, 'regular'),
 ('BUSFULL1', 18, 1, 7, 'regular'),
@@ -366,7 +365,6 @@ INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) VA
 ('PLANE142', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
 ('PLANE143', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
 ('PLANE144', '2023-05-01 20:00:00', 'creadit card', 800.00, NULL),
-('BUS102', '2023-05-10 08:00:00', 'creadit card', 299.00, NULL),
 ('BUS103', '2023-05-10 23:30:00', 'creadit card', 299.00, NULL),
 ('BUS104', '2023-05-10 21:30:00', 'creadit card', 270.00, 1);
 

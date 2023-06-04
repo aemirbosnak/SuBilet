@@ -86,6 +86,10 @@
                           <div class="row text-secondary">Destination:</div>
                           <div class="row">{{ travel.arr_city }}</div>
                         </div>
+                        <div class="col">
+                          <div class="row text-secondary">Price:</div>
+                          <div class="row">{{ travel.price }}</div>
+                        </div>
                         <div class="col-2">
                           {% if travel.travel_id in booked_journey_ids %}
                           <form method='POST' action="{{ url_for('myTravels') }}">
