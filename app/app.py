@@ -384,11 +384,10 @@ def myTravels():
                 vehicle_types.append(vehicle_type)
 
         # Retrieve filter values from the request arguments
-        if request.method == 'GET':
-            travel_date = request.args.get('travelDate')
-            departure_terminal = request.args.get('departureTerminal')
-            arrival_terminal = request.args.get('arrivalTerminal')
-            travel_type = request.args.get('travelType')
+        travel_date = request.args.get('travelDate')
+        departure_terminal = request.args.get('departureTerminal')
+        arrival_terminal = request.args.get('arrivalTerminal')
+        travel_type = request.args.get('travelType')
 
         # Initialize the WHERE clause of the query
         where_clause = 'WHERE Booking.traveler_id = %s'
