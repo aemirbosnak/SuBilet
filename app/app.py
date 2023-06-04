@@ -302,11 +302,9 @@ def travels(vehicle_type, departure_city, arrival_city, departure_date, extra_da
                 SELECT seat_number 
                 FROM Booking 
                 WHERE travel_id = %s
-                    AND PNR IN (SELECT PNR
-                                FROM Purchased)
                 """
         cursor.execute(query, (travel_seat, ))
-        occupied = cursor.fetchall()
+        occupied = [x['seat_number'] for x in cursor.fetchall()]
 
         formation = [int(x) for x in seating_info['seat_formation'].split("-")]
         col = sum(formation)
@@ -395,11 +393,10 @@ def myTravels():
                 vehicle_types.append(vehicle_type)
 
         # Retrieve filter values from the request arguments
-        if request.method == 'GET':
-            travel_date = request.args.get('travelDate')
-            departure_terminal = request.args.get('departureTerminal')
-            arrival_terminal = request.args.get('arrivalTerminal')
-            travel_type = request.args.get('travelType')
+        travel_date = request.args.get('travelDate')
+        departure_terminal = request.args.get('departureTerminal')
+        arrival_terminal = request.args.get('arrivalTerminal')
+        travel_type = request.args.get('travelType')
 
         # Initialize the WHERE clause of the query
         where_clause = 'WHERE Booking.traveler_id = %s'
@@ -503,22 +500,29 @@ def buy_travel(travel_id):
 
     pnr = generatePNR()
     seat_number = generateSeatNumber(travel_id)
+    seat_chosen = False
+    reserved_booking = None
+
+    if request.method == "POST" and 'seat_number' in request.form:
+        if request.form['seat_number']:
+            seat_number = request.form['seat_number']
+            seat_chosen = True
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Check if the travel_id is associated with a reserved booking
-    query_check_reserved_booking = """
-    SELECT *
-    FROM Booking
-    JOIN Reserved ON Booking.PNR = Reserved.PNR
-    WHERE travel_id = %s AND traveler_id = %s
-    """
-    cursor.execute(query_check_reserved_booking, (travel_id, user_id))
-    reserved_booking = cursor.fetchone()
+    if request.method == "POST" and 'reserve_PNR' in request.form:
+        pnr = request.form['reserve_PNR']
 
-    if reserved_booking:
-        pnr = reserved_booking['PNR']
+        query_reserved_booking = """
+        SELECT *
+        FROM Booking
+        WHERE PNR = %s
+        """
+        cursor.execute(query_reserved_booking, (pnr, ))
+        reserved_booking = cursor.fetchone()
+
         seat_number = reserved_booking['seat_number']
+        seat_chosen = True
 
     # Get travel details
     query_travel = """
@@ -681,7 +685,7 @@ def buy_travel(travel_id):
         updated_balance = balance['balance'] - discounted_price
 
         # Check if user has sufficient funds
-        if updated_balance < travel_details['price']:
+        if updated_balance < 0:
             flash("Insuffiecient funds!", "error")
             return redirect(url_for('buy_travel', travel_id=travel_id))
 
@@ -729,8 +733,7 @@ def buy_travel(travel_id):
             mysql.connection.commit()
 
         return redirect(url_for('myTravels'))
-
-    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys, journey_count=journey_count, journey_name=journey_name)
+    return render_template('purchasePage.html', travel_id=travel_id, travel_details=travel_details, reserved_booking=reserved_booking, balance=balance, coupons=coupons, pnr=pnr, seat_number=seat_number, seat_chosen=seat_chosen, is_logged_in=is_logged_in, user_id=user_id, selected_coupon_id=selected_coupon_id, journeys = journeys, journey_count=journey_count, journey_name=journey_name)
 
 @app.route('/coupons', methods=['GET', 'POST'])
 def coupons():
@@ -940,13 +943,14 @@ def journeys():
 
         # Get journeys that are booked
         query_booked_journeys = """
-        SELECT T.travel_id
-        FROM Journey J
-        INNER JOIN Travels_In_Journey T ON J.journey_name = T.journey_name
-        INNER JOIN Booking B ON T.travel_id = B.travel_id
-        WHERE J.traveler_id = %s
+        SELECT travel_id
+        FROM Travels_In_Journey
+        WHERE traveler_id = %s
+        AND travel_id IN (SELECT travel_id
+                FROM Booking
+                WHERE traveler_id = %s) 
         """
-        cursor.execute(query_booked_journeys, (user_id,))
+        cursor.execute(query_booked_journeys, (user_id, user_id))
         booked_journeys = cursor.fetchall()
 
         booked_journey_ids = [journey['travel_id'] for journey in booked_journeys]
@@ -973,38 +977,63 @@ def journeys():
 def buy_all():
     user_id = session.get('userid')
     action = request.form.get('action')
+    journey_name = request.form['journey_name']
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
     if action == 'buy':
-        # Get all travel IDs associated with the user's journeys
+        # Get all travel IDs associated with the user's journey
         query_travel_ids = """
         SELECT T.travel_id
         FROM Travels_In_Journey TIJ
         JOIN Travel T ON TIJ.travel_id = T.travel_id
         WHERE TIJ.traveler_id = %s
+        AND TIJ.journey_name = %s
         """
-        cursor.execute(query_travel_ids, (user_id,))
+        cursor.execute(query_travel_ids, (user_id, journey_name))
         travel_ids = [row['travel_id'] for row in cursor.fetchall()]
+
+        # Get all travel ids of purchased travels
+        query_purchased_ids = """
+        SELECT DISTINCT B.travel_id
+        FROM Booking B
+        JOIN Purchased ON Purchased.PNR = B.PNR
+        WHERE B.traveler_id = %s
+        """
+        cursor.execute(query_purchased_ids, (user_id,))
+        purchased_ids = [row['travel_id'] for row in cursor.fetchall()]
 
         # Buy each travel
         for travel_id in travel_ids:
-            buy_one(travel_id)
+            if travel_id not in purchased_ids:
+                buy_one(travel_id)
 
     elif action == 'reserve':
-        # Get all travel IDs associated with the user's journeys
+        # Get all travel IDs associated with the user's relevant journey
         query_travel_ids = """
         SELECT T.travel_id
         FROM Travels_In_Journey TIJ
         JOIN Travel T ON TIJ.travel_id = T.travel_id
         WHERE TIJ.traveler_id = %s
+        AND TIJ.journey_name = %s
         """
-        cursor.execute(query_travel_ids, (user_id,))
+        cursor.execute(query_travel_ids, (user_id, journey_name))
         travel_ids = [row['travel_id'] for row in cursor.fetchall()]
+
+        # Get all travel ids of reserved travels
+        query_purchased_ids = """
+        SELECT DISTINCT B.travel_id
+        FROM Booking B
+        JOIN Reserved ON Rezerved.PNR = B.PNR
+        WHERE B.traveler_id = %s
+        """
+        cursor.execute(query_purchased_ids, (user_id,))
+        reserved_ids = [row['travel_id'] for row in cursor.fetchall()]
 
         # Reserve each travel
         for travel_id in travel_ids:
-            reserve_one(travel_id)
+            if travel_id not in reserved_ids:
+                reserve_one(travel_id)
 
     return redirect(url_for('journeys'))
 

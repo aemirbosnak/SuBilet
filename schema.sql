@@ -1,4 +1,4 @@
-ALTER DATABASE subiletdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+	ALTER DATABASE subiletdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE DATABASE IF NOT EXISTS subiletdb;
 USE subiletdb;
@@ -25,10 +25,7 @@ INSERT INTO User (id, email, password, phone, active) VALUES
 (8, 'traveler2@example.com', '123456', '555 444 33 29', TRUE),
 (9, 'traveler3@example.com', '123456', '555 444 33 30', TRUE),
 (10, 'traveler4@example.com', '123456', '555 444 33 31', TRUE),
-(11, 'traveler5@example.com', '123456', '555 444 33 32', TRUE),
-(12, 'company4@example.com', '123456', '555 444 33 33', TRUE),
-(13, 'company5@example.com', '123456', '555 444 33 34', TRUE),
-(14, 'company6@example.com', '123456', '555 444 33 35', FALSE);
+(11, 'traveler5@example.com', '123456', '555 444 33 32', TRUE);
 
 CREATE TABLE Traveler (
     id INT,
@@ -86,11 +83,8 @@ CREATE TABLE Company (
 
 INSERT INTO Company (id, company_name, website, foundation_date, about, validator_id, validation_date) VALUES
 (4, 'company1', 'https://company1.com.tr', '2000-01-01', 'about company 1', 1, '2000-01-02' ),
-(5, 'company2', 'https://company2.com.tr', '2001-02-03', 'about company 2', 2, '2001-02-05' ),
-(6, 'company3', 'https://company3.com.tr', '2002-03-04', 'about company 3', 1, '2002-03-05' ),
-(12, 'company4', 'https://company4.com.tr', '2002-03-04', 'about company 4', NULL, NULL ),
-(13, 'company5', 'https://company5.com.tr', '2002-03-04', 'about company 5', NULL, NULL ),
-(14, 'company6', 'https://company6.com.tr', '2005-04-05', 'about company 6', 2, '2005-05-06' );
+(5, 'company2', 'https://company2.com.tr', '2000-01-01', 'about company 2', 1, '2000-01-02' ),
+(6, 'company3', 'https://company3.com.tr', '2000-01-01', 'about company 3', 1, '2000-01-02' );
 
 CREATE TABLE Report (
     report_id INT AUTO_INCREMENT,
@@ -139,8 +133,7 @@ INSERT INTO Sale_Coupon (coupon_id, coupon_name, sale_rate, expiration_date, gen
 (3, 'indirim30', 0.30, '2023-08-31', '2023-05-01', 'public' ),
 (4, 'indirim10', 0.10, '2023-12-31', '2023-05-02', 'private' ),
 (5, 'indirim20', 0.20, '2023-12-31', '2023-05-02', 'private' ),
-(6, 'indirim30', 0.30, '2023-12-31', '2023-05-02', 'private' ),
-(7, 'indirim40', 0.30, '2023-04-30', '2023-01-01', 'public' );
+(6, 'indirim30', 0.30, '2023-12-31', '2023-05-02', 'private' );
 
 CREATE TABLE Coupon_Traveler(
     coupon_id INT,
@@ -157,7 +150,6 @@ INSERT INTO Coupon_Traveler (coupon_id, user_id, used_status) VALUES
 (1, 7, TRUE),
 (1, 8, FALSE),
 (1, 9, TRUE),
-(1, 10, TRUE),
 (3, 7, FALSE),
 (5, 8, FALSE),
 (5, 9, TRUE),
@@ -263,7 +255,7 @@ CREATE TABLE Booking(
 	travel_id INT,
 	seat_number INT NOT NULL,
 	traveler_id INT,
-    seat_type ENUM( 'business', 'regular', 'random' ) NOT NULL DEFAULT 'regular',
+    seat_type ENUM( 'business', 'regular' ) NOT NULL DEFAULT 'regular',
 	PRIMARY KEY(PNR),
 	FOREIGN KEY (travel_id) REFERENCES Travel(travel_id)
 		ON DELETE CASCADE,
@@ -276,13 +268,16 @@ INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type) VALUES
 ('PLANE112', 1, 44, 8, 'regular'),
 ('PLANE113', 1, 1, 9, 'business'),
 ('PLANE120', 4, 53, 7, 'regular'),
+('PLANE121', 4, 36, 8, 'regular'),
 ('PLANE122', 4, 17, 9, 'regular'),
 ('PLANE123', 4, 4, 10, 'business'),
 ('PLANE130', 10, 6, 7, 'business'),
+('PLANE131', 10, 3, 8, 'business'),
 ('PLANE132', 10, 21, 9, 'regular'),
 ('PLANE133', 10, 27, 10, 'regular'),
 ('PLANE134', 10, 24, 11, 'regular'),
 ('PLANE140', 17, 32, 7, 'regular'),
+('PLANE141', 17, 12, 8, 'regular'),
 ('PLANE142', 17, 29, 9, 'regular'),
 ('PLANE143', 17, 30, 10, 'regular'),
 ('PLANE144', 17, 30, 11, 'regular'),
@@ -371,19 +366,21 @@ INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) VA
 ('PLANE112', '2023-04-01 19:00:00', 'creadit card', 999.00, NULL),
 ('PLANE113', '2023-05-01 21:00:00', 'creadit card', 1399.00, NULL),
 ('PLANE120', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
+('PLANE121', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
 ('PLANE122', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
 ('PLANE123', '2023-05-01 21:00:00', 'creadit card', 1299.00, NULL),
 ('PLANE130', '2023-05-01 21:00:00', 'creadit card', 1299.00, NULL),
+('PLANE131', '2023-05-01 21:00:00', 'creadit card', 1299.00, NULL),
 ('PLANE132', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
 ('PLANE133', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
 ('PLANE134', '2023-05-01 20:00:00', 'creadit card', 900.00, NULL),
 ('PLANE140', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
+('PLANE141', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
 ('PLANE142', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
 ('PLANE143', '2023-05-01 21:00:00', 'creadit card', 800.00, NULL),
 ('PLANE144', '2023-05-01 20:00:00', 'creadit card', 800.00, NULL),
 ('BUS103', '2023-05-10 23:30:00', 'creadit card', 299.00, NULL),
 ('BUS104', '2023-05-10 21:30:00', 'creadit card', 270.00, 1);
-
 
 CREATE TABLE Journey(
 	journey_name VARCHAR(256) NOT NULL,
@@ -433,7 +430,6 @@ INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES
 (17, 8, "The travel exceeded my expectations in every way. The attention to detail, the friendly staff, and the unique experiences made it a truly memorable journey. I would choose your company again without hesitation.", 5),
 (17, 9, "I had an incredible travel experience with your company. The accommodations were top-notch, with comfortable rooms and friendly staff. The itinerary was well-planned, and we got to visit breathtaking destinations.", 4),
 (17, 10, "The pricing of the travel package seemed reasonable at first, but there were many hidden costs along the way. It would have been helpful to have a clearer breakdown of expenses upfront.", 3);
-
 
 /* 
 ********************
@@ -498,4 +494,3 @@ TDW.vehicle_model AS vehicle_model,
 TDW.vehicle_type AS vehicle_type
 FROM Company C 
 JOIN travel_detail_view TDW ON C.id = TDW.travel_company_id;
-

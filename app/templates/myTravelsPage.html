@@ -196,8 +196,10 @@
                         </div>
                         {% elif upcomingOrPast == 'upcoming' and row['PNR'] in reserved_travels %}
                         <div class="col-1">
-                            <form method="post" action="{{ url_for('buy_travel', travel_id=row['travel_id']) }}">
+                            <form method="POST" action="{{ url_for('buy_travel', travel_id=row['travel_id']) }}">
+                                <input type="hidden" name="reserve_PNR" id="reserve_PNR" value="{{row['PNR']}}">
                                 <button class="btn btn-danger btn-lg" type="submit">Purchase</button>
+                                {{ row['PNR'] }}
                             </form>
                         </div>
                         {% endif %}
