@@ -113,7 +113,7 @@
     <div class="container-fluid pt-4 pb-4 upperBar">
       <div class="container">
         <div class="row mx-4">
-          <div class="col-6">
+          <div class="col-4">
             <form class="row" action="{{ request.path }}" method="GET">
               <input type="hidden" name="filter_type" id="filter_type" value="{{ filterType }}">
               <div class="col-6">
@@ -131,7 +131,7 @@
             </form>
           </div>
 
-          <div class="col-6">
+          <div class="col-4">
             <form class="row" action="{{ request.path }}" method="GET">
               <input type="hidden" name="sort_type" id="sort_type" value="{{ sortType }}">
               <div class="col-6">
@@ -148,6 +148,20 @@
               </div>
             </form>
           </div>
+
+          <div class="col-4">
+            <form class="row" action="{{ request.path }}" method="GET">
+              <input type="hidden" name="sort_type" id="sort_type" value="{{ sortType }}">
+              <div class="col-6">
+                <input type="text" class="form-control" name="filter_type" id="filter_type">
+              </div>
+              <div class="col-6">
+                <button type="submit" id="filter-button" class="btn btn-outline-danger">Search</button>
+              </div>
+            </form>
+          </div>
+          
+          
         </div>
       </div>  
     </div>
