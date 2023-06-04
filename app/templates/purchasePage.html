@@ -116,6 +116,12 @@
                                         <div> {{ seat_number }} </div>
                                     </div>
                                     {% endif %}
+                                    {% if reserved_booking %}
+                                    <div class="col">
+                                        <div class="text-lightRed">PNR:</div>
+                                        <div> {{ pnr }} </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
 
                             {% if journey_count != 0 %}
@@ -217,6 +223,7 @@
                                         {% if seat_chosen %}
                                             <input type="hidden" id="seat_number" name="seat_number" value="{{ seat_number }}">
                                         {% endif %}
+                                        <input type="hidden" id="reserve_PNR" name="reserved_PNR" value="{{ pnr }}">
                                     </form>
                                 {% else %}
                                     <form method='POST' action="{{ url_for('buy_travel', travel_id=travel_id) }}">

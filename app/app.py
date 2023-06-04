@@ -496,9 +496,9 @@ def buy_travel(travel_id):
     reserved_booking = None
 
     if request.method == "POST" and 'seat_number' in request.form:
-        seat_number = request.form['seat_number']
-        seat_chosen = True
-
+        if request.form['seat_number']:
+            seat_number = request.form['seat_number']
+            seat_chosen = True
 
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 

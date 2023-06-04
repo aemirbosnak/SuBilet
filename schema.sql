@@ -417,9 +417,3 @@ INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES
 (17, 9, "I had an incredible travel experience with your company. The accommodations were top-notch, with comfortable rooms and friendly staff. The itinerary was well-planned, and we got to visit breathtaking destinations.", 4),
 (17, 10, "The pricing of the travel package seemed reasonable at first, but there were many hidden costs along the way. It would have been helpful to have a clearer breakdown of expenses upfront.", 3);
 
-CREATE TRIGGER purchase-on-reserve
-BEFORE INSERT ON Purchased
-REFERENCING NEW ROW AS new-row 
-FOR EACH ROW
-	DELETE FROM Reserved R
-	WHERE R.PNR = new-row.PNR
