@@ -6,6 +6,15 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, PageTemplate, Frame, Paragraph, Spacer
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib import colors
+from reportlab.graphics.shapes import Drawing, Line
+from reportlab.lib.units import inch
+from flask import make_response
+
 
 app = Flask(__name__, static_folder='static') 
 
@@ -1999,31 +2008,120 @@ def reportDetails(report_id):
         theReport = cursor.fetchone()
 
         return render_template('reportPage.html', theReport = theReport)
-
-        # return render_template('reportPage.html', message = message, 
-        #                        admin_number = admin_number,
-        #                        traveler_number = traveler_number, 
-        #                        company_number = company_number,
-        #                        pending_company_number = pending_company_number, 
-        #                        terminal_number = terminal_number, 
-        #                        vehicle_type_number = vehicle_type_number, 
-        #                        total_purchase_number = total_purchase_number, 
-        #                        total_purchase_amount = total_purchase_amount, 
-        #                        past_bus_number = past_bus_number, 
-        #                        upcoming_bus_number = upcoming_bus_number,
-        #                        past_plane_number = past_plane_number,
-        #                        upcoming_plane_number = upcoming_plane_number,
-        #                        past_train_number = past_train_number, 
-        #                        upcoming_train_number = upcoming_train_number,
-        #                        total_reviews = total_reviews,
-        #                        coupon_usage_percentage = coupon_usage_percentage,
-        #                        company_with_max_revenue = company_with_max_revenue,
-        #                        company_with_max_travel_number = company_with_max_travel_number,
-        #                        company_with_max_rating = company_with_max_rating
-        #                         )
     else:
         message = 'Session was not valid, please log in!'
         return render_template('login.html', message = message)
+    
+@app.route('/printReportDetails/<int:report_id>', methods=['GET', 'POST'])
+def printReportDetails(report_id):
+    if 'userid' in session and 'loggedin' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        message = None
+
+        # Get the report
+        query = """
+        SELECT *
+        FROM Report R
+        JOIN Administrator A ON A.id = R.report_generator_id
+        WHERE R.report_id = %s
+        """
+        cursor.execute(query, (report_id,))
+        theReport = cursor.fetchone()
+
+        # Generate the PDF file
+        response = make_response(generate_pdf(theReport))
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=report_{report_id}.pdf'
+        return response
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message=message)
+
+def generate_pdf(report_data):
+    # Create a new PDF document
+    doc = SimpleDocTemplate('temp_report.pdf', pagesize=letter)
+    elements = []
+ # Define header content
+    header_content = "Application Report"
+
+    # Define header style
+    header_style = ParagraphStyle(
+        name='HeaderStyle',
+        fontSize=14,
+        textColor=colors.black,
+        spaceAfter=12
+    )
+
+    # Create header paragraph
+    header_paragraph = Paragraph(header_content, style=header_style)
+
+    # Add header paragraph to the elements list
+    elements.append(header_paragraph)
+
+    # Create a drawing object for the line separator
+    line_separator = Drawing(400, 1)
+    line_separator.add(Line(0, 0, 400, 0))
+
+    # Add line separator to the elements list
+    elements.append(line_separator)
+
+    # Add spacing after the line separator
+    elements.append(Spacer(1, 12))  # Adjust the spacing as needed
+    # Create table data
+    table_data = [
+        ['Indicators', 'Value'],
+        ['Report ID', str(report_data['report_id'])],
+        ['Report Date', str(report_data['report_date'])],
+        ['Total Number of Admin', str(report_data['admin_number'])],
+        ['Total Number of Traveler', str(report_data['traveler_number'])],
+        ['Total Number of Active and Validated Company', str(report_data['company_number'])],
+        ['Total Number of Unverified Company', str(report_data['pending_company_number'])],
+        ['Total Number of Active Terminal', str(report_data['terminal_number'])],
+        ['Total Number of Vehicle Type', str(report_data['vehicle_type_number'])],
+        ['Total Number of Purchase', str(report_data['total_purchase_number'])],
+        ['Total Purchase Amount', str(report_data['total_purchase_amount'])],
+        ['Total Number of Reviews', str(report_data['total_reviews'])],
+        ['Coupon Usage Percentage', str(report_data['coupon_usage_percentage'])],
+        ['Total Number of Past Bus Travel ', str(report_data['past_bus_number'])],
+        ['Total Number of Upcoming Bus Travel', str(report_data['upcoming_bus_number'])],
+        ['Total Number of Past Plane Travel', str(report_data['past_plane_number'])],
+        ['Total Number of Upcoming Plane Travel', str(report_data['upcoming_plane_number'])],
+        ['Total Number of Past Train Travel', str(report_data['past_train_number'])],
+        ['Total Number of Upcoming Train Travel', str(report_data['upcoming_train_number'])],
+        ['Company With Max Revanue', str(report_data['company_with_max_revenue'].capitalize())],
+        ['Company With Max Travel Number', str(report_data['company_with_max_travel_number'].capitalize())],
+        ['Company With Max Rating', str(report_data['company_with_max_rating'].capitalize())],
+        # Add more rows for other attributes
+    ]
+
+    # Define table style
+    table_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+    ])
+
+    # Create table object and apply style
+    table = Table(table_data)
+    table.setStyle(table_style)
+
+    # Add table to the elements list
+    elements.append(table)
+
+    # Build the PDF document
+    doc.build(elements)
+
+    # Read the generated PDF file and return it as bytes
+    with open('temp_report.pdf', 'rb') as file:
+        pdf_bytes = file.read()
+
+    return pdf_bytes
+
 
 
 
