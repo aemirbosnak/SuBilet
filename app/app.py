@@ -60,7 +60,7 @@ def login():
             return redirect(url_for('main'))
 
         else:
-            message = 'Please enter correct email / password !'
+            message = 'Please enter correct email/password!'
             cursor.close()
 
     return render_template('login.html', message = message)
