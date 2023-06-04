@@ -87,9 +87,15 @@
                           <div class="row">{{ travel.arr_city }}</div>
                         </div>
                         <div class="col-2">
-                          <form method='POST' action="{{ url_for('buy_travel', travel_id=travel.travel_id) }}">
-                            <button class="btn btn-success btn-lg mb-2" type="submit" name="journey">Purchase/Reserve</button>
+                          {% if travel.travel_id in booked_journeys %}
+                          <form method='POST' action="{{ url_for('myTravels') }}">
+                            <button class="btn btn-success btn-lg mb-2" type="submit">Details</button>
                           </form>
+                          {% else %}
+                            <form method='POST' action="{{ url_for('buy_travel', travel_id=travel.travel_id) }}">
+                              <button class="btn btn-success btn-lg mb-2" type="submit" name="journey">Purchase/Reserve</button>
+                            </form>
+                          {% endif %}
                         </div>
                       </div>
                     </div>
@@ -99,14 +105,16 @@
               {% set match_found = true %}
               {% endif %}
               {% endfor %}
-              <div class="row">
-                <div class="col">
-                  <button class="btn btn-danger btn-lg">Buy All</button>
+              <form action="{{ url_for('buy_all') }}" method="POST">
+                <div class="row">
+                  <div class="col">
+                    <button class="btn btn-danger btn-lg" type="submit" name="action" value="buy">Buy All</button>
+                  </div>
+                  <div class="col">
+                    <button class="btn btn-warning btn-lg" type="submit" name="action" value="reserve">Reserve All</button>
+                  </div>
                 </div>
-                <div class="col">
-                  <button class="btn btn-warning btn-lg">Reserve All</button>
-                </div>
-              </div>
+              </form>
                 </div>
               </div>
             </div>
