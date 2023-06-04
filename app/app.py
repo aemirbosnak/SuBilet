@@ -445,25 +445,26 @@ def buy_travel(travel_id):
     pnr = generatePNR()
     seat_number = generateSeatNumber(travel_id)
     seat_chosen = False
+    reserved_booking = None
 
     if request.method == "POST" and 'seat_number' in request.form:
         seat_number = request.form['seat_number']
         seat_chosen = True
 
+
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-    # Check if the travel_id is associated with a reserved booking
-    query_check_reserved_booking = """
-    SELECT *
-    FROM Booking
-    JOIN Reserved ON Booking.PNR = Reserved.PNR
-    WHERE travel_id = %s AND traveler_id = %s
-    """
-    cursor.execute(query_check_reserved_booking, (travel_id, user_id))
-    reserved_booking = cursor.fetchone()
+    if request.method == "POST" and 'reserve_PNR' in request.form:
+        pnr = request.form['reserve_PNR']
 
-    if reserved_booking:
-        pnr = reserved_booking['PNR']
+        query_reserved_booking = """
+        SELECT *
+        FROM Booking
+        WHERE PNR = %s
+        """
+        cursor.execute(query_reserved_booking, (pnr, ))
+        reserved_booking = cursor.fetchone()
+
         seat_number = reserved_booking['seat_number']
         seat_chosen = True
 
@@ -618,7 +619,7 @@ def buy_travel(travel_id):
         updated_balance = balance['balance'] - discounted_price
 
         # Check if user has sufficient funds
-        if updated_balance < travel_details['price']:
+        if updated_balance < 0:
             flash("Insuffiecient funds!", "error")
             return redirect(url_for('buy_travel', travel_id=travel_id))
 
