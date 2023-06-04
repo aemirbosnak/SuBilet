@@ -25,7 +25,15 @@ INSERT INTO User (id, email, password, phone, active) VALUES
 (8, 'traveler2@example.com', '123456', '555 444 33 29', TRUE),
 (9, 'traveler3@example.com', '123456', '555 444 33 30', TRUE),
 (10, 'traveler4@example.com', '123456', '555 444 33 31', TRUE),
-(11, 'traveler5@example.com', '123456', '555 444 33 32', TRUE);
+(11, 'traveler5@example.com', '123456', '555 444 33 32', TRUE),
+(12, 'Kamilkoc@example.com', '123456', '555 444 33 33', TRUE),
+(13, 'Setur@example.com', '123456', '555 444 33 34', TRUE),
+(14, 'Pegasus@example.com', '123456', '555 444 33 35', TRUE),
+(15, 'Touristica@example.com', '123456', '555 444 33 36', TRUE),
+(16, 'EtsTur@example.com', '123456', '555 444 33 37', TRUE),
+(17, 'InterskyTravel@example.com', '123456', '555 444 33 38', TRUE),
+(18, 'Ulusoy@example.com', '123456', '555 444 33 39', TRUE),
+(19, 'Corendon@example.com', '123456', '555 444 33 40', TRUE);
 
 CREATE TABLE Traveler (
     id INT,
@@ -83,8 +91,16 @@ CREATE TABLE Company (
 
 INSERT INTO Company (id, company_name, website, foundation_date, about, validator_id, validation_date) VALUES
 (4, 'company1', 'https://company1.com.tr', '2000-01-01', 'about company 1', 1, '2000-01-02' ),
-(5, 'company2', 'https://company2.com.tr', '2000-01-01', 'about company 2', 1, '2000-01-02' ),
-(6, 'company3', 'https://company3.com.tr', '2000-01-01', 'about company 3', 1, '2000-01-02' );
+(5, 'company2', 'https://company2.com.tr', '2000-01-02', 'about company 2', 1, '2000-01-02' ),
+(6, 'company3', 'https://company3.com.tr', '2000-01-03', 'about company 3', 1, '2000-01-14' ),
+(13, 'Setur', 'https://setur.com.tr', '2000-01-04', 'about Setur ', 2, '2000-01-12' ),
+(14, 'Pegasus', 'https://pegasus.com.tr', '2000-01-05', 'about pegasus ', 3, '2000-01-11' ),
+(15, 'Touristica', 'https://touristica.com.tr', '2000-01-06', 'about Touristica ', 1, '2000-01-12' ),
+(16, 'EtsTur', 'https://etstur.com.tr', '2000-01-07', 'about EtsTur ', 1, '2000-01-24' ),
+(17, 'InterskyTravel', 'https://interskytravel.com.tr', '2000-01-08', 'about InterskyTravel ', 1, '2000-01-14' ),
+(18, 'Ulusoy', 'https://ulusoy.com.tr', '2000-01-09', 'about Ulusoy ', 1, '2000-01-12' ),
+(19, 'Corendon', 'https://corendon.com.tr', '2000-01-10', 'about Corendon ', 1, '2000-01-12' );
+
 
 CREATE TABLE Report (
     report_id INT AUTO_INCREMENT,
