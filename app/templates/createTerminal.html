@@ -66,7 +66,7 @@
     {% endif %}
 
     <div class="container pt-4">
-      <h4>Create New Vehicle Type</h4>
+      <h4>Create New Terminal</h4>
       <hr />
     </div>
 
@@ -88,14 +88,14 @@
     <div class="container">
       <div class="row justify-content-center mt-4">
         <div class="col-md-9 p-5 rounded-4 profileCard">
-          <form action="{{ url_for('createVehicleType') }}" method="POST">
+          <form action="{{ url_for('createTerminal') }}" method="POST">
             <div class="row mb-4">
               <div class="col-md-6">
-                <label for="vehicle_type">Vehicle Type:</label>
+                <label for="terminal_type">Terminal Type:</label>
                 <select
                   class="form-select"
-                  id="vehicle_type"
-                  name="vehicle_type"
+                  id="terminal_type"
+                  name="terminal_type"
                 >
                   <option value="bus">Bus</option>
                   <option value="plane">Plane</option>
@@ -103,101 +103,38 @@
                 </select>
               </div>
               <div class="col-md-6">
-                <label for="vehicle_seat_formation">Seat Formation:</label>
+                <label for="terminal_city">Terminal City:</label>
                 <input
                   type="text"
                   class="form-control"
-                  id="vehicle_seat_formation"
-                  name="vehicle_seat_formation"
-                  placeholder="Format: X-X or X-X-X"
-                  oninput="formatSeatFormation(this)"
-                />
-                <script>
-                  function formatSeatFormation(input) {
-                    // Formats the seat formation as X-X or X-X-X as it is being written
-                    var seatFormation = input.value.replace(/[^\d-]/g, "");
-
-                    if (
-                      seatFormation.length % 2 === 0 &&
-                      seatFormation.length !== 0
-                    ) {
-                      var lastItem = seatFormation.charAt(
-                        seatFormation.length - 1
-                      );
-                      seatFormation =
-                        seatFormation.slice(0, -1) + "-" + lastItem;
-                    }
-
-                    input.value = seatFormation;
-                  }
-
-                  document
-                    .getElementById("vehicle_seat_formation")
-                    .addEventListener("keydown", function (event) {
-                      if (event.key === "Backspace") {
-                        var seatFormation = this.value.replace(/[^\d-]/g, "");
-                        var lastChar = seatFormation.charAt(
-                          seatFormation.length - 1
-                        );
-
-                        if (
-                          seatFormation.length % 2 === 1 &&
-                          lastChar === "-"
-                        ) {
-                          this.value = seatFormation.slice(0, -2) + lastChar;
-                          event.preventDefault();
-                        }
-                      }
-                    });
-                </script>
-              </div>
-            </div>
-
-            <div class="row mb-4">
-              <div class="col-md-6">
-                <label for="vehicle_num_of_seats">Total Seat Number:</label>
-                <input
-                  type="number"
-                  class="form-control"
-                  id="vehicle_num_of_seats"
-                  name="vehicle_num_of_seats"
-                  placeholder="Enter a number..."
-                />
-              </div>
-              <div class="col-md-6">
-                <label for="vehicle_business_rows"
-                  >Number of Business Class Rows:</label
-                >
-                <input
-                  type="text"
-                  class="form-control"
-                  id="vehicle_business_rows"
-                  name="vehicle_business_rows"
-                  placeholder="Enter a number..."
+                  id="terminal_city"
+                  name="terminal_city"
+                  placeholder="Enter a city"
                 />
               </div>
             </div>
 
             <div class="row mb-4">
               <div class="col-md-6">
-                <label for="vehicle_model">Vehicle Model:</label>
+                <label for="terminal_name">Terminal Name:</label>
                 <input
                   type="text"
                   class="form-control"
-                  id="vehicle_model"
-                  name="vehicle_model"
-                  placeholder="Give a name to vehicle model..."
+                  id="terminal_name"
+                  name="terminal_name"
+                  placeholder="Enter terminal name..."
                 />
-              </div>
+              </div> 
             </div>
 
             <div class="row">
               <div class="col-md-12 text-center">
                 <button type="submit" class="btn btn-lg btn-danger">
-                  Create Vehicle Type
+                  Create Terminal
                 </button>
               </div>
             </div>
+
           </form>
         </div>
       </div>

@@ -187,7 +187,7 @@ CREATE TABLE Terminal(
     name VARCHAR(256) NOT NULL,
     city VARCHAR(256) NOT NULL,
     type ENUM( 'plane', 'train', 'bus' ) NOT NULL,
-    active_status ENUM( 'active', 'inactive'),
+    active_status ENUM( 'active', 'inactive') DEFAULT 'active',
     PRIMARY KEY (terminal_id),
     UNIQUE (name)
 );
@@ -216,8 +216,8 @@ INSERT INTO Terminal (terminal_id, name, city, type, active_status) VALUES
 CREATE TABLE Travel(
 	travel_id INT AUTO_INCREMENT,
 	travel_company_id INT NOT NULL,
-	departure_terminal_id INT NOT NULL,
-	arrival_terminal_id INT NOT NULL,
+	departure_terminal_id INT,
+	arrival_terminal_id INT,
 	depart_time DATETIME NOT NULL,
 	arrive_time DATETIME NOT NULL,
 	price	 DECIMAL(10,2) NOT NULL,
@@ -227,9 +227,9 @@ CREATE TABLE Travel(
 	FOREIGN KEY(travel_company_id) REFERENCES Company(id)
         ON DELETE CASCADE,
 	FOREIGN KEY(departure_terminal_id) REFERENCES Terminal(terminal_id)
-		ON DELETE NO ACTION,
+		ON DELETE SET NULL,
 	FOREIGN KEY(arrival_terminal_id) REFERENCES Terminal(terminal_id)
-		ON DELETE NO ACTION,
+		ON DELETE SET NULL,
 	FOREIGN KEY(vehicle_type_id) REFERENCES Vehicle_Type(id)
 		ON DELETE SET NULL,
 	CHECK (arrive_time > depart_time)

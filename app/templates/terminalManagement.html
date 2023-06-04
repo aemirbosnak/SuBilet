@@ -13,7 +13,6 @@
     <title>ŞuBilet</title>
 </head>
 <body>
-    {% if session['loggedin'] and session['userType'] == 'admin' %}
     <nav class="navbar navbar-expand-sm navbar-dark customNavbar">
         <div class="container-fluid">
         <ul class="navbar-nav">
@@ -42,30 +41,30 @@
         </ul>
         </div>
     </nav>
-    {% endif %}
 
-    <div class="container pt-4 ">
+    <div class="container pt-4">
         <div class="row">
-            <div class="col-10 d-flex flex-column">
-                <div class="mt-auto ">
-                    <h4> Coupons </h4>
+            <div class="col-9 d-flex flex-column">
+                <div class="mt-auto">
+                    <h4>Terminals</h4>
                 </div>
             </div>
-            <div class="col-2">
-                <a  href="{{ url_for( 'createVehicleType' ) }}">
-                    <Button class="btn btn-lg btn-danger px-4"> Create New Vehicle Type</Button>
+            <div class="col-3 d-flex justify-content-center">
+                <a href="{{ url_for('createTerminal') }}">
+                    <button class="btn btn-lg btn-danger px-5">Create New Terminal</button>
                 </a>
             </div>
         </div>
         <hr>
     </div>
+    
 
     {% with messages = get_flashed_messages() %}
     {% if messages %}
       <div class=flashes>
       {% for message in messages %}
         {% if message != 'Session was not valid, please log in!' %}
-          <div class="container mt-2">
+          <div class="container mt-2 mb-2">
             <h4 class="text-danger">{{ message }}</h4>
           </div>
         {% endif %}
@@ -75,9 +74,9 @@
     {% endwith %}
 
 
-    {% if allVehicles%}
+    {% if allTerminals%}
     <div class="container mt-2">
-        {% for singleVehicle in allVehicles %}
+        {% for singleTerminal in allTerminals %}
             <div class="card card-person bg-secondary text-white">
                 <div class="card-body">
                     <div class="container-fluid">
@@ -85,50 +84,47 @@
                             
                             <div class="col">
                                 <div class="row">
-                                    <h6 class=" blockTitle">Vehicle ID</h6>
-                                    <p class="">{{ singleVehicle['id'] }}</p>
+                                    <h6 class=" blockTitle">Terminal Name</h6>
+                                    <p class="">{{ singleTerminal['name'] }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Vehicle Model</h6>
-                                    <p class="">{{ singleVehicle['model'] }}</p>
+                                    <h6 class="blockTitle">City</h6>
+                                    <p class="">{{ singleTerminal['city'].capitalize() }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle">Vehicle Type</h6>
-                                    <p class="">{{ singleVehicle['type'] }}</p>
+                                    <h6 class="blockTitle">Terminal Type</h6>
+                                    <p class="">{{ singleTerminal['type'].capitalize() }}</p>
                                 </div>
                             </div>
 
                             <div class="col">
                                 <div class="row">
-                                    <h6 class="blockTitle" data-bs-toggle="tooltip" data-bs-placement="top" title="Numbers represent adjacent seats. The dash represents the corridor.">Seat Formation</h6>
-                                    <p class="">{{ singleVehicle['seat_formation'] }}</p>
+                                    <h6 class="blockTitle">Terminal Active Status</h6>
+                                    <p class="">{{ singleTerminal['active_status'].capitalize() }}</p>
                                 </div>
                             </div>
 
-                            <div class="col">
-                                <div class="row">
-                                    <h6 class="blockTitle">Total Seat Number</h6>
-                                    <p class="">{{ singleVehicle['num_of_seats'] }}</p>
-                                </div>
-                            </div>
 
                             <div class="col">
-                                <div class="row">
-                                    <h6 class="blockTitle">Business Row #</h6>
-                                    <p class="">{{ singleVehicle['business_rows'] }}</p>
-                                </div>
-                            </div>
-
-                            <div class="col">
-                                <a class="row text-decoration-none" href="{{ url_for('deleteAVehicleType', vehicleTypeId = singleVehicle['id'] ) }}">
-                                    <button class="btn btn-danger">Delete Vehicle Type</button>
-                                </a>                           
+                                <a class="row text-decoration-none mb-2" href="{{ url_for('deleteTerminal', terminalId = singleTerminal['terminal_id'], sure = 'false' ) }}">
+                                    <button class="btn btn-danger">Delete Terminal</button>
+                                </a> 
+                                
+                                <!-- {% if singleTerminal['active_status'] == 'active' %}                          
+                                <a class="row text-decoration-none" href="{{ url_for('deleteAVehicleType', vehicleTypeId = singleTerminal['terminal_id'] ) }}">
+                                    <button class="btn btn-danger">Deactivate Terminal</button>
+                                </a> 
+                                {% else %}
+                                <a class="row text-decoration-none" href="{{ url_for('deleteAVehicleType', vehicleTypeId = singleTerminal['terminal_id'] ) }}">
+                                    <button class="btn btn-danger">Activate Terminal</button>
+                                </a>   
+                                {% endif %} -->
                             </div>
 
                         </div>
