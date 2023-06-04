@@ -266,7 +266,10 @@
                               <a class="row mb-2 text-decoration-none" href="{{ url_for('validateCompany', companyId = singleCompany['id']) }}">
                                 <button class="btn btn-info">Validate Company</button>
                               </a>
-                              {% endif %}                            
+                              {% endif %}  
+                              <a class="row mb-2 text-decoration-none" href="{{ url_for('deleteCompany', companyId = singleCompany['id']) }}">
+                                <button class="btn btn-danger">Delete Company</button>
+                            </a>                          
                         </div>
 
                     </div>
