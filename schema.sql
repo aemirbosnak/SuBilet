@@ -251,7 +251,6 @@ CREATE TABLE Booking(
 
 INSERT INTO Booking (PNR, travel_id, seat_number, traveler_id, seat_type) VALUES
 ('PLANE111', 1, 43, 7, 'regular'),
-('PLANE112', 1, 44, 8, 'regular'),
 ('PLANE113', 1, 1, 9, 'business'),
 ('PLANE120', 4, 53, 7, 'regular'),
 ('PLANE121', 4, 36, 8, 'regular'),
@@ -349,7 +348,6 @@ CREATE TABLE Purchased(
 );
 
 INSERT INTO Purchased (PNR, purchased_time, payment_method, price, coupon_id) VALUES
-('PLANE112', '2023-04-01 19:00:00', 'creadit card', 999.00, NULL),
 ('PLANE113', '2023-05-01 21:00:00', 'creadit card', 1399.00, NULL),
 ('PLANE120', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
 ('PLANE121', '2023-05-01 21:00:00', 'creadit card', 900.00, NULL),
@@ -417,3 +415,7 @@ INSERT INTO Review ( travel_id, traveler_id, comment, rating) VALUES
 (17, 9, "I had an incredible travel experience with your company. The accommodations were top-notch, with comfortable rooms and friendly staff. The itinerary was well-planned, and we got to visit breathtaking destinations.", 4),
 (17, 10, "The pricing of the travel package seemed reasonable at first, but there were many hidden costs along the way. It would have been helpful to have a clearer breakdown of expenses upfront.", 3);
 
+CREATE VIEW future_travels AS
+SELECT *
+FROM Travel
+WHERE depart_time < NOW();

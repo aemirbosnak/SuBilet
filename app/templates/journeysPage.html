@@ -110,6 +110,7 @@
               {% endif %}
               {% endfor %}
               <form action="{{ url_for('buy_all') }}" method="POST">
+                <input type="hidden" name="journey_name" value="{{ journey.journey_name }}">
                 <div class="row">
                   <div class="col">
                     <button class="btn btn-danger btn-lg" type="submit" name="action" value="buy">Buy All</button>
