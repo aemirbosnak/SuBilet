@@ -1712,6 +1712,55 @@ def editCompanyProfile(companyId):
 ### ADMIN RELATED ROUTES ###
 ###############################
 
+@app.route('/makePurchaseOnBehalfOfTraveler/<int:travelId>', methods = ['GET', 'POST'])
+def makePurchaseOnBehalfOfTraveler(travelId):
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
+        message = None
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        #get travel information
+        queryGetTravelInfo = """
+        SELECT *
+        FROM travel_detail_view
+        WHERE travel_id = %s
+        """
+        cursor.execute(queryGetTravelInfo, (travelId, ))
+        theTravel = cursor.fetchone()
+
+        if request.method == 'POST':
+            if 'traveler_TCK' in request.form and request.form['traveler_TCK'] and \
+            'deduction_amount' in request.form and request.form['deduction_amount'] and \
+            'seat_number' in request.form and request.form['seat_number'] and \
+            'seat_type' in request.form and request.form['seat_type']:
+                traveler_TCK = request.form['traveler_TCK']
+                deduction_amount = request.form['deduction_amount']
+                seat_number = request.form['seat_number']
+                seat_type = request.form['seat_type']
+
+                # find traveler id
+                queryFindTravelerId = """
+                SELECT id
+                FROM Traveler
+                WHERE TCK = %s
+                """
+                cursor.execute(queryFindTravelerId, (traveler_TCK,))
+                travelerId = cursor.fetchone()
+
+                if travelerId:
+                    a = 1
+                else:
+                    message = "There is no traveler with that TCK!"
+
+
+        else:
+            message = 'Please fill the form!'
+
+
+        
+        return render_template('makePurchaseOnBehalfOfTraveler.html', message = message, theTravel = theTravel)
+    else:
+        message = 'Session was not valid, please log in!'
+        return render_template('login.html', message = message)
+
 @app.route('/companies', methods=['GET', 'POST'])
 def companies():
     if 'userid' in session and 'loggedin' in session:
