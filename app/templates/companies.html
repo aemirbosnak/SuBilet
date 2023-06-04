@@ -245,6 +245,9 @@
                         </div>
 
                         <div class="row align-items-start mt-4">
+                              <a class="row mb-2 text-decoration-none" href="{{ url_for('companysAllTravelsByAdmin', companyId =  singleCompany['id'],  upcomingOrPast = 'upcoming' ) }}">
+                                  <button class="btn btn-danger">See Company's All Travels</button>
+                              </a>
                               <a class="row mb-2 text-decoration-none" href="{{ url_for('companyProfile', companyId = singleCompany['id']) }}">
                                   <button class="btn btn-danger">Edit Company</button>
                               </a>
