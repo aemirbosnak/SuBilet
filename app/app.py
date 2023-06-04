@@ -25,21 +25,6 @@ PNR_LENGTH = 8
 def home():
     return main()
 
-@app.route('/test', methods=['GET', 'POST'])
-def test():
-    if request.method == 'GET' and 'id' in request.args:
-        id = request.args.get('id')
-        occupied = [1, 6, 11, 7]
-        formation = [3, 3, 3]
-        row = 5
-        col = 9
-        return render_template('test.html', formation=formation, row=row, tot_col=col, occupied=occupied)
-
-
-
-    return render_template('test.html', formation=0, row=0, tot_col=0, occupied=0)
-
-
 @app.route('/login', methods =['GET', 'POST'])
 def login():
     message = ''
@@ -480,6 +465,7 @@ def buy_travel(travel_id):
     if reserved_booking:
         pnr = reserved_booking['PNR']
         seat_number = reserved_booking['seat_number']
+        seat_chosen = True
 
     # Get travel details
     query_travel = """

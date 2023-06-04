@@ -163,15 +163,15 @@
                 <div class="card-body">
                     <div class="container-fluid">
                         <div class="row">
-                            <div class="col-5">
+                            <div class="col-6" style="width:20vw">
                                 <h1 class="companyTitle">{{ singleTravel['company_name'] }}</h1>
                             </div>
-                            <div class="col-5">
-                                <div class="row arrow-container">
+                            <div class="col d-flex justify-content-center">
+                                <div class="row arrow-container" style="width:80%">
                                     <div class="col arrow-text">
                                         <div>Depart: {{ singleTravel['depart_time'] }}</div>
                                     </div>
-                                    <div class="col">                        
+                                    <div class="col d-flex justify-content-center">
                                         <span class="arrow">&rarr;</span>
                                     </div>
                                     <div class="col arrow-text">
@@ -180,23 +180,40 @@
                                 </div>
                             </div>
                             <div class="col-2 col-right">
-                              <a href="{{ url_for('buy_travel', travel_id=singleTravel['travel_id']) }}" class="btn btn-danger btn-lg">{{ singleTravel['price'] }} ₺</a>
+                                <!--<a href="{{ url_for('buy_travel', travel_id=singleTravel['travel_id']) }}" class="btn btn-danger btn-lg">{{ singleTravel['price'] }} ₺</a>
+                                    -->
+
+                                <div class="container">
+                                    <div class="row">
+                                    <div class="row">
+                                        {% if travel_seat != singleTravel['travel_id'] %}
+                                        <form action="{{ url_for('buy_travel', travel_id=singleTravel['travel_id']) }}" method="get">
+                                            <button type="submit" style="width: 10vw" class="btn btn-danger btn-lg">Purchase random seat</button>
+                                        </form>
+                                        {% else %}
+                                        <form action="{{ url_for('buy_travel', travel_id=singleTravel['travel_id']) }}" method="POST">
+                                            <input type="hidden" name="seat_number" id="seat_number">
+                                            <button type="submit" id="seat_purchase" style="width: 10vw" class="btn btn-danger btn-lg">Purchase seat</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                        {% if travel_seat != singleTravel['travel_id'] %}
+                                        <form action="{{ request.path }}" method="get">
+                                            <input type="hidden" name="travel_seat" value="{{ singleTravel['travel_id'] }}">
+                                            <button type="submit" style="width: 10vw" class="btn btn-danger btn-lg">Choose seat</button>
+                                        </form>
+                                        {% else %}
+                                        <form action="{{ request.path }}" method="get">
+                                            <button type="submit" style="width: 10vw" class="btn btn-danger btn-lg">Close</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {% if travel_seat != singleTravel['travel_id'] %}
-                    <form action="{{ request.path }}" method="get" >
-                        <input type="hidden" name="travel_seat" value={{singleTravel['travel_id']}}>
-                        <button type="submit" id="seat_button" class="btn btn-outline-danger">Choose seat</button>
-                    </form>
-                    {% endif %}
-
                     {% if travel_seat == singleTravel['travel_id'] %}
-                    <form action="{{ request.path }}" method="get" >
-                        <button type="submit" id="close_button" class="btn btn-outline-danger">Close</button>
-                    </form>
-
                     <div class="container-sm">
                         {% for row in range(row) %}
                             <div class="row">
@@ -219,14 +236,8 @@
                             </div>
                         {% endfor %}
                     </div>
-
-                    <div class="col-2 col-right">
-                        <form action="{{ url_for('buy_travel', travel_id=singleTravel['travel_id']) }}" method="POST">
-                            <input type="hidden" name="seat_number" id="seat_number">
-                            <button type="submit" id="seat_purchase" class="btn btn-outline-danger">Purchase seat</button>
-                        </form>
-                    </div>
                     {% endif %}
+
                 </div>
             </div>
             {% endfor %}
