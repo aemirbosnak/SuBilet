@@ -531,6 +531,7 @@ def deleteComment(travel_id, traveler_id, company_id):
 
 @app.route('/travel/buy/<int:travel_id>/', methods=['GET', 'POST'])
 def buy_travel(travel_id):
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     user_id = session.get('userid')
     is_logged_in = session.get('loggedin', False)
     selected_coupon_id = None
@@ -539,27 +540,6 @@ def buy_travel(travel_id):
     seat_number = generateSeatNumber(travel_id)
     seat_chosen = False
     reserved_booking = None
-
-    if request.method == "POST" and 'seat_number' in request.form:
-        if request.form['seat_number']:
-            seat_number = request.form['seat_number']
-            seat_chosen = True
-
-    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-    if request.method == "POST" and 'reserve_PNR' in request.form:
-        pnr = request.form['reserve_PNR']
-
-        query_reserved_booking = """
-        SELECT *
-        FROM Booking
-        WHERE PNR = %s
-        """
-        cursor.execute(query_reserved_booking, (pnr, ))
-        reserved_booking = cursor.fetchone()
-
-        seat_number = reserved_booking['seat_number']
-        seat_chosen = True
 
     # Get travel details
     query_travel = """
@@ -655,6 +635,25 @@ def buy_travel(travel_id):
         else:
             selected_coupon_id = None
             travel_details['discounted_price'] = travel_details['price']
+
+    if request.method == "POST" and 'seat_number' in request.form:
+        if request.form['seat_number']:
+            seat_number = request.form['seat_number']
+            seat_chosen = True
+
+    if request.method == "POST" and 'reserve_PNR' in request.form:
+        pnr = request.form['reserve_PNR']
+
+        query_reserved_booking = """
+        SELECT *
+        FROM Booking
+        WHERE PNR = %s
+        """
+        cursor.execute(query_reserved_booking, (pnr, ))
+        reserved_booking = cursor.fetchone()
+
+        seat_number = reserved_booking['seat_number']
+        seat_chosen = True
 
     # reserve
     if request.method == 'POST' and "reserve" in request.form:
