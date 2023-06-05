@@ -491,6 +491,43 @@ def makeComment(travel_id):
     else:
         message = 'session is not valid, please log in!'
         return render_template('login.html', message = message)
+    
+@app.route('/deleteComment/<int:travel_id>/<int:traveler_id>/<int:company_id>', methods = [ 'GET', 'POST' ])
+def deleteComment(travel_id, traveler_id, company_id):
+    # only admin can delete a comment
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'admin':
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        user_id = session.get('userid')
+        message = ""
+        # company_id = None
+
+        # if request.method == "get" and session['userType'] =='admin':
+        #     company_id = int(request.args.get('company_id'))
+
+        # check if there is a comment made by traveler_id on travel_id
+        queryIsExist = """
+        SELECT *
+        FROM Review 
+        WHERE travel_id = %s AND traveler_id = %s
+        """
+        cursor.execute(queryIsExist, (travel_id, traveler_id))
+        isExist = cursor.fetchone()
+        if isExist:
+            # delete comment
+            queryDeleteReview = """
+            DELETE FROM Review WHERE travel_id = %s AND traveler_id = %s 
+            """
+            cursor.execute(queryDeleteReview, (travel_id, traveler_id) )
+            cursor.connection.commit()
+            message = "The comment is deleted!"
+        else:
+            message = "There is no such comment!"
+
+        flash(message)
+        return redirect(url_for('commentsOnATravel', travelId = travel_id, company_id = company_id))
+    else:
+        message = 'session is not valid, please log in!'
+        return render_template('login.html', message = message)
 
 @app.route('/travel/buy/<int:travel_id>/', methods=['GET', 'POST'])
 def buy_travel(travel_id):
@@ -1248,9 +1285,12 @@ def aTravelDetails(travelId):
         
 @app.route('/commentsOnATravel/<int:travelId>', methods = ['GET', 'POST'])
 def commentsOnATravel(travelId):
-    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company':
+    if 'userid' in session and 'loggedin' in session and 'userType' in session and session['userType'] == 'company' or session['userType'] == 'admin':
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         companyId = session['userid']
+
+        if request.method == "GET" and session['userType'] =='admin':
+            companyId = int(request.args.get('company_id'))
 
         #get travel information
         queryGetTravelInfo = """
@@ -1277,7 +1317,7 @@ def commentsOnATravel(travelId):
             cursor.execute(queryGetComment, (travelId,))
             allComments = cursor.fetchall()
 
-        return render_template('commentsOnATravel.html', theTravel = theTravel, allComments = allComments)
+        return render_template('commentsOnATravel.html', theTravel = theTravel, allComments = allComments, companyId = companyId)
     else:
         message = 'Session is not valid, please log in!'
         return render_template('login.html', message = message)

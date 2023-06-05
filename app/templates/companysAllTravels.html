@@ -203,9 +203,10 @@
                                       <button class="btn btn-danger" >Make Purchase On Behalf Of Traveler</button>
                                     </form>
                                   {% else %}
-                                    <a class="row mb-2 text-decoration-none" href="{{ url_for('commentsOnATravel', travelId = singleTravel['travel_id']) }}">
-                                      <button class="btn btn-danger">Comments</button>
-                                    </a>
+                                  <form class="row mb-2 text-decoration-none" action="{{ url_for('commentsOnATravel', travelId = singleTravel['travel_id']) }}" method="get">
+                                    <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
+                                    <button type="submit" class="btn btn-danger">Comments</button>
+                                  </form>
                                   {% endif %}
                                     <form class="row mb-2 text-decoration-none" action="{{ url_for('aTravelDetails', travelId = singleTravel['travel_id']) }}" method="get">
                                       <input type="hidden" name="company_id" id="company_id" value="{{ companyId }}">
