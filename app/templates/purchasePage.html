@@ -149,15 +149,23 @@
                                     {% for coupon in coupons %}
                                         <form method="post" action="{{ url_for('buy_travel', travel_id=travel_id) }}" class="couponForm">
                                             <div class="card couponCard p-2 mb-2">
+                                                {% if seat_chosen and reserved_booking %}
+                                                    <input type="hidden" name="reserve_PNR" id="reserve_PNR" value="{{ pnr }}">
+                                                    <input type="hidden" name="seat_number" id="seat_number" value="{{ seat_number }}">
+                                                {% endif %}
                                                 <button class="btn btn-outline-success btn-lg {% if coupon.coupon_id == selected_coupon_id %}clickedCoupon{% endif %}" type="submit">
                                                     {{ coupon.coupon_name }} ({{ coupon.sale_rate * 100 }}%)
                                                 </button>
                                                 <input type="hidden" name="coupon_id" value="{{ coupon.coupon_id }}">
                                             </div>
                                         </form>
-                                    {% endfor %}
+                                    {% endfor %}    
                                     {% if selected_coupon_id %}
                                         <form method="post" action="{{ url_for('buy_travel', travel_id=travel_id) }}">
+                                            {% if seat_chosen and reserved_booking %}
+                                                <input type="hidden" name="reserve_PNR" id="reserve_PNR" value="{{ pnr }}">
+                                                <input type="hidden" name="seat_number" id="seat_number" value="{{ seat_number }}">
+                                            {% endif %}
                                             <button class="btn btn-outline-danger" type="submit">Clear Coupon</button>
                                         </form>
                                     {% endif %}
