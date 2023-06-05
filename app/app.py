@@ -1071,7 +1071,7 @@ def buy_all():
         query_purchased_ids = """
         SELECT DISTINCT B.travel_id
         FROM Booking B
-        JOIN Reserved ON Rezerved.PNR = B.PNR
+        JOIN Reserved ON Reserved.PNR = B.PNR
         WHERE B.traveler_id = %s
         """
         cursor.execute(query_purchased_ids, (user_id,))
