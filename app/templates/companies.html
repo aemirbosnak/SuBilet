@@ -151,12 +151,11 @@
 
           <div class="col-4">
             <form class="row" action="{{ request.path }}" method="GET">
-              <input type="hidden" name="sort_type" id="sort_type" value="{{ sortType }}">
               <div class="col-6">
-                <input type="text" class="form-control" name="filter_type" id="filter_type">
+                <input type="text" class="form-control" name="search_word" id="search_word">
               </div>
               <div class="col-6">
-                <button type="submit" id="filter-button" class="btn btn-outline-danger">Search</button>
+                <button type="submit"  class="btn btn-outline-danger">Search</button>
               </div>
             </form>
           </div>
