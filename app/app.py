@@ -975,7 +975,7 @@ def journeys():
         SELECT *, T1.name as dep_name, T2.name as arr_name
         FROM Travels_In_Journey natural join Travel join Company on travel_company_id = id join Terminal T1 on departure_terminal_id = T1.terminal_id join Terminal T2 on arrival_terminal_id = T2.terminal_id
         WHERE traveler_id = %s
-        ORDER BY departure_time
+        ORDER BY depart_time
         """
         cursor.execute(query_travelInJourney, (user_id,))
         travelsInJourneys = cursor.fetchall()
