@@ -1859,8 +1859,9 @@ def companies():
         filter_in = 'all'
         filter_type = 'all'
         filterClause = ''
+        search_clause = ''
 
-        if request.method == 'GET' and 'sort_type' in request.args or 'filter_type' in request.args:
+        if request.method == 'GET' and 'sort_type' in request.args or 'filter_type' in request.args or 'search_word' in request.args:
             sort_in = request.args.get('sort_type')
             if sort_in == 'sort_by_name':
                 sort_type = 'C.company_name'
@@ -1880,19 +1881,24 @@ def companies():
             filter_in = request.args.get('filter_type')
             if filter_in == 'validated':
                 filter_type = 'validated'
-                filterClause = 'WHERE C.validation_date IS NOT NULL'
+                filterClause = 'AND C.validation_date IS NOT NULL'
             elif filter_in == 'unvalidated':
                 filter_type = 'unvalidated'
-                filterClause = 'WHERE C.validation_date IS NULL'
+                filterClause = 'AND C.validation_date IS NULL'
             elif filter_in == 'active':
                 filter_type = 'active'
-                filterClause = 'WHERE U.active = TRUE'
+                filterClause = 'AND U.active = TRUE'
             elif filter_in == 'inactive':
                 filter_type = 'inactive'
-                filterClause = 'WHERE U.active = FALSE'
+                filterClause = 'AND U.active = FALSE'
             else:
                 filter_type = 'all'
                 filterClause = ''
+
+            search_word = request.args.get('search_word')
+            if search_word:
+                search_clause = 'AND C.company_name LIKE "%' + search_word + '%"'
+
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         queryCompanies = """
@@ -1910,9 +1916,9 @@ def companies():
         FROM Company C
         NATURAL JOIN User U
         LEFT JOIN Administrator A ON A.id = C.validator_id
-        {whereClause}
+        WHERE TRUE {whereClause} {search_clause}
         ORDER BY {sortClause}
-        """.format(whereClause = filterClause, sortClause = sort_type)
+        """.format(whereClause = filterClause, search_clause=search_clause, sortClause = sort_type)
         cursor.execute(queryCompanies)
         allCompanies = cursor.fetchall()
 
